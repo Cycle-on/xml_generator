@@ -93,13 +93,13 @@ class Card(BaseModel):
     humanThreat: bool = False
     chs: bool = False  # Чрезвычайная ситуация или нет
     callSource: CallSource = None
-    phoneCalls: list[Phone] = []
+    phoneCalls: list[Phone] = None
     era: Era = None
-    sensorMessages: list[SensorMessage] = []
-    sms: list[Sms] = []
-    otherMessages: list[OtherMessage] = []
-    transferItem: list[TransferItem] = []
-    receptionItems: list[ReceptionItem] = []
+    sensorMessages: list[SensorMessage] = None
+    sms: list[Sms] = None
+    otherMessages: list[OtherMessage] = None
+    transferItem: list[TransferItem] = None
+    receptionItems: list[ReceptionItem] = None
     card01: FireDepartment = None
     card02: Police = None
     card03: Ambulance = None
@@ -113,8 +113,4 @@ class Card(BaseModel):
 
 
 if __name__ == '__main__':
-    Card(
-        globalId='1',
-        wrong=True,
-        childPlay=True
-    )
+    print(isinstance(Police(dtCreate=datetime.datetime.now()), BaseModel))
