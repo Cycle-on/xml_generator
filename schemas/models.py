@@ -1,6 +1,6 @@
 import datetime
 
-from string_schemas import CallSource, IncidentType
+from schemas.string_schemas import CallSource, IncidentType
 from pydantic import BaseModel
 
 from schemas.Phone import Phone
@@ -8,7 +8,7 @@ from schemas import Operator, EOSType
 
 
 class SensorMessage(BaseModel):
-    operator: Operator = ''
+    operator: Operator = None
     dtSensorMessage: datetime.datetime
 
 
@@ -17,13 +17,13 @@ class Sms(BaseModel):
 
 
 class OtherMessage(BaseModel):
-    operator: Operator = ''
+    operator: Operator = None
     dtOtherMessage: datetime.datetime
 
 
 class Era(BaseModel):
     operator: Operator
-    dtEra: datetime.datetime = ''
+    dtEra: datetime.datetime = None
     callType: bool
 
 
@@ -64,7 +64,7 @@ class HouseDepartment(BaseModel):
 
 class AntiTerror(BaseModel):
     dtCreate: datetime.datetime
-    strInjurySuspect: str = ''
+    strInjurySuspect: str = None
 
 
 class Consult(BaseModel):
@@ -84,32 +84,32 @@ class Psycho(BaseModel):
 
 class Card(BaseModel):
     globalId: str
-    cardState: str = ''
-    incidentType: str = ''
+    cardState: str = None
+    incidentType: str = None
     dtSend_: datetime.datetime = datetime.datetime.now()
     dtCreate: datetime.datetime = datetime.datetime.now()
     dtUpdate: datetime.datetime = datetime.datetime.now()
     casualties: int = 0
     humanThreat: bool = False
     chs: bool = False  # Чрезвычайная ситуация или нет
-    callSource: CallSource = ''
+    callSource: CallSource = None
     phoneCalls: list[Phone] = []
-    era: Era = ''
+    era: Era = None
     sensorMessages: list[SensorMessage] = []
     sms: list[Sms] = []
     otherMessages: list[OtherMessage] = []
     transferItem: list[TransferItem] = []
     receptionItems: list[ReceptionItem] = []
-    card01: FireDepartment = ''
-    card02: Police = ''
-    card03: Ambulance = ''
-    card04: GasDepartment = ''
-    cardCommServ: HouseDepartment = ''
-    cardAT: AntiTerror = ''
+    card01: FireDepartment = None
+    card02: Police = None
+    card03: Ambulance = None
+    card04: GasDepartment = None
+    cardCommServ: HouseDepartment = None
+    cardAT: AntiTerror = None
     wrong: bool
     childPlay: bool
-    consult: Consult = ''
-    psycho: Psycho = ''
+    consult: Consult = None
+    psycho: Psycho = None
 
 
 if __name__ == '__main__':
