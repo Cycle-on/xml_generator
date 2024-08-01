@@ -3,6 +3,7 @@ from pprint import pprint
 
 from pydantic import BaseModel
 
+from schemas.Phone import Phone, RedirectCall
 from schemas.models import Card, Police
 import xml.etree.ElementTree as ET
 
@@ -25,7 +26,16 @@ def main():
         globalId='2',
         wrong=False,
         childPlay=False,
-        card02=Police(dtCreate=datetime.datetime.now())
+        card02=Police(dtCreate=datetime.datetime.now()),
+        phoneCalls=Phone(phoneCallId='1',
+                         OperatorIniciatied=False,
+                         redirectCall=RedirectCall(
+                             dtRedirectConfirm_=datetime.datetime.now(),
+                             redirectCancel=True,
+                             newPhoneCallId='1',
+                             conference=False
+                         ))
+
     )
     root = ET.Element("ukio")
     sub_root = generate_xml_from_pydantic(root, c1.dict())
