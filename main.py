@@ -1,11 +1,21 @@
 import datetime
 import os
 
+from pydantic import BaseModel
+
 from test_cards import cards
 import xml.etree.ElementTree as ET
 
 
 def __generate_xml_from_pydantic(root: ET.Element, model: dict, name='ukio'):
+    """
+    recursive subtree generator from dicts
+    adding different type subtrees to root
+    :param root:
+    :param model:
+    :param name:
+    :return:
+    """
     sub_root = ET.SubElement(root, name)
     for feature_name, feature_value in model.items():
         if isinstance(feature_value, dict):  # if we have pydantic model
@@ -24,18 +34,19 @@ def __generate_xml_from_pydantic(root: ET.Element, model: dict, name='ukio'):
     return sub_root
 
 
-def create_file_from_model(filename: str = 'output') -> str:
+def create_file_from_model(model: BaseModel, filename: str = 'output') -> str:
     """
+    function which create xml file from pydantic model
     :param filename: string format
+    :param model: pydantic model
     :return:  True -> file was saved successful
               False -> some exceptions
     """
     try:
         root_ = ET.Element("ukio")
-        c1 = cards[0]
-        sub_root = __generate_xml_from_pydantic(root_, c1.dict())
+        sub_root = __generate_xml_from_pydantic(root_, model.dict())
         tree = ET.ElementTree(sub_root)
-        tree.write("filename.xml")
+        tree.write(f"{filename}.xml")
         return True
     except Exception as ex:
         with open(os.path.join("logs", "xml_creator", datetime.datetime.now().isoformat()), "w+") as f:
@@ -44,7 +55,8 @@ def create_file_from_model(filename: str = 'output') -> str:
 
 
 def main():
-    create_file_from_model()
+    c1 = cards[0]
+    create_file_from_model(c1)
 
 
 if __name__ == '__main__':
