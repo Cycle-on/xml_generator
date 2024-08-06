@@ -3,7 +3,6 @@ import os
 
 from pydantic import BaseModel
 
-from test_cards import cards
 import xml.etree.ElementTree as ET
 
 
@@ -28,7 +27,8 @@ def __generate_xml_from_pydantic(root: ET.Element, model: dict, name='ukio'):
             for value in feature_value:
                 __generate_xml_from_pydantic(sub_root_wrapper, value, name=feature_name[:-1])
             continue
-
+        elif feature_value is None:
+            continue
         el = ET.SubElement(sub_root, feature_name)
         el.text = str(feature_value)
     return sub_root
@@ -44,9 +44,9 @@ def create_file_from_model(model: BaseModel, filename: str = 'output', basename=
     """
     try:
         root_ = ET.Element(basename)
-        sub_root = __generate_xml_from_pydantic(root_, model.dict())
+        sub_root = __generate_xml_from_pydantic(root_, model.dict(), basename)
         tree = ET.ElementTree(sub_root)
-        tree.write(f"{filename}.xml")
+        tree.write(f"{filename}.xml", encoding='utf-8')
         return True
     except Exception as ex:
         with open(os.path.join("logs", "xml_creator", datetime.datetime.now().isoformat()), "w+") as f:
@@ -55,6 +55,7 @@ def create_file_from_model(model: BaseModel, filename: str = 'output', basename=
 
 
 def main():
+    from test_cards import cards
     c1 = cards[0]
     create_file_from_model(c1)
 

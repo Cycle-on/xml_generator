@@ -35,5 +35,7 @@ class Operator(BaseModel):
 
 
 if __name__ == '__main__':
-    o1 = Operator()
-    print(o1)
+    o1 = Operator(
+        eosClassTypeId=[EOSType.s112]
+    )
+    print(o1.eosClassTypeId)
