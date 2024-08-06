@@ -34,7 +34,7 @@ def __generate_xml_from_pydantic(root: ET.Element, model: dict, name='ukio'):
     return sub_root
 
 
-def create_file_from_model(model: BaseModel, filename: str = 'output') -> str:
+def create_file_from_model(model: BaseModel, filename: str = 'output', basename='ukio') -> str:
     """
     function which create xml file from pydantic model
     :param filename: string format
@@ -43,7 +43,7 @@ def create_file_from_model(model: BaseModel, filename: str = 'output') -> str:
               False -> some exceptions
     """
     try:
-        root_ = ET.Element("ukio")
+        root_ = ET.Element(basename)
         sub_root = __generate_xml_from_pydantic(root_, model.dict())
         tree = ET.ElementTree(sub_root)
         tree.write(f"{filename}.xml")

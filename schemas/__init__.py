@@ -1,6 +1,7 @@
 from enum import Enum
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
+from typing import ClassVar
 
 
 class EOSType(dict, Enum):
@@ -22,5 +23,17 @@ class EOSType(dict, Enum):
 
 
 class Operator(BaseModel):
-    operatorId: str
+    operatorId: str = Field(default_factory=lambda: Operator.__get_next_id())
     eosClassTypeId: list[EOSType] = []
+
+    __id_counter: ClassVar[int] = 0
+
+    @classmethod
+    def __get_next_id(cls):
+        cls.__id_counter += 1
+        return str(cls.__id_counter)
+
+
+if __name__ == '__main__':
+    o1 = Operator()
+    print(o1)

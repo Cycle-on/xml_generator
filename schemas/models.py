@@ -1,7 +1,8 @@
 import datetime
+from typing import ClassVar
 
-from schemas.string_schemas import CallSource, IncidentType
-from pydantic import BaseModel
+from schemas.string_schemas import CallSource, IncidentType, CardStates
+from pydantic import BaseModel, Field
 
 from schemas.Phone import Phone
 from schemas import Operator, EOSType
@@ -68,24 +69,38 @@ class AntiTerror(BaseModel):
 
 
 class Consult(BaseModel):
-    consultId: str
+    consultId: str = Field(default_factory=lambda: Consult.__get_next_id())
     operator: Operator
     dtConsultStart: datetime.datetime
     dtConsultEnd: datetime.datetime
 
+    __id_counter: ClassVar[int] = 0
+
+    @classmethod
+    def __get_next_id(cls):
+        cls.__id_counter += 1
+        return str(cls.__id_counter)
+
 
 class Psycho(BaseModel):
-    psychoId: str
+    psychoId: str = Field(default_factory=lambda: Psycho.__get_next_id())
     operator: Operator
     bPsychoInHouse: bool
     dtPsychoStart: datetime.datetime
     dtPsychoEnd: datetime.datetime
 
+    __id_counter: ClassVar[int] = 0
+
+    @classmethod
+    def __get_next_id(cls):
+        cls.__id_counter += 1
+        return str(cls.__id_counter)
+
 
 class Card(BaseModel):
-    globalId: str
-    cardState: str = None
-    incidentType: str = None
+    globalId: str = Field(default_factory=lambda: Card.__get_next_id())
+    cardState: CardStates = None
+    incidentType: IncidentType = None
     dtSend_: datetime.datetime = datetime.datetime.now()
     dtCreate: datetime.datetime = datetime.datetime.now()
     dtUpdate: datetime.datetime = datetime.datetime.now()
@@ -110,6 +125,13 @@ class Card(BaseModel):
     childPlay: bool
     consult: Consult = None
     psycho: Psycho = None
+
+    __id_counter: ClassVar[int] = 0
+
+    @classmethod
+    def __get_next_id(cls):
+        cls.__id_counter += 1
+        return str(cls.__id_counter)
 
 
 if __name__ == '__main__':
