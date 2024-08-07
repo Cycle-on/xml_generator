@@ -24,7 +24,7 @@ class EOSType(dict, Enum):
 
 class Operator(BaseModel):
     operatorId: str = Field(default_factory=lambda: Operator.__get_next_id())
-    eosClassTypeId: list[EOSType] = []
+    eosClassTypeId: list[EOSType] = None
 
     __id_counter: ClassVar[int] = 0
 

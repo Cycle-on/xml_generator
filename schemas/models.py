@@ -104,7 +104,7 @@ class Card(BaseModel):
     dtSend_: datetime.datetime = datetime.datetime.now()
     dtCreate: datetime.datetime = datetime.datetime.now()
     dtUpdate: datetime.datetime = datetime.datetime.now()
-    casualties: int = 0
+    casualties: int = None
     humanThreat: bool = False
     chs: bool = False  # Чрезвычайная ситуация или нет
     callSource: CallSource = None

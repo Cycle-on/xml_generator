@@ -46,7 +46,7 @@ def create_file_from_model(model: BaseModel, filename: str = 'output', basename=
         root_ = ET.Element(basename)
         sub_root = __generate_xml_from_pydantic(root_, model.dict(), basename)
         tree = ET.ElementTree(sub_root)
-        tree.write(f"{filename}.xml", encoding='utf-8')
+        tree.write(os.path.join("files", f"{filename}.xml"), encoding='utf-8')
         return True
     except Exception as ex:
         with open(os.path.join("logs", "xml_creator", datetime.datetime.now().isoformat()), "w+") as f:
