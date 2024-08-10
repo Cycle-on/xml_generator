@@ -7,7 +7,9 @@ import numpy as np
 from constants import *
 from config import load_config
 from schemas import Operator, EOSType
-from schemas.Phone import Phone
+from schemas.phone import Phone
+
+from generators import check_event_probability
 
 config = load_config()
 
@@ -60,7 +62,13 @@ def _generate_phone_date():
 
 
 def generate_phone_data() -> Phone:
-    # random constants
+    if check_event_probability(1, 1):  # phone call is dropped
+        # ^ mean 1 percent probability ^
+        re_call_time = np.random.normal(3, 5)
+        print(re_call_time)
+        return
+
+        # random constants
     operator_indicate = False
 
     end_call_list = [True, False]
@@ -84,3 +92,12 @@ def generate_phone_data() -> Phone:
         dtEndCall_=dt_end_call,
         # redirectCall=redirect_call
     )
+
+
+def main():
+    random.seed(184)  # seed with dropped phone call
+    generate_phone_data()
+
+
+if __name__ == '__main__':
+    main()
