@@ -1,6 +1,6 @@
 import datetime
 
-from schemas.Phone import Phone, RedirectCall
+from schemas.phone import Phone, RedirectCall
 from schemas.models import Card, Police
 
 cards = [
