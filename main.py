@@ -1,5 +1,5 @@
 from config import load_config
-from generators.phone_calls import generate_cut_phone_call, generate_phone_data
+from generators.phone_calls import generate_phone_data
 from file_creator import create_file_from_model
 
 config = load_config()

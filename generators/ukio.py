@@ -20,7 +20,7 @@ def generate_other_ukio_data():
 
 
 def generate_ukio_date():
-    random_card_create_time = np.random.normal(AVERAGE_CARD_CREATE_TIME, CARD_CREATE_TIME_SCALE)
+    random_card_create_time = abs(np.random.normal(AVERAGE_CARD_CREATE_TIME, CARD_CREATE_TIME_SCALE))
     random_send_date = datetime.datetime.now()
     random_create_date = random_send_date - td(seconds=random_card_create_time)
     random_update_date = copy(random_create_date)

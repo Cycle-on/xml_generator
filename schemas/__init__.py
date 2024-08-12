@@ -8,7 +8,10 @@ class EOSType(dict, Enum):
     s112 = {
         'name': 'Система 112',
         'code': "112",
-        # "class": Consult,
+        'p_min': CONSULT_SHARE_MIN,
+        'p_max': CONSULT_SHARE_MAX,
+        'class': "Consult"
+
     }
     fireDepartment = {
         "name": 'Пожарная Служба',
@@ -60,7 +63,9 @@ class EOSType(dict, Enum):
     psycho = {
         "name": "Психологическая поддержка",
         "code": "08",
-        # "class": Psycho
+        "p_min": PSYCHO_SHARE_MIN,
+        'p_max': PSYCHO_SHARE_MAX,
+        "class": "Psycho"
     }
     translators = {
         "name": "Переводчики",

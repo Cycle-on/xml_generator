@@ -1,3 +1,4 @@
+from schemas import EOSType, Operator, Consult, Psycho
 from schemas.eos_models import *
 from schemas.string_schemas import CallSource, IncidentType, CardStates
 from schemas.phone import Phone
@@ -73,6 +74,5 @@ class Card(BaseModel):
         cls.__id_counter += 1
         return str(cls.__id_counter)
 
-
-if __name__ == '__main__':
-    print(isinstance(Police(dtCreate=datetime.datetime.now()), BaseModel))
+# if __name__ == '__main__':
+#     print(isinstance(Police(dtCreate=datetime.datetime.now()), BaseModel))

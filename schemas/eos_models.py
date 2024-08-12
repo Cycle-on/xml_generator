@@ -9,8 +9,8 @@ from schemas.string_schemas import IncidentType
 class FireDepartment(BaseModel):
     dtCreate: datetime.datetime
     strIncidentType: IncidentType
-    strObject: str
-    bObjectGasified: bool
+    strObject: str = None
+    bObjectGasified: bool = None
 
 
 class Police(BaseModel):

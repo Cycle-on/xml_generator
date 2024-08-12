@@ -20,14 +20,19 @@ def __generate_xml_from_pydantic(root: ET.Element, model: dict, name='ukio'):
         if isinstance(feature_value, dict):  # if we have pydantic model
             __generate_xml_from_pydantic(sub_root, feature_value, name=feature_name)
             continue
+
         elif isinstance(feature_value, datetime.datetime):
             feature_value = feature_value.isoformat()
+
         elif isinstance(feature_value, list):
             sub_root_wrapper = ET.SubElement(sub_root, feature_name)
             for value in feature_value:
                 __generate_xml_from_pydantic(sub_root_wrapper, value, name=feature_name[:-1])
             continue
+
         elif feature_value is None:
+            continue
+        if feature_name in ('p_min', 'p_max', 'class'):
             continue
         el = ET.SubElement(sub_root, feature_name)
         el.text = str(feature_value)
