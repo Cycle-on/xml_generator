@@ -27,7 +27,7 @@ class EOSType(dict, Enum):
         'p_max': POLICE_SHARE_MAX,
         "class": Police
     }
-    Ambulance = {
+    ambulance = {
         "name": 'Скорая помощь',
         "code": "03",
         'p_min': AMBULANCE_SHARE_MIN,
@@ -35,21 +35,21 @@ class EOSType(dict, Enum):
         "class": Ambulance
     }
 
-    GasDepartment = {
+    gasDepartment = {
         "name": 'Газовая служба',
         "code": "04",
         "p_min": GAS_SHARE_MIN,
         "p_max": GAS_SHARE_MAX,
         "class": GasDepartment
     }
-    AntiTerror = {
+    antiTerror = {
         "name": 'Антитеррор',
         "code": "05",
         "p_min": CARD_AT_SHARE_MIN,
         "p_max": CARD_AT_SHARE_MAX,
         "class": AntiTerror
     }
-    HouseDepartment = {
+    houseDepartment = {
         "name": "ЖКХ",
         "code": "06",
         "class": HouseDepartment,

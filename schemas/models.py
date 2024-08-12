@@ -47,7 +47,7 @@ class Card(BaseModel):
     dtUpdate: datetime.datetime = datetime.datetime.now()
     casualties: int = None
     humanThreat: bool = False
-    chs: bool = False  # Чрезвычайная ситуация или нет
+    chs: bool = False
     callSource: CallSource = None
     phoneCalls: list[Phone] = None
     era: Era = None

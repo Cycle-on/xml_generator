@@ -1,8 +1,7 @@
 import datetime
 from datetime import timedelta as td
 import random
-from pprint import pprint
-
+from eos_probability import generate_random_eos_list
 import numpy as np
 
 from constants import *
@@ -45,8 +44,10 @@ def generate_phone_data() -> Phone:
     operator_indicate = False
 
     # operator
-    random_EOS = list(EOSType)[random.randint(0, len(list(EOSType)) - 1)]
-    operator = Operator(eosClassTypeId=[random_EOS])
+    # random_EOS = list(EOSType)[random.randint(0, len(list(EOSType)) - 1)]
+    random_EOS = generate_random_eos_list()
+
+    operator = Operator(eosClassTypeId=random_EOS)
 
     # phone date info
     if check_event_probability(1, 1):  # phone call is dropped
