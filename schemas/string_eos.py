@@ -10,7 +10,7 @@ class EOSType(dict, Enum):
         'code': "112",
         'p_min': CONSULT_SHARE_MIN,
         'p_max': CONSULT_SHARE_MAX,
-        'class': "Consult"
+        'class': "consult"
 
     }
     fireDepartment = {
@@ -18,40 +18,40 @@ class EOSType(dict, Enum):
         "code": "01",
         "p_min": FIRE_SHARE_MIN,
         'p_max': FIRE_SHARE_MAX,
-        "class": Card01
+        "class": card01
     }
     police = {
         "name": 'Полиция',
         "code": "02",
         "p_min": POLICE_SHARE_MIN,
         'p_max': POLICE_SHARE_MAX,
-        "class": Card02
+        "class": card02
     }
     ambulance = {
         "name": 'Скорая помощь',
         "code": "03",
         'p_min': AMBULANCE_SHARE_MIN,
         'p_max': AMBULANCE_SHARE_MAX,
-        "class": Card03
+        "class": card03
     }
     gasDepartment = {
         "name": 'Газовая служба',
         "code": "04",
         "p_min": GAS_SHARE_MIN,
         "p_max": GAS_SHARE_MAX,
-        "class": Card04
+        "class": card04
     }
     antiTerror = {
         "name": 'Антитеррор',
         "code": "05",
         "p_min": CARD_AT_SHARE_MIN,
         "p_max": CARD_AT_SHARE_MAX,
-        "class": CardAT
+        "class": cardAT
     }
     houseDepartment = {
         "name": "ЖКХ",
         "code": "06",
-        "class": CardCommServ,
+        "class": cardCommServ,
     }
     edds = {
         "name": "ЕДДС",
@@ -64,7 +64,7 @@ class EOSType(dict, Enum):
         "code": "08",
         "p_min": PSYCHO_SHARE_MIN,
         'p_max': PSYCHO_SHARE_MAX,
-        "class": "Psycho"
+        "class": "psycho"
     }
     translators = {
         "name": "Переводчики",
@@ -106,17 +106,14 @@ class Operator(BaseModelWithId):
     eosClassTypeId: list[EOSType] = None
 
 
-class Consult(BaseModelWithId):
-    consultId: str = Field(default_factory=lambda: Consult._BaseModelWithId__get_next_id())
-    operator: Operator
+class consult(BaseModelWithId):
+    consultId: str = Field(default_factory=lambda: consult._BaseModelWithId__get_next_id())
     dtConsultStart: datetime.datetime
     dtConsultEnd: datetime.datetime
 
 
-class Psycho(BaseModelWithId):
-    psychoId: str = Field(default_factory=lambda: Psycho._BaseModelWithId__get_next_id())
-    operator: Operator
-    bPsychoInHouse: bool
+class psycho(BaseModelWithId):
+    psychoid: str = Field(default_factory=lambda: psycho._BaseModelWithId__get_next_id())
     dtPsychoStart: datetime.datetime
     dtPsychoEnd: datetime.datetime
 

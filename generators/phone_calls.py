@@ -1,13 +1,16 @@
 import datetime
 from datetime import timedelta as td
 import random
+from pprint import pprint
+from typing import TypeVar
+
 from generators.eos_probability import generate_random_eos_list
 import numpy as np
 
 from constants import *
 from config import load_config
-from schemas.string_eos import Operator, EOSType
-from schemas.phone import Phone
+from schemas.string_eos import Operator
+from schemas.phonecall import PhoneCall
 from generators import check_event_probability
 
 config = load_config()
@@ -36,7 +39,7 @@ def _generate_phone_date(recall: bool = False):
     return dt_call, dt_connect, dt_end_call, date_send
 
 
-def generate_phone_data() -> Phone:
+def generate_phone_data() -> PhoneCall:
     # random constants
     end_call_list = [True, False]
     random.shuffle(end_call_list)
@@ -56,23 +59,23 @@ def generate_phone_data() -> Phone:
         dt_call, dt_connect, dt_end_call, date_send = _generate_phone_date(recall=True)
     else:
         dt_call, dt_connect, dt_end_call, date_send = _generate_phone_date()
-    return Phone(
-        dtSend_=date_send,
-        operator=operator,
-        OperatorIniciatied=operator_indicate,
-        dtCall_=dt_call,
-        dtConnect_=dt_connect,
+    return PhoneCall(
+        dtSend=date_send,
+        OperatorId=operator.operatorId,
+        bOperatorIniciatied=operator_indicate,
+        dtCall=dt_call,
+        dtConnect=dt_connect,
         bCallEnded=b,
         aCallEnded=a,
-        dtEndCall_=dt_end_call,
+        dtEndCall=dt_end_call,
         # redirectCall=redirect_call
     )
 
 
 def main():
     # random.seed(105)  # seed with dropped phone call
-    for _ in range(100):
-        print(generate_phone_data())
+    for _ in range(4):
+        pprint(generate_phone_data().dict())
 
 
 if __name__ == '__main__':

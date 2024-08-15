@@ -1,20 +1,18 @@
-import datetime
-
-from schemas.string_eos import EOSType, Operator, Consult, Psycho
+from schemas.string_eos import EOSType, Operator, consult, psycho
 
 from schemas.eos_for_ukio_models import *
 from schemas.string_schemas import CallSource, IncidentType, CardStates
-from schemas.phone import Phone
+from schemas.phonecall import PhoneCall
 
 from pydantic import Field
 from schemas import BaseModelWithId
 
-class TransferItem(BaseModelWithId):
-    receptionItemId: str = Field(default_factory=lambda: TransferItem._BaseModelWithId__get_next_id())
 
+class TransferItem(BaseModelWithId):
+    transferItemId: str = Field(default_factory=lambda: TransferItem._BaseModelWithId__get_next_id())
     eosClassTypeId: EOSType
     dtTransfer: datetime.datetime
-    success: bool
+    bSuccess: bool
 
 
 class ReceptionItem(BaseModelWithId):
@@ -30,45 +28,64 @@ class SensorMessage(BaseModelWithId):
 
 
 class Sms(BaseModelWithId):
+    smsId: str = Field(default_factory=lambda: Sms._BaseModelWithId__get_next_id())
     dtSms: datetime.datetime
 
 
 class OtherMessage(BaseModelWithId):
-    operator: Operator = None
+    otherMessageId: str = Field(default_factory=lambda: OtherMessage._BaseModelWithId__get_next_id())
     dtOtherMessage: datetime.datetime
 
 
 class Era(BaseModelWithId):
-    operator: Operator
+    eraId: str = Field(default_factory=lambda: Era._BaseModelWithId__get_next_id())
     dtEra: datetime.datetime = None
-    callType: bool
 
 
-class Card(BaseModelWithId):
-    globalId: str = Field(default_factory=lambda: Card._BaseModelWithId__get_next_id())
-    cardState: CardStates = None
-    incidentType: IncidentType = None
+class CallContent:
+    pass
+
+
+class EosItem:
+    pass
+
+
+class Address:
+    pass
+
+
+class Ukio(BaseModelWithId):
+    globalId: str = Field(default_factory=lambda: Ukio._BaseModelWithId__get_next_id())
+    parentGlobalId: str = None
+    strCardState: CardStates = None
+    strIncidentType: IncidentType = None
     dtSend_: datetime.datetime = datetime.datetime.now()
     dtCreate: datetime.datetime = datetime.datetime.now()
     dtUpdate: datetime.datetime = datetime.datetime.now()
-    casualties: int = None
-    humanThreat: bool = False
-    chs: bool = False
-    callSource: CallSource = None
-    phoneCalls: list[Phone] = None
+    nCasualties: int = None
+    bHumanThreat: bool = False
+    bChs: bool = False
+    strCallSource: CallSource = None
+    bWrong: bool = None
+    bChildPlay: bool
+    PhoneCall: PhoneCall = None
+    PhoneCallID: str = None
+    bRelocated: bool = None
+    strRegionTransfer: str = None
+    CallContent: CallContent = None
+    Address: Address = None
     era: Era = None
     sensorMessages: list[SensorMessage] = None
     sms: list[Sms] = None
     otherMessages: list[OtherMessage] = None
-    transferItem: list[TransferItem] = None
-    receptionItems: list[ReceptionItem] = None
-    card01: Card01 = None
-    card02: Card02 = None
-    card03: Card03 = None
-    card04: Card04 = None
-    cardCommServ: CardCommServ = None
-    cardAT: CardAT = None
-    wrong: bool
-    bChildPlay: bool
-    consult: Consult = None
-    psycho: Psycho = None
+    Psycho: psycho = None
+    Consult: consult = None
+    TransferItem: list[TransferItem] = None
+    ReceptionItems: list[ReceptionItem] = None
+    EosItem: EosItem = None
+    Card01: card01 = None
+    Card02: card02 = None
+    Card03: card03 = None
+    Card04: card04 = None
+    CardAT: cardAT = None
+    CardCommServ: cardCommServ = None
