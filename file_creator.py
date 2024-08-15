@@ -23,7 +23,10 @@ def __generate_xml_from_pydantic(root: ET.Element, model: dict, name='ukio'):
 
         elif isinstance(feature_value, datetime.datetime):
             feature_value = feature_value.isoformat()
-
+        elif feature_name == "phoneCalls":
+            for phone_call in feature_value:
+                __generate_xml_from_pydantic(sub_root, phone_call, name='PhoneCall')
+            continue
         elif isinstance(feature_value, list):
             sub_root_wrapper = ET.SubElement(sub_root, feature_name)
             for value in feature_value:

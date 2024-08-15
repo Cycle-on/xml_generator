@@ -6,9 +6,10 @@ config = load_config()
 
 
 def main():
-    for i in range(5):
+    for i in range(100):
         p = generate_ukio_phone_call_data()
-        create_file_from_model(p, filename=f'{i}', basename='ukio')
+        if i < 100:
+            create_file_from_model(p, filename=f'{i}', basename='ukio')
         # print("_______________________")
 
 

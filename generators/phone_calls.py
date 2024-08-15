@@ -16,66 +16,106 @@ from generators import check_event_probability
 config = load_config()
 
 
-def _generate_phone_date(recall: bool = False):
-    dt_call = datetime.datetime.now()
-
+def generate_phone_date(recall: bool = False, dt_call=datetime.datetime.now(), **kwargs):
+    """
+    dt_call->dt_connect # step 1
+    dt_connect -> phone_call_time # step 2
+    :param recall:
+    :param dt_call:
+    :return:
+    """
     if recall:
-        operator_recall_time = abs(np.random.normal(AVG_TIME_OPERATOR_RECALL_WAITING, OPERATOR_RECALL_WAITING_SCALE))
-        operator_wait_call_answer_time = abs(np.random.normal(AVG_TIME_OPERATOR_WAITING, OPERATOR_TIME_WAITING_SCALE))
+        # we have dropped call and we need some new params
 
-        dt_connect = dt_call + td(seconds=operator_recall_time) + td(seconds=operator_wait_call_answer_time)
+        operator_recall_time = abs(np.random.normal(AVG_TIME_OPERATOR_RECALL_WAITING, OPERATOR_RECALL_WAITING_SCALE))
+        dt_call += td(seconds=operator_recall_time)
+        operator_wait_call_answer_time = abs(np.random.normal(AVG_TIME_OPERATOR_WAITING, OPERATOR_TIME_WAITING_SCALE))
+        dt_connect = dt_call + td(seconds=operator_wait_call_answer_time)
 
     else:
+        # base call from someone
         operator_reaction = abs(np.random.normal(OPERATOR_REACTION_TIME, OPERATOR_REACTION_TIME_SCALE))
-
         dt_connect = dt_call + td(seconds=operator_reaction)
 
-    phone_call_time = abs(np.random.normal(AVERAGE_CARD_CREATE_TIME, CARD_CREATE_TIME_SCALE))
-    random_send_data_delay = random.randint(3, 5)
+    if kwargs.get('step2'):
+        phone_call_time = kwargs.get('step2').second
+
+    else:
+        phone_call_time = abs(np.random.normal(AVERAGE_CARD_CREATE_TIME, CARD_CREATE_TIME_SCALE))
+
     dt_end_call = dt_connect + td(minutes=phone_call_time // 60,
                                   seconds=phone_call_time % 60)
-
+    random_send_data_delay = random.randint(3, 5)
     date_send = dt_end_call + td(seconds=random_send_data_delay)
     return dt_call, dt_connect, dt_end_call, date_send
 
 
-def generate_phone_data() -> PhoneCall:
+def generate_phone_data() -> list[PhoneCall]:
+    phone_calls: list[PhoneCall] = []
     # random constants
     end_call_list = [True, False]
     random.shuffle(end_call_list)
     a, b = end_call_list
-    operator_indicate = False
 
     # operator
-    # random_EOS = list(EOSType)[random.randint(0, len(list(EOSType)) - 1)]
     random_EOS = generate_random_eos_list()
-
-    operator = Operator(eosClassTypeId=random_EOS)
-
+    operator = Operator()
+    dt_call, dt_connect, dt_end_call, date_send = generate_phone_date()
+    date_send2 = None
     # phone date info
-    if check_event_probability(1, 1):  # phone call is dropped
-        # ^ mean 1 percent probability ^
-        operator_indicate = True
-        dt_call, dt_connect, dt_end_call, date_send = _generate_phone_date(recall=True)
-    else:
-        dt_call, dt_connect, dt_end_call, date_send = _generate_phone_date()
-    return PhoneCall(
-        dtSend=date_send,
-        OperatorId=operator.operatorId,
-        bOperatorIniciatied=operator_indicate,
-        dtCall=dt_call,
-        dtConnect=dt_connect,
-        bCallEnded=b,
-        aCallEnded=a,
-        dtEndCall=dt_end_call,
-        # redirectCall=redirect_call
-    )
+    if check_event_probability(config.dropped_call_probability,
+                               config.dropped_call_probability):  # phone call is dropped
+        dropped_timedelta = dt_end_call - dt_connect
+        break_time = random.randint(0, dropped_timedelta.seconds)
+        break_time_delta = td(seconds=break_time % 60, minutes=break_time // 60)
+        step1_timedelta = dt_connect - dt_call
+        dt_end_call = dt_call + break_time_delta
+        if break_time_delta < step1_timedelta:
+            dt_call2, dt_connect2, dt_end_call2, date_send2 = generate_phone_date(
+                recall=True,
+                dt_call=dt_call + break_time_delta,
+                step1=True
+            )
+
+        else:  # step 2: dt_end_call - dt_connect
+            dt_call2, dt_connect2, dt_end_call2, date_send2 = generate_phone_date(
+                recall=True,
+                dt_call=dt_call + break_time_delta,
+                step2=dt_end_call - break_time_delta,
+
+            )
+        phone_calls.append(
+            PhoneCall(
+                dtSend=date_send2,
+                OperatorId=operator.operatorId,
+                bOperatorIniciatied=True,
+                dtCall=dt_call2,
+                dtConnect=dt_connect2,
+                bCallEnded=b,
+                aCallEnded=a,
+                dtEndCall=dt_end_call2,
+
+            )
+        )
+    phone_calls.append(
+        PhoneCall(
+            dtSend=date_send2 if date_send2 is not None else date_send,
+            OperatorId=operator.operatorId,
+            bOperatorIniciatied=False,
+            dtCall=dt_call,
+            dtConnect=dt_connect,
+            bCallEnded=b,
+            aCallEnded=a,
+            dtEndCall=dt_end_call,
+            # redirectCall=redirect_call
+        ))
+    return phone_calls[::-1]
 
 
 def main():
     # random.seed(105)  # seed with dropped phone call
-    for _ in range(4):
-        pprint(generate_phone_data().dict())
+    for _ in range(10):
+        pprint(generate_phone_data())
 
 
 if __name__ == '__main__':

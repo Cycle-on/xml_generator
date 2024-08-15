@@ -59,7 +59,7 @@ class Ukio(BaseModelWithId):
     parentGlobalId: str = None
     strCardState: CardStates = None
     strIncidentType: IncidentType = None
-    dtSend_: datetime.datetime = datetime.datetime.now()
+    dtSend: datetime.datetime = datetime.datetime.now()
     dtCreate: datetime.datetime = datetime.datetime.now()
     dtUpdate: datetime.datetime = datetime.datetime.now()
     nCasualties: int = None
@@ -68,7 +68,7 @@ class Ukio(BaseModelWithId):
     strCallSource: CallSource = None
     bWrong: bool = None
     bChildPlay: bool
-    PhoneCall: PhoneCall = None
+    phoneCalls: list[PhoneCall] = None
     PhoneCallID: str = None
     bRelocated: bool = None
     strRegionTransfer: str = None

@@ -3,7 +3,7 @@ from dataclasses import dataclass
 
 @dataclass
 class Config:
-    pass
+    dropped_call_probability = 100  # in %
 
 
 def load_config():

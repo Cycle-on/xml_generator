@@ -13,7 +13,6 @@ class RedirectCall(BaseModelWithId):
     bConference: bool
     Operator: Operator = None
     OperatorId: str = None
-    # PhoneCall: Phone
     PhoneCallId: str
 
 
@@ -28,3 +27,11 @@ class PhoneCall(BaseModelWithId):
     dtEndCall: datetime.datetime = datetime.datetime.now()
     OperatorId: str = None
     RedirectCall: RedirectCall = None
+
+
+class Call(BaseModelWithId):
+    callId: str = Field(default_factory=lambda: BaseModelWithId._BaseModelWithId__get_next_id())
+    strCallStatus: str = None
+    PhoneCall: PhoneCall
+    PhoneCallId: str
+    dtCall: datetime.datetime

@@ -26,20 +26,16 @@ T = TypeVar(
 )
 
 
-def generate_card_from_eos_model(eos_value_dict: dict) -> T:
+def generate_card_from_eos_model(eos_value_dict: dict, date_from: datetime.datetime) -> T:
+    """
+
+    :param eos_value_dict: dict with eos models from string_eos
+    :param date_from: default == now()
+    :return:
+    """
     if eos_value_dict.get('class'):
         eos_class = eos_value_dict['class']
-        if eos_class == card01:
-            # random_incident = list(IncidentType)[random.randint(0, len(list(IncidentType)) - 1)]
-            return card01(
-                dtCreate=datetime.datetime.now(),
-                # strIncidentType=random_incident,
-            )
-        elif eos_class == cardAT:
-            return cardAT(
-                dtCreate=datetime.datetime.now(),
-            )
-        elif eos_class == 'consult':
+        if eos_class == 'consult':
             start_consult = datetime.datetime.now()
             return consult(
                 dtConsultStart=start_consult,
@@ -55,13 +51,16 @@ def generate_card_from_eos_model(eos_value_dict: dict) -> T:
                 dtPsychoEnd=start_psycho + td(minutes=int(psycho_time), seconds=psycho_time * 60 % 60)
             )
         elif eos_class == card04:
-            dtCreate = datetime.datetime.now()
             return card04(
-                dtCreate=dtCreate,
-                dtConfirm=dtCreate + td(seconds=abs(np.random.normal(AVG_DEPARTMENT_ANSWER, DEPARTMENT_SCALE)))
+                dtCreate=date_from,
+                dtConfirm=date_from + td(seconds=abs(np.random.normal(AVG_DEPARTMENT_ANSWER, DEPARTMENT_SCALE)))
             )
         else:
-            return eos_class(dtCreate=datetime.datetime.now())
+            return eos_class(
+                dtCreate=date_from + td(
+                    seconds=abs(np.random.normal(AVERAGE_EOS_CARD_CREATE_TIME, DEPARTMENT_SCALE))
+                )
+            )
 
 
 def _check_eos_probability(eos_value_dict: dict) -> EOSType:
