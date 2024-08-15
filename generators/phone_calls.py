@@ -1,12 +1,12 @@
 import datetime
 from datetime import timedelta as td
 import random
-from eos_probability import generate_random_eos_list
+from generators.eos_probability import generate_random_eos_list
 import numpy as np
 
 from constants import *
 from config import load_config
-from schemas import Operator, EOSType
+from schemas.string_eos import Operator, EOSType
 from schemas.phone import Phone
 from generators import check_event_probability
 

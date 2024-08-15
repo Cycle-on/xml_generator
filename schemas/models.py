@@ -1,45 +1,51 @@
-from schemas import EOSType, Operator, Consult, Psycho
-from schemas.eos_models import *
+import datetime
+
+from schemas.string_eos import EOSType, Operator, Consult, Psycho
+
+from schemas.eos_for_ukio_models import *
 from schemas.string_schemas import CallSource, IncidentType, CardStates
 from schemas.phone import Phone
 
-from pydantic import BaseModel, Field
+from pydantic import Field
+from schemas import BaseModelWithId
 
+class TransferItem(BaseModelWithId):
+    receptionItemId: str = Field(default_factory=lambda: TransferItem._BaseModelWithId__get_next_id())
 
-class TransferItem(BaseModel):
     eosClassTypeId: EOSType
     dtTransfer: datetime.datetime
     success: bool
 
 
-class ReceptionItem(BaseModel):
+class ReceptionItem(BaseModelWithId):
+    receptionItemId: str = Field(default_factory=lambda: ReceptionItem._BaseModelWithId__get_next_id())
     eosClassTypeId: EOSType
     dtConfirmMessage: datetime.datetime
     bSuccess: bool
 
 
-class SensorMessage(BaseModel):
+class SensorMessage(BaseModelWithId):
     operator: Operator = None
     dtSensorMessage: datetime.datetime
 
 
-class Sms(BaseModel):
+class Sms(BaseModelWithId):
     dtSms: datetime.datetime
 
 
-class OtherMessage(BaseModel):
+class OtherMessage(BaseModelWithId):
     operator: Operator = None
     dtOtherMessage: datetime.datetime
 
 
-class Era(BaseModel):
+class Era(BaseModelWithId):
     operator: Operator
     dtEra: datetime.datetime = None
     callType: bool
 
 
-class Card(BaseModel):
-    globalId: str = Field(default_factory=lambda: Card.__get_next_id())
+class Card(BaseModelWithId):
+    globalId: str = Field(default_factory=lambda: Card._BaseModelWithId__get_next_id())
     cardState: CardStates = None
     incidentType: IncidentType = None
     dtSend_: datetime.datetime = datetime.datetime.now()
@@ -56,23 +62,13 @@ class Card(BaseModel):
     otherMessages: list[OtherMessage] = None
     transferItem: list[TransferItem] = None
     receptionItems: list[ReceptionItem] = None
-    card01: FireDepartment = None
-    card02: Police = None
-    card03: Ambulance = None
-    card04: GasDepartment = None
-    cardCommServ: HouseDepartment = None
-    cardAT: AntiTerror = None
+    card01: Card01 = None
+    card02: Card02 = None
+    card03: Card03 = None
+    card04: Card04 = None
+    cardCommServ: CardCommServ = None
+    cardAT: CardAT = None
     wrong: bool
-    childPlay: bool
+    bChildPlay: bool
     consult: Consult = None
     psycho: Psycho = None
-
-    __id_counter: ClassVar[int] = 0
-
-    @classmethod
-    def __get_next_id(cls):
-        cls.__id_counter += 1
-        return str(cls.__id_counter)
-
-# if __name__ == '__main__':
-#     print(isinstance(Police(dtCreate=datetime.datetime.now()), BaseModel))

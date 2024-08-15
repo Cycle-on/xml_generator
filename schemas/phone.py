@@ -1,12 +1,11 @@
 import datetime
-from typing import ClassVar
 
-from pydantic import BaseModel, Field
+from pydantic import Field
+from schemas import BaseModelWithId
+from schemas.string_eos import Operator
 
-from schemas import Operator
 
-
-class RedirectCall(BaseModel):
+class RedirectCall(BaseModelWithId):
     eosTypeid: str = None
     dtRedirectTime_: datetime.datetime = datetime.datetime.now()
     dtRedirectConfirm_: datetime.datetime
@@ -16,8 +15,8 @@ class RedirectCall(BaseModel):
     conference: bool
 
 
-class Phone(BaseModel):
-    phoneCallId: str = Field(default_factory=lambda: Phone.__get_next_id())
+class Phone(BaseModelWithId):
+    phoneCallId: str = Field(default_factory=lambda: Phone._BaseModelWithId__get_next_id())
     dtSend_: datetime.datetime = datetime.datetime.now()
     operator: Operator = None
     OperatorIniciatied: bool
@@ -27,10 +26,3 @@ class Phone(BaseModel):
     aCallEnded: bool = None
     dtEndCall_: datetime.datetime = datetime.datetime.now()
     redirectCall: RedirectCall = None
-
-    __id_counter: ClassVar[int] = 0
-
-    @classmethod
-    def __get_next_id(cls):
-        cls.__id_counter += 1
-        return str(cls.__id_counter)

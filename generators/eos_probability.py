@@ -5,37 +5,36 @@ from typing import TypeVar
 import numpy as np
 
 from constants import *
-from schemas import EOSType, Operator
-from schemas.eos_models import *
-from schemas import Psycho, Consult
-
+from schemas.string_eos import EOSType, Operator
+from schemas.string_eos import *
+from schemas.string_eos import Psycho, Consult
+from schemas.eos_for_ukio_models import *
 from generators import check_event_probability
 
 T = TypeVar(
     "T",
     Psycho,
     Consult,
-    Ambulance,
-    Police,
-    FireDepartment,
-    GasDepartment,
-    AntiTerror,
-    HouseDepartment
+    Card03,
+    Card02,
+    Card01,
+    Card04,
+    CardAT,
+    CardCommServ
 )
 
 
-def _generate_card_from_eos_model(eos_value_dict: dict) -> T:
+def generate_card_from_eos_model(eos_value_dict: dict) -> T:
     if eos_value_dict.get('class'):
-
         eos_class = eos_value_dict['class']
-        if eos_class == FireDepartment:
-            random_incident = list(IncidentType)[random.randint(0, len(list(IncidentType)) - 1)]
-            return FireDepartment(
+        if eos_class == Card01:
+            # random_incident = list(IncidentType)[random.randint(0, len(list(IncidentType)) - 1)]
+            return Card01(
                 dtCreate=datetime.datetime.now(),
-                strIncidentType=random_incident,
+                # strIncidentType=random_incident,
             )
-        elif eos_class == AntiTerror:
-            return AntiTerror(
+        elif eos_class == CardAT:
+            return CardAT(
                 dtCreate=datetime.datetime.now(),
             )
         elif eos_class == 'Consult':

@@ -1,110 +1,14 @@
-from enum import Enum
+from typing import ClassVar
 
-from constants import *
-from schemas.eos_models import *
-
-
-class EOSType(dict, Enum):
-    s112 = {
-        'name': 'Система 112',
-        'code': "112",
-        'p_min': CONSULT_SHARE_MIN,
-        'p_max': CONSULT_SHARE_MAX,
-        'class': "Consult"
-
-    }
-    fireDepartment = {
-        "name": 'Пожарная Служба',
-        "code": "01",
-        "p_min": FIRE_SHARE_MIN,
-        'p_max': FIRE_SHARE_MAX,
-        "class": FireDepartment
-    }
-    police = {
-        "name": 'Полиция',
-        "code": "02",
-        "p_min": POLICE_SHARE_MIN,
-        'p_max': POLICE_SHARE_MAX,
-        "class": Police
-    }
-    ambulance = {
-        "name": 'Скорая помощь',
-        "code": "03",
-        'p_min': AMBULANCE_SHARE_MIN,
-        'p_max': AMBULANCE_SHARE_MAX,
-        "class": Ambulance
-    }
-
-    gasDepartment = {
-        "name": 'Газовая служба',
-        "code": "04",
-        "p_min": GAS_SHARE_MIN,
-        "p_max": GAS_SHARE_MAX,
-        "class": GasDepartment
-    }
-    antiTerror = {
-        "name": 'Антитеррор',
-        "code": "05",
-        "p_min": CARD_AT_SHARE_MIN,
-        "p_max": CARD_AT_SHARE_MAX,
-        "class": AntiTerror
-    }
-    houseDepartment = {
-        "name": "ЖКХ",
-        "code": "06",
-        "class": HouseDepartment,
-    }
-    edds = {
-        "name": "ЕДДС",
-        "code": "07",
-        "p_min": EDDS_SHARE_MIN,
-        "p_max": EDDS_SHARE_MAX
-    }
-    psycho = {
-        "name": "Психологическая поддержка",
-        "code": "08",
-        "p_min": PSYCHO_SHARE_MIN,
-        'p_max': PSYCHO_SHARE_MAX,
-        "class": "Psycho"
-    }
-    translators = {
-        "name": "Переводчики",
-        "code": "09"
-    }
-    mchs = {
-        "name": "МЧС",
-        "code": "10",
-        "p_min": MCHS_SHARE_MIN,
-        "p_max": MCHS_SHARE_MAX,
-    }
-    rosGuardian = {
-        "name": "Росгвардия",
-        "code": "11",
-        "p_min": ROSGV_SHARE_MIN,
-        "p_max": ROSGV_SHARE_MAX}
-    flyForestSecurity = {
-        "name": 'ФБУ "Авиалесоохрана"',
-        "code": "12",
-        "p_min": AVIALES_SHARE_MIN,
-        "p_max": AVIALES_SHARE_MAX
-    }
-    rosAutoDor = {
-        "name": "Росавтодор",
-        "code": "13",
-        "p_min": ROSAVTODOR_SHARE_MIN,
-        "p_max": ROSAVTODOR_SHARE_MAX,
-    }
-    rosLesXoz = {
-        "name": "Рослесхоз",
-        "code": "14",
-        "p_min": ROSLESHOZ_SHARE_MIN,
-        "p_max": ROSLESHOZ_SHARE_MAX
-    }
+from pydantic import BaseModel, Field
 
 
-class Operator(BaseModel):
-    operatorId: str = Field(default_factory=lambda: Operator.__get_next_id())
-    eosClassTypeId: list[EOSType] = None
+class BaseModelWithId(BaseModel):
+    """
+    BaseModel from pydantic, just with id counter for every inherited class
+    simple example:
+         ClassNameId: str = Field(default_factory=lambda: ClassNameId._BaseModelWithId__get_next_id())
+    """
 
     __id_counter: ClassVar[int] = 0
 
@@ -114,37 +18,19 @@ class Operator(BaseModel):
         return str(cls.__id_counter)
 
 
-class Consult(BaseModel):
-    consultId: str = Field(default_factory=lambda: Consult.__get_next_id())
-    operator: Operator
-    dtConsultStart: datetime.datetime
-    dtConsultEnd: datetime.datetime
-
-    __id_counter: ClassVar[int] = 0
-
-    @classmethod
-    def __get_next_id(cls):
-        cls.__id_counter += 1
-        return str(cls.__id_counter)
+"""class C1(BaseModelWithId):
+    id: str = Field(default_factory=lambda: C1._BaseModelWithId__get_next_id())
+    a1: int
+    a2: str
 
 
-class Psycho(BaseModel):
-    psychoId: str = Field(default_factory=lambda: Psycho.__get_next_id())
-    operator: Operator
-    bPsychoInHouse: bool
-    dtPsychoStart: datetime.datetime
-    dtPsychoEnd: datetime.datetime
-
-    __id_counter: ClassVar[int] = 0
-
-    @classmethod
-    def __get_next_id(cls):
-        cls.__id_counter += 1
-        return str(cls.__id_counter)
+class C2(BaseModelWithId):
+    id: str = Field(default_factory=lambda: C2._BaseModelWithId__get_next_id())
 
 
-if __name__ == '__main__':
-    o1 = Operator(
-        eosClassTypeId=[EOSType.s112]
-    )
-    print(o1.eosClassTypeId)
+c1_1 = C1(a1=1, a2='mew')
+c1_2 = C1(a1=1, a2='str')
+c2_1 = C2()
+c2_2 = C2()
+print(c1_1.id, c2_2.id, c2_1.id, c2_2.id)
+"""
