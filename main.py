@@ -1,16 +1,19 @@
+import os
+
 from config import load_config
-from generators.phone_calls import generate_phone_data
 from file_creator import create_file_from_model
-from generators.ukio import generate_ukio_phone_call_data
+from generators.ukio_generator import generate_ukio_phone_call_data
+from config.dirs import create_dirs
+
 config = load_config()
 
 
 def main():
-    for i in range(100):
-        p = generate_ukio_phone_call_data()
-        if i < 100:
-            create_file_from_model(p, filename=f'{i}', basename='ukio')
-        # print("_______________________")
+    create_dirs()
+    for i in range(config.files_count):
+        u, c = generate_ukio_phone_call_data()
+        create_file_from_model(u, filename=os.path.join('ukios', str(i)), basename='ukio')
+        create_file_from_model(c, filename=os.path.join('calls', str(i)), basename='calls')
 
 
 if __name__ == '__main__':

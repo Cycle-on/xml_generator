@@ -4,7 +4,7 @@ from schemas.eos_for_ukio_models import *
 from schemas.string_schemas import CallSource, IncidentType, CardStates
 from schemas.phonecall import PhoneCall
 
-from pydantic import Field
+from pydantic import Field, BaseModel
 from schemas import BaseModelWithId
 
 
@@ -68,8 +68,8 @@ class Ukio(BaseModelWithId):
     strCallSource: CallSource = None
     bWrong: bool = None
     bChildPlay: bool
-    phoneCalls: list[PhoneCall] = None
-    PhoneCallID: str = None
+    phoneCall: list[PhoneCall] = None
+    PhoneCallID: list[str] = None
     bRelocated: bool = None
     strRegionTransfer: str = None
     CallContent: CallContent = None
@@ -89,3 +89,7 @@ class Ukio(BaseModelWithId):
     Card04: card04 = None
     CardAT: cardAT = None
     CardCommServ: cardCommServ = None
+
+
+class Ukios(BaseModel):
+    Ukio: list[Ukio]

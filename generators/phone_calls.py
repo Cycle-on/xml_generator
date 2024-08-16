@@ -2,7 +2,6 @@ import datetime
 from datetime import timedelta as td
 import random
 from pprint import pprint
-from typing import TypeVar
 
 from generators.eos_probability import generate_random_eos_list
 import numpy as np
@@ -10,10 +9,20 @@ import numpy as np
 from constants import *
 from config import load_config
 from schemas.string_eos import Operator
-from schemas.phonecall import PhoneCall
+from schemas.phonecall import PhoneCall, Call
 from generators import check_event_probability
+from schemas.string_schemas import CardStates
 
 config = load_config()
+
+
+def generate_call_from_phone_call(phone_call: PhoneCall) -> Call:
+    return Call(
+        strCallStatus=random.choice(list(CardStates)),
+        PhoneCall=phone_call,
+        PhoneCallID=phone_call.phoneCallId,
+        dtCall=phone_call.dtCall,
+    )
 
 
 def generate_phone_date(recall: bool = False, dt_call=datetime.datetime.now(), **kwargs):
