@@ -4,8 +4,8 @@ from pprint import pprint
 from datetime import timedelta as td
 
 from config import load_config
-from generators.eos_probability import generate_card_from_eos_model, generate_random_eos_list
-from generators.phone_calls import generate_phone_data, generate_phone_date, generate_call_from_phone_call
+from generators.eos_probability import generate_card_from_eos_model, generate_random_eos_list, T
+from generators.phone_calls import generate_phone_data, generate_call_from_phone_call
 from schemas.string_eos import EOSType, consult, psycho
 from schemas.ukio_model import Ukio
 from schemas.phonecall import PhoneCall, RedirectCall, Calls
@@ -17,7 +17,13 @@ config = load_config()
 def _check_ukio_cards(
         eos_list: list[EOSType],
         dt_send: datetime.datetime = datetime.datetime.now()
-):
+) -> dict[str, T]:
+    """
+    convert eos_dict to the pydantic model / from eos_for_ukio_models
+    :param eos_list: list with eos_dicts from string_eos(can be created in generate_random_eos_list())
+    :param dt_send: ukio card date_send
+    :return:  dict with eos_models
+    """
     eos_dict = {}
     for eos in eos_list:
         card = generate_card_from_eos_model(eos, dt_send)
@@ -26,7 +32,11 @@ def _check_ukio_cards(
     return eos_dict
 
 
-def generate_ukio_phone_call_data():
+def generate_ukio_phone_call_data() -> Ukio:
+    """
+    creating ukio card with call_source = mobile phone
+    :return: Ukio model
+    """
     ukio_dict = {}
     card_state = random.choice(list(CardStates))
     incident_type = random.choice(list(IncidentType))
@@ -67,10 +77,6 @@ def generate_ukio_phone_call_data():
         Call=[generate_call_from_phone_call(phone_call) for phone_call in phone_calls],
         dtSend=phone_calls[-1].dtSend
     )
-
-
-def generate_card():
-    pass
 
 
 def main():

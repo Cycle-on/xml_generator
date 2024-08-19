@@ -6,6 +6,10 @@ config = load_config()
 
 
 def create_dirs() -> list[PosixPath]:
+    """
+    creating output directories on start-up
+    :return: the list with directories' paths
+    """
     files_dir = Path(config.output_directory_name)
     logs_dir = Path(config.logs_directory_name)
     logs_xml_dir = Path(os.path.join(config.logs_directory_name, 'xml_generator'))

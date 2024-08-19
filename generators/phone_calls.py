@@ -27,10 +27,14 @@ def generate_call_from_phone_call(phone_call: PhoneCall) -> Call:
 
 def generate_phone_date(recall: bool = False, dt_call=datetime.datetime.now(), **kwargs):
     """
+    creating date params to PhoneCall model
     dt_call->dt_connect # step 1
     dt_connect -> phone_call_time # step 2
     :param recall:
     :param dt_call:
+    :param kwargs: dict with step1, step2
+    ** can change to one step, with True or datetime and check it with isinstance
+    because it has different types
     :return:
     """
     if recall:
@@ -60,6 +64,12 @@ def generate_phone_date(recall: bool = False, dt_call=datetime.datetime.now(), *
 
 
 def generate_phone_data() -> list[PhoneCall]:
+    """
+    creating PhoneCall,
+    if len(list) == 0, phone call not dropped,
+    if len(list) == 1, phone call is dropped
+    :return: list with phone calls models
+    """
     phone_calls: list[PhoneCall] = []
     # random constants
     end_call_list = [True, False]

@@ -19,10 +19,10 @@ def __up_first_verb(s: str) -> str:
 def __generate_xml_from_pydantic(root: ET.Element, model: dict, name='ukio'):
     """
     recursive subtree generator from dicts
-    adding different type subtrees to root
-    :param root:
-    :param model:
-    :param name:
+    *adding different type subtrees to root
+    :param root: sub_root connecting to root
+    :param model: dict with property names and values
+    :param name:name in the xml file
     :return:
     """
     sub_root = ET.SubElement(root, name)
@@ -63,7 +63,7 @@ def __generate_xml_from_pydantic(root: ET.Element, model: dict, name='ukio'):
 
 def create_file_from_model(model: BaseModel, filename: str = 'output', basename='ukio') -> str:
     """
-    function create xml file from pydantic model
+    function creates xml file from a pydantic model
     :param basename:
     :param filename: string format
     :param model: pydantic model

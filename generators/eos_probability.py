@@ -1,13 +1,8 @@
-import datetime
 from datetime import timedelta as td
-import random
-from pprint import pprint
 from typing import TypeVar
 
 import numpy as np
 
-from constants import *
-from schemas.string_eos import EOSType, Operator
 from schemas.string_eos import *
 from schemas.string_eos import psycho, consult
 from schemas.eos_for_ukio_models import *
@@ -28,7 +23,7 @@ T = TypeVar(
 
 def generate_card_from_eos_model(eos_value_dict: dict, date_from: datetime.datetime) -> T:
     """
-
+    take eos_class from string_eos and converts it to the model in eos_for_ukio_models
     :param eos_value_dict: dict with eos models from string_eos
     :param date_from: default == now()
     :return:
@@ -63,14 +58,22 @@ def generate_card_from_eos_model(eos_value_dict: dict, date_from: datetime.datet
             )
 
 
-def _check_eos_probability(eos_value_dict: dict) -> EOSType:
+def _check_eos_probability(eos_value_dict: dict) -> bool:
+    """
+    takes string_eos and check eos probability by p_min and p_max
+    :param eos_value_dict: dict from string_eos
+    :return:
+    """
     if check_event_probability(EOS_SHARE_MIN, EOS_SHARE_MAX):
-        if check_event_probability(eos_value_dict['p_min'], eos_value_dict['p_max']):
-            return True
-    return False
+        return check_event_probability(eos_value_dict['p_min'], eos_value_dict['p_max'])
 
 
 def generate_random_eos_list() -> list[EOSType]:
+    """
+    creates a list with random eos dicts from string_eos
+
+    :return:
+    """
     eos_list = []
     for eos_obj in EOSType:
         if eos_obj.value.get('p_min') is not None and eos_obj.value.get('class'):
@@ -79,7 +82,7 @@ def generate_random_eos_list() -> list[EOSType]:
     return eos_list
 
 
-# consult seed 30r
+# consult seed 30
 # Psycho seed 86
 # random.seed(30)
 
