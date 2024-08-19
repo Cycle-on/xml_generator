@@ -66,6 +66,7 @@ def generate_ukio_phone_call_data() -> Ukio:
     ukio_dict['cardState'] = card_state
     ukio_dict['incidentType'] = incident_type
     ukio_dict['dtSend'] = phone_calls[-1].dtSend
+    ukio_dict['dtUpdate'] = phone_calls[-1].dtSend
     ukio_dict['dtCreate'] = phone_calls[-1].dtEndCall
     ukio_dict['callSource'] = call_source
     ukio_dict['wrong'] = wrong

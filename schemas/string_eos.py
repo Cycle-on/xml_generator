@@ -1,6 +1,6 @@
 from enum import Enum
 
-from constants import *
+from config.config_data import *
 from schemas.eos_for_ukio_models import *
 
 

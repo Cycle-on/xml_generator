@@ -25,7 +25,7 @@
                 <sequence>
                     <element name="card04Id" type="string" minOccurs="1" maxOccurs="1"/>
                     <element name="dtCreate" type="dateTime" minOccurs="1" maxOccurs="1"/>
-                    <element name="dtConfirm" type="dateTime" minOccurs="0" maxOccurs="1"/
+                    <element name="dtConfirm" type="dateTime" minOccurs="0" maxOccurs="1"/>
                 </sequence>
             </complexType>
             <complexType name="Card03">

@@ -1,4 +1,3 @@
-import datetime
 from datetime import timedelta as td
 import random
 from pprint import pprint
@@ -6,7 +5,7 @@ from pprint import pprint
 from generators.eos_probability import generate_random_eos_list
 import numpy as np
 
-from constants import *
+from config.config_data import *
 from config import load_config
 from schemas.string_eos import Operator
 from schemas.phonecall import PhoneCall, Call
@@ -25,7 +24,7 @@ def generate_call_from_phone_call(phone_call: PhoneCall) -> Call:
     )
 
 
-def generate_phone_date(recall: bool = False, dt_call=datetime.datetime.now(), **kwargs):
+def generate_phone_date(recall: bool = False, dt_call=date_zero, **kwargs):
     """
     creating date params to PhoneCall model
     dt_call->dt_connect # step 1
@@ -54,7 +53,7 @@ def generate_phone_date(recall: bool = False, dt_call=datetime.datetime.now(), *
         phone_call_time = kwargs.get('step2').second
 
     else:
-        phone_call_time = abs(np.random.normal(AVERAGE_CARD_CREATE_TIME, CARD_CREATE_TIME_SCALE))
+        phone_call_time = abs(np.random.normal(AVERAGE_CALL_TIME, CARD_CREATE_TIME_SCALE))
 
     dt_end_call = dt_connect + td(minutes=phone_call_time // 60,
                                   seconds=phone_call_time % 60)
