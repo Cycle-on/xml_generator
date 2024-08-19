@@ -1,8 +1,13 @@
 import datetime
+import os
+
+PHONE_CALL_STRUCTURE_PROBABILITY = 50
 
 drop_call_probability: int = 100  # percents from 0 to 100
-files_count: int = 1
-output_directory_name: str = f'files_{datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}'
+files_count: int = 10
+base_directory_name = 'files'
+output_directory_name: str = os.path.join(base_directory_name,
+                                          f'file_{datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}')
 logs_directory_name: str = 'logs'
 date_zero = datetime.datetime(  # can fill like: datetime.datetime.now()
     year=2023,

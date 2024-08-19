@@ -39,4 +39,4 @@ class Call(BaseModelWithId):
 
 class Calls(BaseModel):
     Call: list[Call]
-    dtSend: datetime.datetime
+    dtSend: datetime.datetime = datetime.datetime.now()

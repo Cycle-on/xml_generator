@@ -92,4 +92,4 @@ class Ukio(BaseModelWithId):
 
 
 class Ukios(BaseModel):
-    Ukio: list[Ukio]
+    Ukios: list[Ukio]

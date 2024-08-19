@@ -8,7 +8,7 @@ from generators.eos_probability import generate_card_from_eos_model, generate_ra
 from generators.phone_calls import generate_phone_data, generate_call_from_phone_call
 from schemas.string_eos import EOSType, consult, psycho
 from schemas.ukio_model import Ukio
-from schemas.phonecall import PhoneCall, RedirectCall, Calls
+from schemas.phonecall import PhoneCall, RedirectCall, Calls, Call
 from schemas.string_schemas import IncidentType, CardStates, CallSource
 
 config = load_config()
@@ -50,8 +50,8 @@ def generate_ukio_phone_call_data() -> Ukio:
         if not isinstance(ukio_eos_card, psycho) and not isinstance(ukio_eos_card, consult):
             phone_calls[-1].RedirectCall = RedirectCall(
                 eosClassTypeId=ukio_eos_card.__class__.__name__,
-                dtRedirectTime=ukio_eos_card.dtCreate,
-                dtRedirectConfirm=ukio_eos_card.dtCreate + td(seconds=random.randint(10, 40)),
+                dtRedirectTime=ukio_eos_card.dtCreate + td(seconds=random.randint(10, 40)),
+                dtRedirectConfirm=ukio_eos_card.dtCreate,
                 redirectCancel=False,
                 bConference=False,
                 PhoneCallId=phone_calls[-1].phoneCallId
@@ -59,7 +59,6 @@ def generate_ukio_phone_call_data() -> Ukio:
 
     ukio_dict |= ukio_eos_cards
 
-    # casualties = None  # get from config
     wrong = False
     child_play = False
 
@@ -67,17 +66,15 @@ def generate_ukio_phone_call_data() -> Ukio:
     ukio_dict['incidentType'] = incident_type
     ukio_dict['dtSend'] = phone_calls[-1].dtSend
     ukio_dict['dtUpdate'] = phone_calls[-1].dtSend
-    ukio_dict['dtCreate'] = phone_calls[-1].dtEndCall
+    ukio_dict['dtCreate'] = phone_calls[-1].dtConnect
     ukio_dict['callSource'] = call_source
     ukio_dict['wrong'] = wrong
     ukio_dict['bChildPlay'] = child_play
+
     ukio_dict['phoneCall'] = phone_calls
     ukio_dict['PhoneCallID'] = [phone_call.phoneCallId for phone_call in phone_calls]
 
-    return Ukio(**ukio_dict), Calls(
-        Call=[generate_call_from_phone_call(phone_call) for phone_call in phone_calls],
-        dtSend=phone_calls[-1].dtSend
-    )
+    return Ukio(**ukio_dict), generate_call_from_phone_call(phone_calls[0])
 
 
 def main():

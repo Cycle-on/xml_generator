@@ -102,6 +102,7 @@ def generate_phone_data() -> list[PhoneCall]:
                 step2=dt_end_call - break_time_delta,
 
             )
+
         phone_calls.append(
             PhoneCall(
                 dtSend=date_send2,
@@ -109,12 +110,23 @@ def generate_phone_data() -> list[PhoneCall]:
                 bOperatorIniciatied=True,
                 dtCall=dt_call2,
                 dtConnect=dt_connect2,
-                bCallEnded=b,
-                aCallEnded=a,
+                bCallEnded=True,
+                aCallEnded=False,
                 dtEndCall=dt_end_call2,
 
             )
         )
+    else:
+        if check_event_probability(
+                PHONE_CALL_STRUCTURE_PROBABILITY,
+                PHONE_CALL_STRUCTURE_PROBABILITY
+        ):
+            # making structures in ukio and to call add phone call id
+            pass
+        else:
+            # make structure in calls and in ukio add phonecall id
+            pass
+
     phone_calls.append(
         PhoneCall(
             dtSend=date_send2 if date_send2 is not None else date_send,

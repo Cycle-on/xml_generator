@@ -34,10 +34,13 @@ def __generate_xml_from_pydantic(root: ET.Element, model: dict, name='ukio'):
             __generate_xml_from_pydantic(sub_root, feature_value, name=feature_name)
             continue
 
-        elif feature_name in ("phoneCall", "Call"):
-
+        elif feature_name in ("phoneCall", "Call", "Ukio", "Ukios", 'calls'):
             for phone_call in feature_value:
-                __generate_xml_from_pydantic(sub_root, phone_call, name=__up_first_verb(feature_name))
+
+                if feature_name == 'Ukios':
+                    __generate_xml_from_pydantic(sub_root, phone_call, name=__up_first_verb(feature_name)[:-1])
+                else:
+                    __generate_xml_from_pydantic(sub_root, phone_call, name=__up_first_verb(feature_name))
             continue
 
         elif isinstance(feature_value, list):
