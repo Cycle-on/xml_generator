@@ -1,22 +1,31 @@
 import datetime
 import os
 
-PHONE_CALL_STRUCTURE_PROBABILITY = 50
+CHILD_PLAY_UKIO_PROBABILITY = 1  # from 0 to 100
+WRONG_CALLS_PROBABILITY = 1  # from 0 to 100
 
-drop_call_probability: int = 100  # percents from 0 to 100
-files_count: int = 10
+OPERATOR_WAIT_ANSWER_RECALL = 60  # seconds
+MAX_RECALL_ATTEMPTS = 2
+
+PHONE_CALL_STRUCTURE_PROBABILITY_IN_UKIO = 50
+
+drop_call_probability: int = 50  # percents from 0 to 100
+files_count: int = 100
 base_directory_name = 'files'
-output_directory_name: str = os.path.join(base_directory_name,
-                                          f'file_{datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}')
-logs_directory_name: str = 'logs'
-date_zero = datetime.datetime(  # can fill like: datetime.datetime.now()
+
+output_directory_name: str = os.path.join(
+    base_directory_name,
+    f'file_{datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}'
+)
+logs_directory_name: str = 'errors'
+date_zero = datetime.datetime(  # can fill: datetime.datetime.now()
     year=2023,
     month=12,
     day=23,
-    hour=13,
-    minute=35,
-    second=52,
-    microsecond=252_329  # microsecond must be in 0..999999
+    hour=10,
+    minute=30,
+    second=1,
+    microsecond=252_329  # microsecond must be in 0...999999
 )
 
 # constants
@@ -85,6 +94,7 @@ CONSULT_SHARE_MAX = 10
 
 PSYCHO_SHARE_MIN = 0
 PSYCHO_SHARE_MAX = 5
+
 # other eos timings
 CONSULT_TIME = 120  # seconds
 

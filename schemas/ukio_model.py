@@ -2,14 +2,14 @@ from schemas.string_eos import EOSType, Operator, consult, psycho
 
 from schemas.eos_for_ukio_models import *
 from schemas.string_schemas import CallSource, IncidentType, CardStates
-from schemas.phonecall import PhoneCall
+from schemas.phonecall import phoneCall
 
 from pydantic import Field, BaseModel
 from schemas import BaseModelWithId
 
 
-class TransferItem(BaseModelWithId):
-    transferItemId: str = Field(default_factory=lambda: TransferItem._BaseModelWithId__get_next_id())
+class transferItem(BaseModelWithId):
+    transferItemId: str = Field(default_factory=lambda: transferItem._BaseModelWithId__get_next_id())
     eosClassTypeId: EOSType
     dtTransfer: datetime.datetime
     bSuccess: bool
@@ -68,7 +68,7 @@ class Ukio(BaseModelWithId):
     strCallSource: CallSource = None
     bWrong: bool = None
     bChildPlay: bool
-    phoneCall: list[PhoneCall] = None
+    PhoneCall: list[phoneCall] = None
     PhoneCallID: list[str] = None
     bRelocated: bool = None
     strRegionTransfer: str = None
@@ -80,7 +80,7 @@ class Ukio(BaseModelWithId):
     otherMessages: list[OtherMessage] = None
     Psycho: psycho = None
     Consult: consult = None
-    TransferItem: list[TransferItem] = None
+    TransferItem: list[transferItem] = None
     ReceptionItems: list[ReceptionItem] = None
     EosItem: EosItem = None
     Card01: card01 = None

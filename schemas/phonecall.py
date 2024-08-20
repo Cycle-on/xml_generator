@@ -5,7 +5,7 @@ from schemas import BaseModelWithId
 from schemas.string_eos import Operator
 
 
-class RedirectCall(BaseModelWithId):
+class redirectCall(BaseModelWithId):
     eosClassTypeId: str = None
     dtRedirectTime: datetime.datetime = datetime.datetime.now()
     dtRedirectConfirm: datetime.datetime
@@ -16,24 +16,24 @@ class RedirectCall(BaseModelWithId):
     PhoneCallId: str
 
 
-class PhoneCall(BaseModelWithId):
-    phoneCallId: str = Field(default_factory=lambda: PhoneCall._BaseModelWithId__get_next_id())
-    dtSend: datetime.datetime = datetime.datetime.now()
+class phoneCall(BaseModelWithId):
+    phoneCallId: str = Field(default_factory=lambda: phoneCall._BaseModelWithId__get_next_id())
+    dtSend: datetime.datetime = None
     bOperatorIniciatied: bool
     dtCall: datetime.datetime = datetime.datetime.now()
-    dtConnect: datetime.datetime | str = datetime.datetime.now()
+    dtConnect: datetime.datetime | str = None
     bCallEnded: bool = None
     aCallEnded: bool = None
     dtEndCall: datetime.datetime = datetime.datetime.now()
     OperatorId: str = None
-    RedirectCall: RedirectCall = None
+    RedirectCall: redirectCall | None = None
 
 
 class Call(BaseModelWithId):
     callId: str = Field(default_factory=lambda: BaseModelWithId._BaseModelWithId__get_next_id())
     strCallStatus: str = None
-    PhoneCall: PhoneCall
-    PhoneCallID: str
+    PhoneCall: phoneCall = None
+    PhoneCallID: str | None = None
     dtCall: datetime.datetime
 
 
