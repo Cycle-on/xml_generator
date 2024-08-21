@@ -10,7 +10,7 @@ MAX_RECALL_ATTEMPTS = 2
 PHONE_CALL_STRUCTURE_PROBABILITY_IN_UKIO = 50
 
 drop_call_probability: int = 50  # percents from 0 to 100
-files_count: int = 100
+files_count: int = 1000
 base_directory_name = 'files'
 
 output_directory_name: str = os.path.join(

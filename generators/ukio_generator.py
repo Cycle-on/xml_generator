@@ -76,12 +76,12 @@ def generate_ukio_phone_call_data() -> Ukio:
 
     if check_event_probability(CHILD_PLAY_UKIO_PROBABILITY):
         ukio_dict['cardState'] = "child play"
-        ukio_dict['wrong'] = True
+        ukio_dict['bWrong'] = True
         ukio_dict['bChildPlay'] = True
 
     elif check_event_probability(WRONG_CALLS_PROBABILITY):
         ukio_dict['cardState'] = "wrong"
-        ukio_dict['wrong'] = True
+        ukio_dict['bWrong'] = True
         ukio_dict['bChildPlay'] = False
 
     else:
@@ -97,7 +97,7 @@ def generate_ukio_phone_call_data() -> Ukio:
     ukio_dict['dtCreate'] = phone_calls[-1].dtConnect
 
     ukio_dict['PhoneCall'] = []
-    if phone_calls[-1].RedirectCall and not ukio_dict['wrong']:
+    if phone_calls[-1].RedirectCall and not ukio_dict['bWrong']:
         # creating transfer item
         ukio_dict['TransferItem'] = generate_transfer_items_by_ukio_cards(eos_type_list, phone_calls[-1].dtSend)
 
