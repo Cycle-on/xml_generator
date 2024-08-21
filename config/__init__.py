@@ -22,7 +22,7 @@ class Config(BaseModel):
 
 def load_config() -> Config:
     return Config(
-        dropped_call_probability=drop_call_probability,
+        dropped_call_probability=DROP_CALL_PROBABILITY,
         files_count=files_count,
         logs_directory_name=logs_directory_name,
         output_directory_name=output_directory_name,

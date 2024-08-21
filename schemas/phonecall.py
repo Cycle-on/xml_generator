@@ -1,6 +1,8 @@
 import datetime
 
 from pydantic import Field, BaseModel
+
+from constants import files_prefix
 from schemas import BaseModelWithId
 from schemas.string_eos import Operator
 
@@ -30,11 +32,12 @@ class phoneCall(BaseModelWithId):
 
 
 class Call(BaseModelWithId):
-    callId: str = Field(default_factory=lambda: BaseModelWithId._BaseModelWithId__get_next_id())
+    callId: str = Field(default_factory=lambda: f"{files_prefix}_{BaseModelWithId._BaseModelWithId__get_next_id()}")
     strCallStatus: str = None
     PhoneCall: phoneCall = None
     PhoneCallID: str | None = None
     dtCall: datetime.datetime
+    dtSend: datetime.datetime = None
 
 
 class Calls(BaseModel):

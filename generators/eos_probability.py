@@ -25,13 +25,13 @@ def generate_card_from_eos_model(eos_value_dict: dict, date_from: datetime.datet
     """
     take eos_class from string_eos and converts it to the model in eos_for_ukio_models
     :param eos_value_dict: dict with eos models from string_eos
-    :param date_from: default == now()
+    :param date_from
     :return:
     """
     if eos_value_dict.get('class'):
         eos_class = eos_value_dict['class']
         if eos_class == 'consult':
-            start_consult = datetime.datetime.now()
+            start_consult = date_from
             return consult(
                 dtConsultStart=start_consult,
                 dtConsultEnd=start_consult + td(minutes=CONSULT_TIME // 60, seconds=CONSULT_TIME % 60)
@@ -39,7 +39,7 @@ def generate_card_from_eos_model(eos_value_dict: dict, date_from: datetime.datet
 
         elif eos_class == 'psycho':
 
-            start_psycho = datetime.datetime.now()
+            start_psycho = date_from
             psycho_time = round(np.random.normal(AVG_PSYCHO_TIME, PSYCHO_SCALE), 3)
             return psycho(
                 dtPsychoStart=start_psycho,
@@ -53,7 +53,7 @@ def generate_card_from_eos_model(eos_value_dict: dict, date_from: datetime.datet
         else:
             return eos_class(
                 dtCreate=date_from + td(
-                    seconds=abs(np.random.normal(AVERAGE_EOS_CARD_CREATE_TIME, DEPARTMENT_SCALE))
+                    seconds=abs(np.random.normal(AVERAGE_EOS_CARD_CREATE_TIME, EOS_CARD_CREATE_SCALE))
                 )
             )
 

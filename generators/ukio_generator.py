@@ -7,19 +7,42 @@ from datetime import timedelta as td
 from config import load_config
 from config.config_data import *
 from generators.eos_probability import generate_card_from_eos_model, generate_random_eos_list, T
-from generators.phonecall_generator import generate_phone_data, generate_call_from_phone_call
+from generators.phonecall_generator import generate_phone_data
 from generators import check_event_probability
 from schemas.string_eos import EOSType, consult, psycho
 from schemas.ukio_model import Ukio, transferItem
-from schemas.phonecall import phoneCall, redirectCall
+from schemas.phonecall import phoneCall, redirectCall, Call
 from schemas.string_schemas import IncidentType, CardStates, CallSource
 
 config = load_config()
 
 
+def generate_call_from_phone_call(phone_call: phoneCall | datetime.datetime, rtype='') -> Call:
+    if rtype == 'wrong':
+        return Call(
+            strCallStatus='status1',
+            dtCall=phone_call,
+        )
+
+    phone_call_without_end_params = deepcopy(phone_call)
+
+    phone_call_without_end_params.aCallEnded = None
+    phone_call_without_end_params.bCallEnded = None
+    phone_call_without_end_params.RedirectCall = None
+    phone_call_without_end_params.dtEndCall = None
+    phone_call_without_end_params.bOperatorIniciatied = None
+
+    return Call(
+        strCallStatus=random.choice(list(CardStates)),
+        PhoneCall=phone_call_without_end_params,
+        dtCall=phone_call.dtCall,
+        dtSend=phone_call.dtCall + td(seconds=random.randint(3, 10))
+    )
+
+
 def _check_ukio_cards(
         eos_list: list[EOSType],
-        dt_send: datetime.datetime = datetime.datetime.now()
+        dt_send: datetime.datetime
 ) -> dict[str, T]:
     """
     convert eos_dict to the pydantic model / from eos_for_ukio_models
@@ -35,21 +58,16 @@ def _check_ukio_cards(
     return eos_dict
 
 
-def generate_transfer_items_by_ukio_cards(ukio_eos_cards: list[EOSType],
-                                          transfer_date: datetime.datetime) -> list[transferItem]:
-    transfers: list[transferItem] = []
-    for eos in ukio_eos_cards:
-        transfers.append(
-            transferItem(
-                eosClassTypeId=eos,
-                dtTransfer=transfer_date,
-                bSuccess=True
-            )
-        )
-    return transfers
+def generate_transfer_items_by_ukio_cards(eos_id: str,
+                                          transfer_date: datetime.datetime) -> transferItem:
+    return transferItem(
+        eosClassTypeId=eos_id,
+        dtTransfer=transfer_date,
+        bSuccess=True
+    )
 
 
-def generate_ukio_phone_call_data() -> Ukio:
+def generate_ukio_phone_call_data(call_date: datetime.datetime) -> Ukio:
     """
     creating ukio card with call_source = mobile phone
     :return: Ukio model
@@ -59,20 +77,9 @@ def generate_ukio_phone_call_data() -> Ukio:
     incident_type = random.choice(list(IncidentType))
     call_source = CallSource.mobile_phone
 
-    phone_calls: list[phoneCall] = generate_phone_data()
+    phone_calls: list[phoneCall] = generate_phone_data(call_date)
     eos_type_list = generate_random_eos_list()
     ukio_eos_cards = _check_ukio_cards(eos_type_list, phone_calls[-1].dtSend)
-    if ukio_eos_cards:
-        ukio_eos_card = ukio_eos_cards[random.choice(list(ukio_eos_cards.keys()))]
-        if not isinstance(ukio_eos_card, psycho) and not isinstance(ukio_eos_card, consult):
-            phone_calls[-1].RedirectCall = redirectCall(
-                eosClassTypeId=ukio_eos_card.__class__.__name__,
-                dtRedirectTime=ukio_eos_card.dtCreate + td(seconds=random.randint(10, 40)),
-                dtRedirectConfirm=ukio_eos_card.dtCreate,
-                redirectCancel=False,
-                bConference=False,
-                PhoneCallId=phone_calls[-1].phoneCallId
-            )
 
     if check_event_probability(CHILD_PLAY_UKIO_PROBABILITY):
         ukio_dict['cardState'] = "child play"
@@ -83,6 +90,8 @@ def generate_ukio_phone_call_data() -> Ukio:
         ukio_dict['cardState'] = "wrong"
         ukio_dict['bWrong'] = True
         ukio_dict['bChildPlay'] = False
+    elif check_event_probability(CALLS_WITHOUT_ANSWER_PROBABILITY):
+        return None, generate_call_from_phone_call(call_date, 'wrong')
 
     else:
         ukio_dict['cardState'] = card_state
@@ -91,38 +100,33 @@ def generate_ukio_phone_call_data() -> Ukio:
         ukio_dict['bChildPlay'] = False
         ukio_dict |= ukio_eos_cards
 
+    if ukio_eos_cards and not ukio_dict['bWrong']:
+        ukio_eos_card = ukio_eos_cards[random.choice(list(ukio_eos_cards.keys()))]
+        if not isinstance(ukio_eos_card, psycho) and not isinstance(ukio_eos_card, consult):
+            eos_id = ''
+            for eos_card in EOSType:
+                if eos_card.get('class') == type(ukio_eos_card):
+                    eos_id = str(eos_card['id'])
+
+            phone_calls[-1].RedirectCall = redirectCall(
+                eosClassTypeId=eos_id,
+                dtRedirectTime=ukio_eos_card.dtCreate + td(seconds=random.randint(10, 40)),
+                dtRedirectConfirm=ukio_eos_card.dtCreate,
+                redirectCancel=False,
+                bConference=False,
+                PhoneCallId=phone_calls[-1].phoneCallId
+            )
+            # creating transfer item
+            ukio_dict['TransferItem'] = [generate_transfer_items_by_ukio_cards(eos_id, phone_calls[-1].dtSend)]
+
     ukio_dict['callSource'] = call_source
     ukio_dict['dtSend'] = phone_calls[-1].dtSend
     ukio_dict['dtUpdate'] = phone_calls[-1].dtSend
     ukio_dict['dtCreate'] = phone_calls[-1].dtConnect
 
-    ukio_dict['PhoneCall'] = []
-    if phone_calls[-1].RedirectCall and not ukio_dict['bWrong']:
-        # creating transfer item
-        ukio_dict['TransferItem'] = generate_transfer_items_by_ukio_cards(eos_type_list, phone_calls[-1].dtSend)
-
-        # we need to put the card with redirect to ukio
-        ukio_dict['PhoneCall'] = [phone_calls[-1]]
-
-        # card without redirect put to call
-        phone_call_without_redirect = deepcopy(phone_calls[-1])
-        phone_call_without_redirect.RedirectCall = None
-
-        call = generate_call_from_phone_call(phone_call_without_redirect, rtype='structure')
-    else:
-        if check_event_probability(
-                PHONE_CALL_STRUCTURE_PROBABILITY_IN_UKIO,
-                PHONE_CALL_STRUCTURE_PROBABILITY_IN_UKIO):
-            ukio_dict['PhoneCall'] = [phone_calls[0]]
-            call = generate_call_from_phone_call(phone_calls[0], rtype='id')
-        else:
-            ukio_dict['PhoneCallID'] = [phone_calls[0].phoneCallId]
-            call = generate_call_from_phone_call(phone_calls[0], rtype='structure')
-
-        if len(phone_calls) > 1:
-            middle_recalls = phone_calls[1:-1]
-            ukio_dict['PhoneCall'].extend(middle_recalls)
-
+    ukio_dict['PhoneCall'] = phone_calls
+    call = generate_call_from_phone_call(phone_calls[0])
+    # make delay between calls
     return Ukio(**ukio_dict), call
 
 

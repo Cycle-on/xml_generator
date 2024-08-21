@@ -17,24 +17,7 @@ from schemas.string_schemas import CardStates
 config = load_config()
 
 
-def generate_call_from_phone_call(phone_call: phoneCall, rtype='structure') -> Call:
-    match rtype:
-        case "structure":
-            return Call(
-                strCallStatus=random.choice(list(CardStates)),
-                PhoneCall=phone_call,
-                dtCall=phone_call.dtCall,
-            )
-
-        case "id":
-            return Call(
-                strCallStatus=random.choice(list(CardStates)),
-                PhoneCallID=phone_call.phoneCallId,
-                dtCall=phone_call.dtCall,
-            )
-
-
-def generate_phone_date(recall: bool = False, dt_call=date_zero, **kwargs):
+def generate_phone_date(recall: bool = False, dt_call=DATE_ZERO, **kwargs):
     """
     creating date params to PhoneCall model
     dt_call->dt_connect # step 1
@@ -90,7 +73,7 @@ def recall(dt_call: datetime.datetime) -> tuple[datetime.datetime, list[phoneCal
     return dt_call if dt_end_call is None else dt_end_call, calls
 
 
-def generate_phone_data() -> list[phoneCall]:
+def generate_phone_data(call_date) -> list[phoneCall]:
     """
     creating PhoneCall,
     if len(list) == 0, phone call not dropped,
@@ -106,7 +89,9 @@ def generate_phone_data() -> list[phoneCall]:
     DROP = False
     # operator
     operator = Operator()
-    dt_call, dt_connect, dt_end_call, date_send = generate_phone_date()
+    dt_call, dt_connect, dt_end_call, date_send = generate_phone_date(
+        dt_call=call_date
+    )
     first_call_end_call_time = dt_end_call
     date_send2 = None
     # phone date info
@@ -169,7 +154,7 @@ def generate_phone_data() -> list[phoneCall]:
 
 def main():
     # random.seed(105)  # seed with dropped phone call
-    for _ in range(1):
+    for _ in range(10):
         pprint(generate_phone_data())
 
 

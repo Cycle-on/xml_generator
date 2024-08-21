@@ -1,3 +1,4 @@
+from constants import files_prefix
 from schemas.string_eos import EOSType, Operator, consult, psycho
 
 from schemas.eos_for_ukio_models import *
@@ -10,7 +11,7 @@ from schemas import BaseModelWithId
 
 class transferItem(BaseModelWithId):
     transferItemId: str = Field(default_factory=lambda: transferItem._BaseModelWithId__get_next_id())
-    eosClassTypeId: EOSType
+    eosClassTypeId: str
     dtTransfer: datetime.datetime
     bSuccess: bool
 
@@ -55,7 +56,7 @@ class Address:
 
 
 class Ukio(BaseModelWithId):
-    globalId: str = Field(default_factory=lambda: Ukio._BaseModelWithId__get_next_id())
+    globalId: str = Field(default_factory=lambda: f"{files_prefix}_{Ukio._BaseModelWithId__get_next_id()}")
     parentGlobalId: str = None
     strCardState: CardStates = None
     strIncidentType: IncidentType = None
