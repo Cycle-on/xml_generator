@@ -87,7 +87,7 @@ def generate_ukio_phone_call_data() -> Ukio:
     else:
         ukio_dict['cardState'] = card_state
         ukio_dict['incidentType'] = incident_type
-        ukio_dict['wrong'] = False
+        ukio_dict['bWrong'] = False
         ukio_dict['bChildPlay'] = False
         ukio_dict |= ukio_eos_cards
 
