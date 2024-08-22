@@ -4,10 +4,12 @@ from copy import deepcopy
 from pprint import pprint
 from datetime import timedelta as td
 
+import numpy as np
+
 from config import load_config
 from config.config_data import *
 from generators.eos_probability import generate_card_from_eos_model, generate_random_eos_list, T
-from generators.phonecall_generator import generate_phone_data
+from generators.phonecall_generator import generate_phone_data, generate_phone_date
 from generators import check_event_probability
 from schemas.string_eos import EOSType, consult, psycho
 from schemas.ukio_model import Ukio, transferItem
@@ -15,6 +17,19 @@ from schemas.phonecall import phoneCall, redirectCall, Call
 from schemas.string_schemas import IncidentType, CardStates, CallSource
 
 config = load_config()
+
+
+def generate_phonecall_from_redirect(dt_call: datetime.datetime) -> phoneCall:
+    dt_call, dt_connect, dt_end_call, date_send = generate_phone_date(
+        dt_call=dt_call
+    )
+    return phoneCall(
+        dtSend=date_send,
+        bOperatorIniciatied=True,
+        dtCall=dt_call,
+        dtConnect=dt_connect,
+
+    )
 
 
 def generate_call_from_phone_call(phone_call: phoneCall | datetime.datetime, rtype='') -> Call:
@@ -107,15 +122,27 @@ def generate_ukio_phone_call_data(call_date: datetime.datetime) -> Ukio:
             for eos_card in EOSType:
                 if eos_card.get('class') == type(ukio_eos_card):
                     eos_id = str(eos_card['id'])
+                    break
+            redirect_time_confirm = ukio_eos_card.dtCreate + td(seconds=random.randint(10, 40))
+            redirect_phone_call = generate_phonecall_from_redirect(redirect_time_confirm)
 
             phone_calls[-1].RedirectCall = redirectCall(
                 eosClassTypeId=eos_id,
-                dtRedirectTime=ukio_eos_card.dtCreate + td(seconds=random.randint(10, 40)),
-                dtRedirectConfirm=ukio_eos_card.dtCreate,
+                dtRedirectTime=ukio_eos_card.dtCreate,
+                dtRedirectConfirm=redirect_time_confirm,
                 redirectCancel=False,
                 bConference=False,
-                PhoneCallId=phone_calls[-1].phoneCallId
+                PhoneCallId=redirect_phone_call.phoneCallId
             )
+
+            # add new phonecall
+            if len(phone_calls) > 1:
+                phone_calls.insert(-2, redirect_phone_call)
+            else:
+                phone_calls.insert(0, redirect_phone_call)
+            # add new phoneCallId to redirect
+            phone_calls[-1].RedirectCall.PhoneCallId = redirect_phone_call.phoneCallId
+
             # creating transfer item
             ukio_dict['TransferItem'] = [generate_transfer_items_by_ukio_cards(eos_id, phone_calls[-1].dtSend)]
 

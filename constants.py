@@ -1,4 +1,4 @@
-xml_count = 1000  # Количество записей в одном файле
+xml_count = 10  # Количество записей в одном файле
 files_count = 1  # Количество файлов
 files_prefix = 'ukio'  # префикс перед global_id в ukio и call
 

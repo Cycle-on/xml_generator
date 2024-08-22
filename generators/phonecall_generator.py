@@ -17,7 +17,11 @@ from schemas.string_schemas import CardStates
 config = load_config()
 
 
-def generate_phone_date(recall: bool = False, dt_call=DATE_ZERO, **kwargs):
+def generate_phone_date(recall: bool = False, dt_call=DATE_ZERO, **kwargs) \
+        -> tuple[datetime.datetime,
+        datetime.datetime,
+        datetime.datetime,
+        datetime.datetime]:
     """
     creating date params to PhoneCall model
     dt_call->dt_connect # step 1
@@ -27,7 +31,7 @@ def generate_phone_date(recall: bool = False, dt_call=DATE_ZERO, **kwargs):
     :param kwargs: dict with step1, step2
     ** can change to one step, with True or datetime and check it with isinstance
     because it has different types
-    :return:
+    :return: four dates
     """
     if recall:
         # we have dropped call and we need some new params
