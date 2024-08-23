@@ -1,11 +1,11 @@
-xml_count = 10  # Количество записей в одном файле
-files_count = 1  # Количество файлов
-files_prefix = 'ukio'  # префикс перед global_id в ukio и call
+xml_count_per_file = 100  # Количество записей в одном файле
+files_count = 10  # Количество файлов
+files_prefix = 'TEST'  # префикс перед global_id в ukio и call
 
 OPERATOR_WAIT_ANSWER_RECALL = 60  # секунды, время дозвона со стороны оператора при обратном вызове
 MAX_RECALL_ATTEMPTS = 3  # максимальное количество попыток перезвона при сброшенном вызове
 
-DATE_ZERO_FORMAT = "2023-10-23_10-30-10"  # формат: YYYY-MM-DD_HH-MM-SS
+DATE_ZERO_FORMAT = "2024-08-23_11-30-00"  # формат: YYYY-MM-DD_HH-MM-SS
 
 DELAY_BETWEEN_CALLS = 5  # секунды, задержка между каждым вызовом
 # константы с припиской _SCALE - среднеквадратичное отклонение

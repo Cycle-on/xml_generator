@@ -16,7 +16,7 @@ def main(date_zero=DATE_ZERO):
     ukios_list = []
     calls_list = []
     for i in range(config.files_count):
-        for _ in range(xml_count):
+        for _ in range(xml_count_per_file):
 
             u, c = generate_ukio_phone_call_data(date_zero)
             date_zero += td(seconds=DELAY_BETWEEN_CALLS)
