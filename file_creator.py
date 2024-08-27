@@ -34,7 +34,7 @@ def __generate_xml_from_pydantic(root: ET.Element, model: dict, name='ukio'):
             __generate_xml_from_pydantic(sub_root, feature_value, name=feature_name)
             continue
 
-        elif feature_name in ("PhoneCall", "Call", "Ukio", "Ukios", 'calls', 'TransferItem'):
+        elif feature_name in ("phoneCall", "call", "Ukio", "Ukios", 'calls', 'transferItem'):
             for phone_call in feature_value:
 
                 if feature_name == 'Ukios':

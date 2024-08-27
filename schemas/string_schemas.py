@@ -14,7 +14,13 @@ class CardStates(str, Enum):
     status3 = 'status3'
 
 
-class IncidentType(str, Enum):
+class IncidentTypes(str, Enum):
     type1 = "type1"
     type2 = "type2"
     type3 = "type3"
+
+
+class EosResourceUnitNames(str, Enum):
+    name1 = 'Бригада 1'
+    name2 = 'Бригада 2'
+    name3 = 'Бригада 3'

@@ -4,17 +4,14 @@ from datetime import timedelta as td
 import random
 from pprint import pprint
 
-from generators.eos_probability import generate_random_eos_list
+from generators.eos_generator import generate_random_eos_list
 import numpy as np
 
 from config.config_data import *
-from config import load_config
 from schemas.string_eos import Operator
-from schemas.phonecall import phoneCall, Call
-from generators import check_event_probability
+from schemas.phonecall import PhoneCall, Call
+from generators import check_event_probability, get_distribution_var_by_work_type
 from schemas.string_schemas import CardStates
-
-config = load_config()
 
 
 def generate_phone_date(recall: bool = False, dt_call=DATE_ZERO, **kwargs) \
@@ -36,20 +33,20 @@ def generate_phone_date(recall: bool = False, dt_call=DATE_ZERO, **kwargs) \
     if recall:
         # we have dropped call and we need some new params
 
-        operator_recall_time = abs(np.random.normal(AVG_TIME_OPERATOR_RECALL_WAITING, OPERATOR_RECALL_WAITING_SCALE))
-        dt_call += td(seconds=operator_recall_time)
-        operator_wait_call_answer_time = abs(np.random.normal(AVG_TIME_OPERATOR_WAITING, OPERATOR_TIME_WAITING_SCALE))
-        dt_connect = dt_call + td(seconds=operator_wait_call_answer_time)
+        dt_call += td(
+            seconds=get_distribution_var_by_work_type(OPERATOR_WAIT_ANSWER_RECALL_WORK_TYPE, "OPERATOR_RECALL_WAITING"))
+        dt_connect = dt_call + td(
+            seconds=get_distribution_var_by_work_type(OPERATOR_WAITING_WORK_TYPE, "OPERATOR_WAITING"))
 
     else:
         # base call
-        operator_reaction = abs(np.random.normal(OPERATOR_REACTION_TIME, OPERATOR_REACTION_TIME_SCALE))
+        operator_reaction = get_distribution_var_by_work_type(OPERATOR_REACTION_WORK_TYPE, "OPERATOR_REACTION")
         dt_connect = dt_call + td(seconds=operator_reaction)
 
     if kwargs.get('step2'):
         phone_call_time = kwargs.get('step2').seconds
     else:
-        phone_call_time = abs(np.random.normal(AVERAGE_CALL_TIME, CARD_CREATE_TIME_SCALE))
+        phone_call_time = get_distribution_var_by_work_type(CARD_CREATE_WORK_TYPE, "CARD_CREATE")
     dt_end_call = dt_connect + td(minutes=phone_call_time // 60,
                                   seconds=phone_call_time % 60)
     random_send_data_delay = random.randint(3, 5)
@@ -57,15 +54,18 @@ def generate_phone_date(recall: bool = False, dt_call=DATE_ZERO, **kwargs) \
     return dt_call, dt_connect, dt_end_call, date_send
 
 
-def recall(dt_call: datetime.datetime) -> tuple[datetime.datetime, list[phoneCall]]:
+def recall(dt_call: datetime.datetime) -> tuple[datetime.datetime, list[PhoneCall]]:
     calls = []
     dt_end_call = None
     for _ in range(random.randint(0, MAX_RECALL_ATTEMPTS - 1)):
-        dt_call += td(seconds=abs(np.random.normal(AVG_TIME_OPERATOR_RECALL_WAITING, OPERATOR_RECALL_WAITING_SCALE)))
-        dt_end_call = dt_call + td(minutes=OPERATOR_WAIT_ANSWER_RECALL // 60,
-                                   seconds=OPERATOR_WAIT_ANSWER_RECALL % 60)
+        dt_call += td(
+            seconds=get_distribution_var_by_work_type(OPERATOR_RECALL_WAITING_WORK_TYPE, "OPERATOR_RECALL_WAITING"))
 
-        p = phoneCall(
+        dt_end_call = dt_call + td(
+            get_distribution_var_by_work_type(OPERATOR_WAIT_ANSWER_RECALL_WORK_TYPE, "OPERATOR_WAIT_ANSWER_RECALL")
+        )
+
+        p = PhoneCall(
             dtCall=dt_call,
             bOperatorIniciatied=True,
             aCallEnded=False,
@@ -77,14 +77,14 @@ def recall(dt_call: datetime.datetime) -> tuple[datetime.datetime, list[phoneCal
     return dt_call if dt_end_call is None else dt_end_call, calls
 
 
-def generate_phone_data(call_date) -> list[phoneCall]:
+def generate_phone_data(call_date, operator: Operator) -> list[PhoneCall]:
     """
     creating PhoneCall,
     if len(list) == 0, phone call not dropped,
     if len(list) > 1, phone call is dropped
     :return: list with phone calls models
     """
-    phone_calls: list[phoneCall] = []
+    phone_calls: list[PhoneCall] = []
     # random constants
     end_call_list = [True, False]
     random.shuffle(end_call_list)
@@ -92,15 +92,13 @@ def generate_phone_data(call_date) -> list[phoneCall]:
 
     DROP = False
     # operator
-    operator = Operator()
     dt_call, dt_connect, dt_end_call, date_send = generate_phone_date(
         dt_call=call_date
     )
     first_call_end_call_time = dt_end_call
     date_send2 = None
     # phone date info
-    if check_event_probability(config.dropped_call_probability,
-                               config.dropped_call_probability):  # phone call is dropped
+    if check_event_probability(DROP_CALL_PROBABILITY):  # phone call is dropped
         # recall_logic
         DROP = True
 
@@ -129,7 +127,7 @@ def generate_phone_data(call_date) -> list[phoneCall]:
             )
 
         phone_calls.append(
-            phoneCall(
+            PhoneCall(
                 dtSend=date_send2,
                 OperatorId=operator.operatorId,
                 bOperatorIniciatied=True,
@@ -143,7 +141,7 @@ def generate_phone_data(call_date) -> list[phoneCall]:
         phone_calls.extend(recall_phonecalls_list)
 
     phone_calls.append(
-        phoneCall(
+        PhoneCall(
             dtSend=date_send2 if date_send2 is not None else date_send,
             OperatorId=operator.operatorId,
             bOperatorIniciatied=False,

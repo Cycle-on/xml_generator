@@ -1,3 +1,5 @@
+import datetime
+
 from pydantic import BaseModel
 from pydantic.functional_validators import AfterValidator
 from typing_extensions import Annotated
@@ -18,6 +20,7 @@ class Config(BaseModel):
     files_count: int
     logs_directory_name: str
     output_directory_name: str
+    date_zero: datetime.datetime
 
 
 def load_config() -> Config:
@@ -26,13 +29,5 @@ def load_config() -> Config:
         files_count=files_count,
         logs_directory_name=logs_directory_name,
         output_directory_name=output_directory_name,
+        date_zero=DATE_ZERO
     )
-
-
-def main():
-    c = load_config()
-    print(c)
-
-
-if __name__ == '__main__':
-    main()

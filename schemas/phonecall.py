@@ -8,6 +8,7 @@ from schemas.string_eos import Operator
 
 
 class redirectCall(BaseModelWithId):
+    redirectCallId: str = Field(default_factory=lambda: redirectCall._BaseModelWithId__get_next_id())
     eosClassTypeId: str = None
     dtRedirectTime: datetime.datetime = datetime.datetime.now()
     dtRedirectConfirm: datetime.datetime
@@ -18,8 +19,8 @@ class redirectCall(BaseModelWithId):
     PhoneCallId: str
 
 
-class phoneCall(BaseModelWithId):
-    phoneCallId: str = Field(default_factory=lambda: phoneCall._BaseModelWithId__get_next_id())
+class PhoneCall(BaseModelWithId):
+    phoneCallId: str = Field(default_factory=lambda: PhoneCall._BaseModelWithId__get_next_id())
     dtSend: datetime.datetime = None
     bOperatorIniciatied: bool
     dtCall: datetime.datetime = datetime.datetime.now()
@@ -34,9 +35,10 @@ class phoneCall(BaseModelWithId):
 class Call(BaseModelWithId):
     callId: str = Field(default_factory=lambda: f"{files_prefix}_{BaseModelWithId._BaseModelWithId__get_next_id()}")
     strCallStatus: str = None
-    PhoneCall: phoneCall = None
+    phoneCall: PhoneCall = None
     PhoneCallID: str | None = None
     dtCall: datetime.datetime
+    aCallEnded: bool = None
     dtSend: datetime.datetime = None
 
 

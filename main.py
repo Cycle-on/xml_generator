@@ -19,7 +19,7 @@ def main(date_zero=DATE_ZERO):
         for _ in range(xml_count_per_file):
 
             u, c = generate_ukio_phone_call_data(date_zero)
-            date_zero += td(seconds=DELAY_BETWEEN_CALLS)
+            date_zero += td(seconds=AVG_DELAY_BETWEEN_CALLS_TIME)
             if u is not None:
                 ukios_list.append(u)
             calls_list.append(c)
