@@ -1,0 +1,34 @@
+import random
+from constants import *
+from generators.random_generators import get_random_telephone_number
+
+from schemas.string_eos import OperatorWork, Operator, Arm
+
+
+def generate_arm() -> Arm:
+    return Arm(
+        strArmNumber=get_random_telephone_number(),
+        strArmPlace=random.choice(ARM_PLACES),
+
+    )
+
+
+def generate_operator_work(operator: Operator, date_from) -> OperatorWork:
+    arm = generate_arm()
+    return OperatorWork(
+        operator=operator,
+        operatorId=operator.operatorId,
+        strOperatorStatus=random.choice(OPERATOR_STATES),
+        dtAction=date_from,
+        arm=arm,
+        armId=arm.armId,
+        dtSend=date_from
+    )
+
+
+def main():
+    pass
+
+
+if __name__ == '__main__':
+    main()

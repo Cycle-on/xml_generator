@@ -1,4 +1,3 @@
-import datetime
 import random
 from copy import deepcopy
 from pprint import pprint
@@ -8,9 +7,10 @@ from config.config_data import *
 from generators.eos_generator import generate_card_from_eos_model, generate_random_eos_list, T, \
     generate_eos_item_from_eos_list
 from generators.phonecall_generator import generate_phone_data, generate_phone_date
-from generators import check_event_probability
-from schemas.string_eos import EOSType, Consult, Psycho, Operator
-from schemas.ukio_model import Ukio, TransferItem
+from generators import check_event_probability, genders
+from generators.random_generators import get_address_by_code, get_random_name, get_random_telephone_number
+from schemas.string_eos import StringEosType, Consult, Psycho, Operator
+from schemas.ukio_model import Ukio, TransferItem, Address, CallContent
 from schemas.phonecall import PhoneCall, redirectCall, Call
 from schemas.string_schemas import IncidentTypes, CardStates, CallSource
 
@@ -52,12 +52,31 @@ def generate_call_from_phone_call(phone_call: PhoneCall | datetime.datetime, rty
     )
 
 
+def __generate_call_content() -> CallContent:
+    applicant_number = get_random_telephone_number()
+    applicant_surname, applicant_name, applicant_middle_name, = get_random_name(
+        genders[check_event_probability(CALL_CONTENT_APPLICANT_MALE_PROBABILITY)])
+
+    return CallContent(
+        strLastName=applicant_surname,
+        strMiddleName=applicant_middle_name,
+        strName=applicant_name,
+        strCallerContactPhone=applicant_number,
+        strCgPN=applicant_number if check_event_probability(
+            CALL_NUMBER_APPLICANT_NUMBER_EQUALITY_PROBABILITY) else get_random_telephone_number(),
+        appResAddress=get_address_by_code()[0],
+        strLanguage="ru",
+        strIncidentDescription=random.choice(INCIDENT_DESCRIPTIONS),
+        appLocAddress=get_address_by_code()[0],
+    )
+
+
 def __decapitalize(s: str):
     return s[0].lower() + s[1:]
 
 
 def _check_ukio_cards(
-        eos_list: list[EOSType],
+        eos_list: list[StringEosType],
         dt_send: datetime.datetime,
         operator: Operator
 ) -> dict[str, T]:
@@ -84,6 +103,15 @@ def generate_transfer_items_by_ukio_cards(eos_id: str,
     )
 
 
+def __generate_ukio_address() -> Address:
+    string_address, district, city = get_address_by_code()
+    return Address(
+        strAddress=string_address,
+        strDistrict=district,
+        strCity=city
+    )
+
+
 def generate_ukio_phone_call_data(call_date: datetime.datetime) -> Ukio:
     """
     creating ukio card with call_source = mobile phone
@@ -95,7 +123,8 @@ def generate_ukio_phone_call_data(call_date: datetime.datetime) -> Ukio:
     call_source = CallSource.mobile_phone
     operator = Operator()
     phone_calls: list[PhoneCall] = generate_phone_data(call_date, operator)
-    eos_type_list: list[EOSType] = generate_random_eos_list()
+    eos_type_list: list[StringEosType] = generate_random_eos_list()
+
     ukio_eos_cards = _check_ukio_cards(eos_type_list, phone_calls[-1].dtSend, operator)
     if check_event_probability(CHILD_PLAY_UKIO_PROBABILITY):
         ukio_dict['cardState'] = "child play"
@@ -115,13 +144,15 @@ def generate_ukio_phone_call_data(call_date: datetime.datetime) -> Ukio:
         ukio_dict['bWrong'] = False
         ukio_dict['bChildPlay'] = False
         ukio_dict |= ukio_eos_cards
-        # ukio_dict['eosItem'] = generate_eos_item_from_eos_list(eos_type_list)
+        ukio_dict['eosItem'] = generate_eos_item_from_eos_list(eos_type_list, operator, call_date)
+        ukio_dict['address'] = __generate_ukio_address()
+        ukio_dict['callContent'] = __generate_call_content()
 
     if ukio_eos_cards and not ukio_dict['bWrong']:
         ukio_eos_card = ukio_eos_cards[random.choice(list(ukio_eos_cards.keys()))]
         if not isinstance(ukio_eos_card, Psycho) and not isinstance(ukio_eos_card, Consult):
             eos_id = ''
-            for eos_card in EOSType:
+            for eos_card in StringEosType:
                 if eos_card.get('class') == type(ukio_eos_card):
                     eos_id = str(eos_card['id'])
                     break

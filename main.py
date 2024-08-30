@@ -15,6 +15,8 @@ def main(date_zero=DATE_ZERO):
     create_dirs()
     ukios_list = []
     calls_list = []
+    dt_start = datetime.datetime.now()
+    models_create_time = None
     for i in range(config.files_count):
         for _ in range(xml_count_per_file):
 
@@ -29,8 +31,12 @@ def main(date_zero=DATE_ZERO):
         calls = Calls(
             Call=calls_list,
         )
+        models_create_time = datetime.datetime.now() - dt_start
+        print("models done", models_create_time)
         create_file_from_model(ukios, filename=f'ukios_{i}', basename="Ukios")
         create_file_from_model(calls, filename=f'calls_{i}', basename='Calls')
+
+    print("finish time", datetime.datetime.now() - dt_start)
 
 
 if __name__ == '__main__':

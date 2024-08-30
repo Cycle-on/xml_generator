@@ -4,7 +4,7 @@ from config.config_data import *
 from schemas.eos_for_ukio_models import *
 
 
-class EOSType(dict, Enum):
+class StringEosType(dict, Enum):
     s112 = {
         'name': 'Система 112',
         'code': "112",
@@ -127,12 +127,12 @@ class Operator(BaseModelWithId):
     isPsychologist: bool = None
     bOperatorTranslator: bool = None
     strLanguage: str = None
-    eosClassTypeId: list[EOSType] = None
+    eosClassTypeId: list[StringEosType] = None
     dtSend: datetime.datetime = None
 
 
-class Arm:
-    armId: str = None
+class Arm(BaseModelWithId):
+    armId: str = Field(default_factory=lambda: Arm._BaseModelWithId__get_next_id())
     strArmNumber: str = None
     strArmPlace: str = None
     dtSend: datetime.datetime = None
@@ -147,11 +147,11 @@ class ArmWork:
     dtSend: datetime.datetime = None
 
 
-class OperatorWork:
+class OperatorWork(BaseModelWithId):
     operatorStatusId: str = None
     strOperatorStatus: str = None
     dtAction: datetime.datetime = None
-    Operator: Operator = None
+    operator: Operator = None
     operatorId: str = None
     arm: Arm = None
     armId: str = None
@@ -177,6 +177,6 @@ class Psycho(BaseModelWithId):
 
 if __name__ == '__main__':
     o1 = Operator(
-        eosClassTypeId=[EOSType.s112]
+        eosClassTypeId=[StringEosType.s112]
     )
     print(o1.eosClassTypeId)

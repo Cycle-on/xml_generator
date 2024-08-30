@@ -34,13 +34,9 @@ def __generate_xml_from_pydantic(root: ET.Element, model: dict, name='ukio'):
             __generate_xml_from_pydantic(sub_root, feature_value, name=feature_name)
             continue
 
-        elif feature_name in ("phoneCall", "call", "Ukio", "Ukios", 'calls', 'transferItem'):
+        elif feature_name == 'Ukios':
             for phone_call in feature_value:
-
-                if feature_name == 'Ukios':
-                    __generate_xml_from_pydantic(sub_root, phone_call, name=__up_first_verb(feature_name)[:-1])
-                else:
-                    __generate_xml_from_pydantic(sub_root, phone_call, name=__up_first_verb(feature_name))
+                __generate_xml_from_pydantic(sub_root, phone_call, name=__up_first_verb(feature_name)[:-1])
             continue
 
         elif isinstance(feature_value, list):
@@ -50,8 +46,7 @@ def __generate_xml_from_pydantic(root: ET.Element, model: dict, name='ukio'):
                     el.text = str(value)
 
                 else:
-                    sub_root_wrapper = ET.SubElement(sub_root, feature_name)
-                    __generate_xml_from_pydantic(sub_root_wrapper, value, name=feature_name[:-1])
+                    __generate_xml_from_pydantic(sub_root, value, name=feature_name)
             continue
 
         elif isinstance(feature_value, datetime.datetime):

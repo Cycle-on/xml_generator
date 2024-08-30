@@ -7,6 +7,8 @@ import numpy as np
 
 from config import ALL_PROJ_CONSTANTS
 
+genders = {True: "M", False: "F"}
+
 
 def check_event_probability(p1, p2=None) -> bool:
     """
@@ -39,14 +41,21 @@ def get_distribution_var_by_work_type(work_type: S, var_name: str) -> int | floa
         case "normal":
             try:
                 return abs(np.random.normal(
-                    ALL_PROJ_CONSTANTS.get(f"AVG_{var_name}_TIME"),
+                    ALL_PROJ_CONSTANTS.get(f"AVG_{var_name}"),
                     ALL_PROJ_CONSTANTS.get(f"{var_name}_SCALE")
 
                 ))
             except Exception:
-                raise AttributeError(
-                    f"Не заданы значения для нормального распределения у переменной {var_name}"
-                )
+                try:
+                    return abs(np.random.normal(
+                        ALL_PROJ_CONSTANTS.get(f"AVG_{var_name}_TIME"),
+                        ALL_PROJ_CONSTANTS.get(f"{var_name}_SCALE")
+
+                    ))
+                except Exception:
+                    raise AttributeError(
+                        f"Не заданы значения для нормального распределения у переменной {var_name}"
+                    )
 
         case "uniform":
             try:
@@ -60,9 +69,10 @@ def get_distribution_var_by_work_type(work_type: S, var_name: str) -> int | floa
                 )
 
 
-def get_random_birth_date_by_year(year: int):
-    start = datetime.datetime(year=year, month=1, day=1)
-    end = datetime.datetime(year=year, month=12, day=31)
+def get_random_birth_date_by_year(year: datetime.datetime):
+    int_year = year.year
+    start = datetime.datetime(year=int_year, month=1, day=1)
+    end = datetime.datetime(year=int_year, month=12, day=31)
     delta = end - start
     random_days = random.randint(0, delta.days)
     return start + td(days=random_days)

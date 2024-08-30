@@ -1,14 +1,11 @@
-import random
-from datetime import timedelta as td
-from typing import TypeVar
-
 from generators import *
-from random_names import get_random_name
+from generators.random_generators import get_random_name
 from schemas.string_eos import *
 from schemas.string_eos import Psycho, Consult
 from schemas.eos_for_ukio_models import *
 from generators import check_event_probability
-from schemas.ukio_model import EosItem
+from schemas.string_schemas import EosResourceUnitNames
+from schemas.ukio_model import EosItem, DispatchService, EosResource
 
 T = TypeVar(
     "T",
@@ -21,8 +18,6 @@ T = TypeVar(
     CardAT,
     CardCommServ
 )
-
-genders = {True: "M", False: "F"}
 
 
 def _check_eos_probability(eos_value_dict: dict) -> bool:
@@ -37,10 +32,10 @@ def _check_eos_probability(eos_value_dict: dict) -> bool:
 
 def generate_patients_list() -> list[Patient]:
     patients = []
-    patients_count = int(get_distribution_var_by_work_type())
+    patients_count = int(get_distribution_var_by_work_type(PATIENTS_COUNT_WORK_TYPE, 'PATIENTS_COUNT'))
     for _ in range(patients_count):
         gender = genders[check_event_probability(AMBULANCE_MALE_PROBABILITY)]
-        name, middle_name, surname = get_random_name(gender)
+        surname, name, middle_name = get_random_name(gender)
         age = int(get_distribution_var_by_work_type(AMBULANCE_AGE_WORK_TYPE, "AMBULANCE_AGE"))
         birth_day = get_random_birth_date_by_year(DATE_ZERO - td(days=365 * age))
 
@@ -64,7 +59,7 @@ def generate_wanted_list() -> list[WantedPerson]:
     wanted_count = int(get_distribution_var_by_work_type(HOW_MANY_WANTED_WORK_TYPE, "HOW_MANY_WANTED"))
     for _ in range(wanted_count):
         gender = genders[check_event_probability(WANTED_MALE_GENDER_PROBABILITY)]
-        name, middle_name, surname = get_random_name(gender)
+        surname, name, middle_name = get_random_name(gender)
         age = int(get_distribution_var_by_work_type(WANTED_AGE_WORK_TYPE, "WANTED_AGE"))
         birth_day = get_random_birth_date_by_year(DATE_ZERO - td(days=365 * age))
         wanted_persons.append(
@@ -175,8 +170,9 @@ def generate_card_from_eos_model(eos_value_dict: dict, date_from: datetime.datet
                 return Card02(
                     dtCreate=dt_create,
                     strIncidentType=random.choice(INCIDENT_TYPES_FOR_CARD02),
-                    iNumberOffenders=get_distribution_var_by_work_type(OFFENDERS_NUMBER_WORK_TYPE, "OFFENDERS_NUMBER"),
-                    iNumberVehicle=get_distribution_var_by_work_type(VEHICLE_NUMBER_WORK_TYPE, "VEHICLE_NUMBER"),
+                    iNumberOffenders=int(
+                        get_distribution_var_by_work_type(OFFENDERS_NUMBER_WORK_TYPE, "OFFENDERS_NUMBER")),
+                    iNumberVehicle=int(get_distribution_var_by_work_type(VEHICLE_NUMBER_WORK_TYPE, "VEHICLE_NUMBER")),
                     suspect=generate_suspects_list(),
                     wantedPerson=generate_wanted_list(),
                     vehicle=generate_vehicles_list(),
@@ -217,7 +213,7 @@ def generate_card_from_eos_model(eos_value_dict: dict, date_from: datetime.datet
                         get_distribution_var_by_work_type(AFFECTED_PEOPLE_WORK_TYPE, 'AFFECTED_PEOPLE')),
                     iSuspectPeople=int(get_distribution_var_by_work_type(SUSPECT_PEOPLE_WORK_TYPE, 'SUSPECT_PEOPLE')),
                     strSuspectDescription=random.choice(SUSPECT_DESCRIPTION),
-                    strArmament=random.choice(ARMAMENTS),
+                    strArmament=[random.choice(ARMAMENTS)],
                     strVehicles=[random.choice(ARMAMENTS) for _ in range(
                         int(get_distribution_var_by_work_type(ARMAMENTS_WORK_TYPE, "ARMAMENTS")))],
                     strDirection=random.choice(DIRECTION_TYPES),
@@ -225,23 +221,80 @@ def generate_card_from_eos_model(eos_value_dict: dict, date_from: datetime.datet
                 )
 
 
-def generate_random_eos_list() -> list[EOSType]:
+def generate_random_eos_list() -> list[StringEosType]:
     """
     creates a list with random eos dicts from string_eos
 
     :return:
     """
     eos_list = []
-    for eos_obj in EOSType:
+    for eos_obj in StringEosType:
         if eos_obj.value.get('p_min') is not None and eos_obj.value.get('class'):
             if _check_eos_probability(eos_obj):
                 eos_list.append(eos_obj)
     return eos_list
 
 
-def generate_eos_item_from_eos_list(eos_type_list: list[EOSType], operator: Operator) -> list[EosItem]:
-    eos_items = []
+def __generate_eos_resources(eos_type_list: list[StringEosType]) -> list[EosResource]:
+    eos_resources = []
+    for el in eos_type_list:
+        eos_resources.append(
+            EosResource(
+                eosClassTypeId=el['id'],
+                strResourceUnitName=random.choice(list(EosResourceUnitNames)),
+                strMembership=random.choice(MEMBERSHIP)
+            )
+        )
+    return eos_resources
 
+
+def generate_eos_item_from_eos_list(eos_type_list: list[StringEosType],
+                                    operator: Operator,
+                                    date_from: datetime.datetime) -> list[EosItem]:
+    eos_items = []
+    for el in eos_type_list:
+        dt_depart = date_from + td(seconds=int(
+            get_distribution_var_by_work_type(
+                DT_DEPART_WORK_TYPE, "DT_DEPART"
+            )))
+
+        if check_event_probability(EOS_ITEM_CANCEL_PROBABILITY):
+            dt_confirm_depart = None
+            dt_arrival = None
+            dt_complete = None
+            dt_cancel = dt_depart + td(seconds=int(
+                get_distribution_var_by_work_type(DT_CANCEL_WORK_TYPE, "DT_CANCEL")
+            ))
+        else:
+            dt_confirm_depart = dt_depart + td(seconds=int(
+                get_distribution_var_by_work_type(
+                    DT_DEPART_CONFIRM_WORK_TYPE, 'DT_DEPART'
+                )))
+            dt_arrival = dt_confirm_depart + td(seconds=int(
+                get_distribution_var_by_work_type(DT_ARRIVAL_WORK_TYPE, 'DT_ARRIVAL')
+            ))
+            dt_complete = dt_arrival + td(seconds=int(
+                get_distribution_var_by_work_type(DT_COMPLETE_WORK_TYPE, "DT_COMPLETE")
+            ))
+            dt_cancel = None
+
+        eos_items.append(
+            EosItem(
+                operator=operator,
+                operatorId=operator.operatorId,
+                dtDepart=dt_depart,
+                dtConfirmDepart=dt_confirm_depart,
+                dtArrival=dt_arrival,
+                dtComplete=dt_complete,
+                dtCancel=dt_cancel,
+                dispatchService=DispatchService(
+                    eosClassTypeId=el['id'],
+                    strDispatchServiceName=el['name']
+                ),
+                eosResource=__generate_eos_resources(eos_type_list) if dt_cancel is None else None
+
+            )
+        )
     return eos_items
 
 

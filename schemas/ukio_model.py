@@ -1,5 +1,5 @@
 from constants import files_prefix
-from schemas.string_eos import EOSType, Operator, Consult, Psycho
+from schemas.string_eos import StringEosType, Operator, Consult, Psycho
 
 from schemas.eos_for_ukio_models import *
 from schemas.string_schemas import CallSource, IncidentTypes, CardStates, EosResourceUnitNames
@@ -19,7 +19,7 @@ class TransferItem(BaseModelWithId):
 
 class ReceptionItem(BaseModelWithId):
     receptionItemId: str = Field(default_factory=lambda: ReceptionItem._BaseModelWithId__get_next_id())
-    eosClassTypeId: EOSType
+    eosClassTypeId: StringEosType
     dtConfirmMessage: datetime.datetime
     bSuccess: bool
 
@@ -90,7 +90,7 @@ class Era(BaseModelWithId):
 
 class DispatchService(BaseModelWithId):
     dispatchServiceId: str = Field(default_factory=lambda: DispatchService._BaseModelWithId__get_next_id())
-    eosClassTypeId: str = None
+    eosClassTypeId: int = None
     strDispatchServiceName: str = None
 
 
@@ -104,42 +104,42 @@ class CallContent(BaseModelWithId):
     strAddressDevice: str = None
     appResAddress: str = None
     strLanguage: str = None
-    strIncidentDescription: str = None
+    strIncidentDescription: str
     appLatitude: Decimal = None
     appLongitude: Decimal = None
     appCoordAccuracy: int = None
-    appLocAddress: str = None
+    appLocAddress: str
     appLocAddressKLADR: str = None
     appLocAddressFIAS: str = None
 
 
 class EosResource(BaseModelWithId):
     eosResourceId: str = Field(default_factory=lambda: EosResource._BaseModelWithId__get_next_id())
-    eosClassTypeId: str = None
-    strResourceUnitName: EosResourceUnitNames = None
+    eosClassTypeId: int = None
+    strResourceUnitName: str = None
     strMembership: str = None
 
 
 class EosItem(BaseModelWithId):
     assignId: str = Field(default_factory=lambda: EosItem._BaseModelWithId__get_next_id())
-    Operator: Operator = None
+    operator: Operator = None
     operatorId: str = None
     dtDepart: datetime.datetime = None
-    dtConfirmDepart: datetime.datetime = None
-    dtArrival: datetime.datetime = None
-    dtComplete: datetime.datetime = None
-    dtCancel: datetime.datetime = None
-    dispatchService: DispatchService = None
-    eosResource: list[EosResource] = None
+    dtConfirmDepart: datetime.datetime | None = None
+    dtArrival: datetime.datetime | None = None
+    dtComplete: datetime.datetime | None = None
+    dtCancel: datetime.datetime | None = None
+    dispatchService: DispatchService
+    eosResource: list[EosResource] | None = None
 
 
 class Address(BaseModelWithId):
     addressId: str = Field(default_factory=lambda: Address._BaseModelWithId__get_next_id())
-    strAddress: str = None
+    strAddress: str
     geoLatitude: Decimal = None
     geoLongitude: Decimal = None
-    strDistrict: str = None
-    strCity: str = None
+    strDistrict: str
+    strCity: str
     strStreet: str = None
     strHouse: str = None
     strHouseSlash: str = None
@@ -159,10 +159,10 @@ class Address(BaseModelWithId):
     OKATO: str = None
     OKTMO: str = None
     strDistrictKLADR: str = None
-    strCityKLADR: str = None
+    strCityKLADR: str = None  # require
     strStreetKLADR: str = None
     strDistrictFIAS: str = None
-    strCityFIAS: str = None
+    strCityFIAS: str = None  # require
     strStreetFIAS: str = None
     strHouseFIAS: str = None
     orgOKPO: str = None
@@ -173,14 +173,14 @@ class Ukio(BaseModelWithId):
     parentGlobalId: str = None
     strCardState: CardStates = None
     strIncidentType: IncidentTypes = None
-    dtSend: datetime.datetime = datetime.datetime.now()
-    dtCreate: datetime.datetime = datetime.datetime.now()
-    dtUpdate: datetime.datetime = datetime.datetime.now()
+    dtSend: datetime.datetime
+    dtCreate: datetime.datetime = None
+    dtUpdate: datetime.datetime = None
     nCasualties: int = None
     bHumanThreat: bool = False
     bChs: bool = False
     strCallSource: CallSource = None
-    bWrong: bool = None
+    bWrong: bool
     bChildPlay: bool
     phoneCall: list[PhoneCall] = None
     PhoneCallID: list[str] = None
