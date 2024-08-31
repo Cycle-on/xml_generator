@@ -3,6 +3,7 @@ from copy import deepcopy
 from pprint import pprint
 from datetime import timedelta as td
 
+from config import load_config, ukios_info, calls_info
 from config.config_data import *
 from generators.eos_generator import generate_card_from_eos_model, generate_random_eos_list, T, \
     generate_eos_item_from_eos_list
@@ -13,6 +14,8 @@ from schemas.string_eos import StringEosType, Consult, Psycho, Operator
 from schemas.ukio_model import Ukio, TransferItem, Address, CallContent
 from schemas.phonecall import PhoneCall, redirectCall, Call
 from schemas.string_schemas import IncidentTypes, CardStates, CallSource
+
+config = load_config()
 
 
 def generate_phonecall_from_redirect(dt_call: datetime.datetime) -> PhoneCall:
@@ -112,7 +115,7 @@ def __generate_ukio_address() -> Address:
     )
 
 
-def generate_ukio_phone_call_data(call_date: datetime.datetime) -> Ukio:
+def generate_ukio_phone_call_data(call_date: datetime.datetime) -> tuple[Ukio, Call] | None:
     """
     creating ukio card with call_source = mobile phone
     :return: Ukio model
@@ -183,9 +186,11 @@ def generate_ukio_phone_call_data(call_date: datetime.datetime) -> Ukio:
     ukio_dict['dtSend'] = phone_calls[-1].dtSend
     ukio_dict['dtUpdate'] = phone_calls[-1].dtSend
     ukio_dict['dtCreate'] = phone_calls[-1].dtConnect
-
+    calls_info.append({'filename': '', 'dt_send': phone_calls[-1].dtSend})
+    ukios_info.append({'filename': '', 'dt_send': phone_calls[-1].dtSend})
     ukio_dict['phoneCall'] = phone_calls
     call = generate_call_from_phone_call(phone_calls[0])
+
     # make delay between calls
     return Ukio(**ukio_dict), call
 

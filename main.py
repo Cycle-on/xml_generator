@@ -1,7 +1,7 @@
 from datetime import timedelta as td
-from config import load_config
+from config import load_config, calls_info, ukios_info
 from config.config_data import *
-from file_creator import create_file_from_model
+from file_creator import create_file_from_model, create_send_info_csv_files
 from generators.ukio_generator import generate_ukio_phone_call_data
 from config.dirs import create_dirs
 from schemas.phonecall import Calls
@@ -20,22 +20,28 @@ def main(date_zero=DATE_ZERO):
     for i in range(config.files_count):
         for _ in range(xml_count_per_file):
 
-            u, c = generate_ukio_phone_call_data(date_zero)
+            u, c, = generate_ukio_phone_call_data(date_zero)
             date_zero += td(seconds=AVG_DELAY_BETWEEN_CALLS_TIME)
+
             if u is not None:
                 ukios_list.append(u)
+                ukios_info[-1]['filename'] = f'ukios_{i}.xml'
+
             calls_list.append(c)
+            calls_info[-1]['filename'] = f'calls_{i}.xml'
         ukios = Ukios(
             Ukios=ukios_list
         )
         calls = Calls(
             Call=calls_list,
         )
+
         models_create_time = datetime.datetime.now() - dt_start
         print("models done", models_create_time)
         create_file_from_model(ukios, filename=f'ukios_{i}', basename="Ukios")
         create_file_from_model(calls, filename=f'calls_{i}', basename='Calls')
-
+    create_send_info_csv_files('calls_to_send', calls_info)
+    create_send_info_csv_files('ukios_to_send', ukios_info)
     print("finish time", datetime.datetime.now() - dt_start)
 
 

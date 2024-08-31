@@ -1,5 +1,6 @@
 import os
 import random
+from pprint import pprint
 
 
 def execute_district(address: str):
@@ -68,7 +69,7 @@ def get_random_telephone_number():
 
 
 def main():
-    print(get_address_by_code())
+    get_address_by_code()
 
 
 if __name__ == '__main__':

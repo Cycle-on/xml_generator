@@ -1,3 +1,4 @@
+import csv
 import datetime
 import os
 import traceback
@@ -85,3 +86,12 @@ def create_file_from_model(model: BaseModel, filename: str = 'output', basename=
                 mode="w+") as f:
             traceback.print_exc(file=f)
         return False
+
+
+def create_send_info_csv_files(filename: str, config_send_info_list: list[dict]):
+    filename = f'{filename}.csv'
+    # Запись данных в CSV файл
+    with open(filename, mode='w', newline='', encoding='utf-8') as file:
+        writer = csv.DictWriter(file, fieldnames=config_send_info_list[0].keys())
+        writer.writeheader()  # Записываем заголовки
+        writer.writerows(config_send_info_list)  # Записываем строки данных

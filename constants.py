@@ -1,11 +1,11 @@
-xml_count_per_file = 100  # Количество записей в одном файле
-files_count = 1  # Количество файлов
+xml_count_per_file = 1_000  # Количество записей в одном файле
+files_count = 1_000  # Количество файлов
 files_prefix = 'TEST'  # префикс перед global_id в ukio и call
 
+# google sheets table information
 SHEET_ID = '1bVCN8REheC7NrINGyiB3s837J6VmkOiwufSbyHztA4c'
 INCIDENT_TYPES_LIST_NAME = 'IncidentTypes'
 ADDRESSES_LIST_NAME = 'Addresses'
-
 
 MAX_RECALL_ATTEMPTS = 3  # максимальное количество попыток перезвона при сброшенном вызове
 DATE_ZERO_FORMAT = "2024-08-23_11-30-00"  # формат: YYYY-MM-DD_HH-MM-SS
@@ -27,7 +27,6 @@ OPERATOR_WAIT_ANSWER_RECALL_SCALE = 4
 CONSULT_WORK_TYPE = 'normal'
 AVG_CONSULT_TIME = 120  # секунды, время консультации
 CONSULT_SCALE = 8
-
 
 PSYCHO_WORK_TYPE = 'normal'
 AVG_PSYCHO_TIME = 15  # минуты, среднее время психологической поддержки
@@ -98,7 +97,7 @@ EOS_SHARE_MAX = 65  # будет выбираться рандомное зна�
 FIRE_SHARE_MIN = 2
 FIRE_SHARE_MAX = 10
 
-INCIDENT_TYPES_FOR_CARD01 = ["01Type1", "01Type2"]
+INCIDENT_TYPES_FOR_CARD01 = []
 OBJECT_FOR_CARD01 = ["01obj1", "01obj2"]
 INCIDENT_STOREY = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
 OBJECT_GASIFIED_PROBABILITY = 60  # проценты
@@ -114,7 +113,7 @@ OWNERS_INFO = ["номер-имя1 номер-имя2", "номер-имя2 но
 # police info
 POLICE_SHARE_MIN = 15
 POLICE_SHARE_MAX = 25
-INCIDENT_TYPES_FOR_CARD02 = ["02Type1", "02Type2"]
+INCIDENT_TYPES_FOR_CARD02 = []
 
 OFFENDERS_NUMBER_WORK_TYPE = 'normal'
 AVG_OFFENDERS_NUMBER = 5
@@ -167,7 +166,7 @@ PATIENTS_COUNT_WORK_TYPE = 'normal'
 AVG_PATIENTS_COUNT = 5
 PATIENTS_COUNT_SCALE = 1
 
-AMBULANCE_INCIDENT_TYPES = ["type1", 'type2']
+INCIDENT_TYPES_FOR_CARD03 = []
 WHO_CALLED = ['прохожий', 'родственник']
 AMBULANCE_CONSULT_PROBABILITY = 50
 
@@ -183,14 +182,14 @@ ABILITY_MOVE_INDEPENDENTLY = ['ability1', 'ability2']
 # card 04 info
 GAS_SHARE_MIN = 0
 GAS_SHARE_MAX = 10
-GAS_INCIDENT_TYPES = ['type1', 'type2']
+GAS_INCIDENT_TYPES = []
 GAS_INSTRUCTIONS = ['instruction1', 'instruction2']
 GAS_CONSULT_PROBABILITY = 50
 
 # card comm serv info
 CARD_CS_SHARE_MIN = 0
 CARD_CS_SHARE_MAX = 5
-CS_INCIDENT_TYPES = ['type1', 'type2']
+CS_INCIDENT_TYPES = []
 C_S = ['служба 1', 'служба 2']
 CS_INSTRUCTIONS = ['instruction 1', 'instruction 2']
 CS_CONSULT_PROBABILITY = 50
@@ -204,7 +203,7 @@ CS_APPEALS = ['appeal 1', 'appeal 2']
 # Anti Terror card info
 CARD_AT_SHARE_MIN = 0
 CARD_AT_SHARE_MAX = 2
-AT_INCIDENT_TYPE = ['type1', "type2"]
+AT_INCIDENT_TYPES = []
 
 PERISHED_PEOPLE_WORK_TYPE = 'normal'
 AVG_PERISHED_PEOPLE = 3

@@ -14,6 +14,9 @@ def check_percent_number(number: int) -> bool:
 
 percents = Annotated[int, AfterValidator(check_percent_number)]
 
+calls_info: list[dict] = []
+ukios_info: list[dict] = []
+
 
 class Config(BaseModel):
     dropped_call_probability: percents  # percents
@@ -29,5 +32,5 @@ def load_config() -> Config:
         files_count=files_count,
         logs_directory_name=logs_directory_name,
         output_directory_name=output_directory_name,
-        date_zero=DATE_ZERO
+        date_zero=DATE_ZERO,
     )

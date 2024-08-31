@@ -180,7 +180,7 @@ def generate_card_from_eos_model(eos_value_dict: dict, date_from: datetime.datet
             case "card03":
                 return Card03(
                     dtCreate=dt_create,
-                    strIncidentType=random.choice(AMBULANCE_INCIDENT_TYPES),
+                    strIncidentType=random.choice(INCIDENT_TYPES_FOR_CARD03),
                     strWhoCalled=random.choice(WHO_CALLED),
                     bConsultation=check_event_probability(AMBULANCE_CONSULT_PROBABILITY),
                     patient=generate_patients_list(),
@@ -206,7 +206,7 @@ def generate_card_from_eos_model(eos_value_dict: dict, date_from: datetime.datet
             case "cardat":
                 return CardAT(
                     dtCreate=dt_create,
-                    strIncidentType=random.choice(AT_INCIDENT_TYPE),
+                    strIncidentType=random.choice(AT_INCIDENT_TYPES),
                     iPerishedPeople=int(
                         get_distribution_var_by_work_type(PERISHED_PEOPLE_WORK_TYPE, 'PERISHED_PEOPLE')),
                     iAffectedPeople=int(
