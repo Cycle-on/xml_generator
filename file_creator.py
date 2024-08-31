@@ -89,6 +89,7 @@ def create_file_from_model(model: BaseModel, filename: str = 'output', basename=
 
 
 def create_send_info_csv_files(filename: str, config_send_info_list: list[dict]):
+    config_send_info_list.sort(key=lambda x: x['dt_send'])
     filename = f'{filename}.csv'
     # Запись данных в CSV файл
     with open(filename, mode='w', newline='', encoding='utf-8') as file:

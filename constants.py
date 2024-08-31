@@ -1,14 +1,14 @@
-xml_count_per_file = 1_000  # Количество записей в одном файле
-files_count = 1_000  # Количество файлов
+xml_count_per_file = 1  # Количество записей в одном файле
+files_count = 10000  # Количество файлов
 files_prefix = 'TEST'  # префикс перед global_id в ukio и call
-
+SERVER_ADDRESS = '0.0.0.0'
 # google sheets table information
 SHEET_ID = '1bVCN8REheC7NrINGyiB3s837J6VmkOiwufSbyHztA4c'
 INCIDENT_TYPES_LIST_NAME = 'IncidentTypes'
 ADDRESSES_LIST_NAME = 'Addresses'
 
 MAX_RECALL_ATTEMPTS = 3  # максимальное количество попыток перезвона при сброшенном вызове
-DATE_ZERO_FORMAT = "2024-08-23_11-30-00"  # формат: YYYY-MM-DD_HH-MM-SS
+DATE_ZERO_FORMAT = "2024-08-31_20-38-00"  # формат: YYYY-MM-DD_HH-MM-SS
 
 AVG_DELAY_BETWEEN_CALLS_TIME = 5  # секунды, задержка между каждым вызовом
 

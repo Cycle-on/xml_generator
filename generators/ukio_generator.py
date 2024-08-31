@@ -1,5 +1,6 @@
 import random
 from copy import deepcopy
+from decimal import Decimal
 from pprint import pprint
 from datetime import timedelta as td
 
@@ -10,6 +11,7 @@ from generators.eos_generator import generate_card_from_eos_model, generate_rand
 from generators.phonecall_generator import generate_phone_data, generate_phone_date
 from generators import check_event_probability, genders
 from generators.random_generators import get_address_by_code, get_random_name, get_random_telephone_number
+from google_sheet_parser.parse_addresses import get_random_address
 from schemas.string_eos import StringEosType, Consult, Psycho, Operator
 from schemas.ukio_model import Ukio, TransferItem, Address, CallContent
 from schemas.phonecall import PhoneCall, redirectCall, Call
@@ -107,11 +109,15 @@ def generate_transfer_items_by_ukio_cards(eos_id: str,
 
 
 def __generate_ukio_address() -> Address:
-    string_address, district, city = get_address_by_code()
+    string_address, lat, long, city, district, kladr, fias = get_random_address()
     return Address(
         strAddress=string_address,
+        geoLatitude=Decimal(lat),
+        geoLongitude=Decimal(long),
+        strCity=city,
         strDistrict=district,
-        strCity=city
+        strCityKLADR=kladr,
+        strCityFIAS=fias
     )
 
 

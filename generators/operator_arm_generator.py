@@ -5,7 +5,7 @@ from generators.random_generators import get_random_telephone_number
 from schemas.string_eos import OperatorWork, Operator, Arm
 
 
-def generate_arm() -> Arm:
+def __generate_arm() -> Arm:
     return Arm(
         strArmNumber=get_random_telephone_number(),
         strArmPlace=random.choice(ARM_PLACES),
@@ -14,7 +14,7 @@ def generate_arm() -> Arm:
 
 
 def generate_operator_work(operator: Operator, date_from) -> OperatorWork:
-    arm = generate_arm()
+    arm = __generate_arm()
     return OperatorWork(
         operator=operator,
         operatorId=operator.operatorId,

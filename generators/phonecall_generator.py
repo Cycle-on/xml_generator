@@ -62,7 +62,8 @@ def recall(dt_call: datetime.datetime) -> tuple[datetime.datetime, list[PhoneCal
             seconds=get_distribution_var_by_work_type(OPERATOR_RECALL_WAITING_WORK_TYPE, "OPERATOR_RECALL_WAITING"))
 
         dt_end_call = dt_call + td(
-            get_distribution_var_by_work_type(OPERATOR_WAIT_ANSWER_RECALL_WORK_TYPE, "OPERATOR_WAIT_ANSWER_RECALL")
+            seconds=get_distribution_var_by_work_type(OPERATOR_WAIT_ANSWER_RECALL_WORK_TYPE,
+                                                      "OPERATOR_WAIT_ANSWER_RECALL")
         )
 
         p = PhoneCall(
@@ -104,7 +105,7 @@ def generate_phone_data(call_date, operator: Operator) -> list[PhoneCall]:
 
         dropped_timedelta = dt_end_call - dt_connect  # count drop time phone call
         break_time = random.randint(0, dropped_timedelta.seconds)
-        break_time_delta = td(seconds=break_time % 60, minutes=break_time // 60)
+        break_time_delta = td(seconds=break_time)
         step1_timedelta = dt_connect - dt_call
         # updating first call end time
         dt_end_call = dt_call + break_time_delta
@@ -156,8 +157,8 @@ def generate_phone_data(call_date, operator: Operator) -> list[PhoneCall]:
 
 def main():
     # random.seed(105)  # seed with dropped phone call
-    for _ in range(10):
-        pprint(generate_phone_data())
+    for _ in range(100):
+        pprint(generate_phone_data(datetime.datetime.now(), Operator()))
 
 
 if __name__ == '__main__':
