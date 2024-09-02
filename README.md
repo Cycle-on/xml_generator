@@ -26,5 +26,6 @@ https://www.python.org/downloads/
 ### Congratulations!
 
 # Constants
-
 You can change base values in constants.py in the root of project
+
+If constant has work_type, you can change work_type_constant with one of: normal/poisson/uniform
