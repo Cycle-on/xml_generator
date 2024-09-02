@@ -9,6 +9,7 @@ from google_sheet_parser.parse_incident_types import fill_incident_type_lists
 from schemas.phonecall import Calls
 from schemas.ukio_model import Ukios
 from config.config_data import DATE_ZERO
+from send_files import send_along
 
 config = load_config()
 
@@ -49,6 +50,8 @@ def main(date_zero=DATE_ZERO):
     create_send_info_csv_files('calls_to_send', calls_info)
     create_send_info_csv_files('ukios_to_send', ukios_info)
     print("finish time", datetime.datetime.now() - dt_start)
+    print("start send files")
+    send_along()
 
 
 if __name__ == '__main__':
