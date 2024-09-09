@@ -1,4 +1,5 @@
 import datetime
+import uuid
 
 from pydantic import Field, BaseModel
 
@@ -37,9 +38,14 @@ class Call(BaseModelWithId):
     strCallStatus: str = None
     phoneCall: PhoneCall = None
     PhoneCallID: str | None = None
-    dtCall: datetime.datetime
-    aCallEnded: bool = None
+    dtCall: datetime.datetime  #
+    dtCallEnd: datetime.datetime = None  #
+    aCallEnded: bool = None  #
     dtSend: datetime.datetime = None
+
+
+class MissedCall(BaseModelWithId):
+    missedCallId: str = Field(default_factory=lambda: BaseModelWithId._BaseModelWithId__get_next_id())
 
 
 class Calls(BaseModel):

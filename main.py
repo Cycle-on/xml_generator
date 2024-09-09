@@ -10,11 +10,37 @@ from schemas.phonecall import Calls
 from schemas.ukio_model import Ukios
 from config.config_data import DATE_ZERO
 from send_files import send_along
+import argparse
+import constants
 
 config = load_config()
 
+"""
+Не забудь заменить запросы в гугл таблице
+"""
+
+
+def parse_args():
+    parser = argparse.ArgumentParser()
+    # Добавляем параметры со значениями по умолчанию
+    parser.add_argument('--files-count', type=int, default=1, help='количество файлов')
+    parser.add_argument('--xmls', type=int, default=100, help='Количество документов в одном файле')
+    parser.add_argument('--send', action='store_true', help='Режим генератора')
+    parser.add_argument('--date', type=str, default=datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S'),
+                        help='Дата в формате: YYYY-MM-DD_HH-MM-SS')
+
+    # Парсим аргументы
+    args = parser.parse_args()
+    constants.files_count = args.files_count
+    constants.xml_count_per_file = args.xmls
+    send_files: bool = args.send
+    constants.DATE_ZERO_FORMAT = args.date
+
+    return send_files
+
 
 def main(date_zero=DATE_ZERO):
+    send_files: bool = parse_args()
     create_dirs()
     ukios_list = []
     calls_list = []
@@ -22,36 +48,39 @@ def main(date_zero=DATE_ZERO):
     models_create_time = None
     fill_incident_type_lists()
     fill_addresses()
+
     print("заполнил incident types")
     for i in range(config.files_count):
         for _ in range(xml_count_per_file):
 
-            u, c, = generate_ukio_phone_call_data(date_zero)
+            u = generate_ukio_phone_call_data(date_zero)
             date_zero += td(seconds=AVG_DELAY_BETWEEN_CALLS_TIME)
             if u is not None:
                 ukios_list.append(u)
                 ukios_info[-1]['filename'] = f'ukios_{i}.xml'
 
-            calls_list.append(c)
-            calls_info[-1]['filename'] = f'calls_{i}.xml'
+            # calls_list.append(c)
+            # calls_info[-1]['filename'] = f'calls_{i}.xml'
+
         ukios = Ukios(
             Ukios=ukios_list
         )
-        calls = Calls(
-            Call=calls_list,
-        )
+        # calls = Calls(
+        #     Call=calls_list
+        # )
 
         ukios_list = []
         calls_list = []
         models_create_time = datetime.datetime.now() - dt_start
         # print("models done", models_create_time)
         create_file_from_model(ukios, filename=f'ukios_{i}', basename="Ukios")
-        create_file_from_model(calls, filename=f'calls_{i}', basename='Calls')
-    create_send_info_csv_files('calls_to_send', calls_info)
+        # create_file_from_model(calls, filename=f'calls_{i}', basename='Calls')
+    # create_send_info_csv_files('calls_to_send', calls_info)
     create_send_info_csv_files('ukios_to_send', ukios_info)
     print("finish time", datetime.datetime.now() - dt_start)
     print("start send files")
-    send_along()
+    if send_files:
+        send_along()
 
 
 if __name__ == '__main__':

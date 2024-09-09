@@ -5,6 +5,7 @@ from schemas.eos_for_ukio_models import *
 
 
 class StringEosType(dict, Enum):
+
     s112 = {
         'name': 'Система 112',
         'code': "112",
@@ -59,6 +60,8 @@ class StringEosType(dict, Enum):
         "code": "06",
         "class": "cardcommserv",
         "id": 7,
+        'p_min': CARD_CS_SHARE_MIN,
+        'p_max': CARD_CS_SHARE_MAX,
     }
     edds = {
         "name": "ЕДДС",

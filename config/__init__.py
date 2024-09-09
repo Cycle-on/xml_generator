@@ -1,9 +1,6 @@
-import datetime
-
 from pydantic import BaseModel
 from pydantic.functional_validators import AfterValidator
 from typing_extensions import Annotated
-
 from config.config_data import *
 
 

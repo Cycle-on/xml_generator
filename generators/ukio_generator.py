@@ -11,7 +11,7 @@ from generators.eos_generator import generate_card_from_eos_model, generate_rand
 from generators.phonecall_generator import generate_phone_data, generate_phone_date
 from generators import check_event_probability, genders
 from generators.random_generators import get_address_by_code, get_random_name, get_random_telephone_number
-from google_sheet_parser.parse_addresses import get_random_address
+from google_sheet_parser.parse_addresses import get_random_address, ADDRESSES
 from schemas.string_eos import StringEosType, Consult, Psycho, Operator
 from schemas.ukio_model import Ukio, TransferItem, Address, CallContent
 from schemas.phonecall import PhoneCall, redirectCall, Call
@@ -92,6 +92,7 @@ def _check_ukio_cards(
     :return:  dict with eos_models
     """
     eos_dict = {}
+
     for eos in eos_list:
         card = generate_card_from_eos_model(eos, dt_send, operator)
         eos_dict[__decapitalize(card.__class__.__name__)] = card
@@ -105,19 +106,6 @@ def generate_transfer_items_by_ukio_cards(eos_id: str,
         eosClassTypeId=eos_id,
         dtTransfer=transfer_date,
         bSuccess=True
-    )
-
-
-def __generate_ukio_address() -> Address:
-    string_address, lat, long, city, district, kladr, fias = get_random_address()
-    return Address(
-        strAddress=string_address,
-        geoLatitude=Decimal(lat),
-        geoLongitude=Decimal(long),
-        strCity=city,
-        strDistrict=district,
-        strCityKLADR=kladr,
-        strCityFIAS=fias
     )
 
 
@@ -145,7 +133,8 @@ def generate_ukio_phone_call_data(call_date: datetime.datetime) -> tuple[Ukio, C
         ukio_dict['bWrong'] = True
         ukio_dict['bChildPlay'] = False
     elif check_event_probability(CALLS_WITHOUT_ANSWER_PROBABILITY):
-        return None, generate_call_from_phone_call(call_date, 'wrong')
+        # return missed call
+        return None #generate_call_from_phone_call(call_date, 'wrong')
 
     else:
         ukio_dict['cardState'] = card_state
@@ -154,7 +143,7 @@ def generate_ukio_phone_call_data(call_date: datetime.datetime) -> tuple[Ukio, C
         ukio_dict['bChildPlay'] = False
         ukio_dict |= ukio_eos_cards
         ukio_dict['eosItem'] = generate_eos_item_from_eos_list(eos_type_list, operator, call_date)
-        ukio_dict['address'] = __generate_ukio_address()
+        ukio_dict['address'] = random.choice(ADDRESSES)
         ukio_dict['callContent'] = __generate_call_content()
 
     if ukio_eos_cards and not ukio_dict['bWrong']:
@@ -195,10 +184,9 @@ def generate_ukio_phone_call_data(call_date: datetime.datetime) -> tuple[Ukio, C
     calls_info.append({'filename': '', 'dt_send': phone_calls[-1].dtSend})
     ukios_info.append({'filename': '', 'dt_send': phone_calls[-1].dtSend})
     ukio_dict['phoneCall'] = phone_calls
-    call = generate_call_from_phone_call(phone_calls[0])
 
     # make delay between calls
-    return Ukio(**ukio_dict), call
+    return Ukio(**ukio_dict)
 
 
 def main():

@@ -1,5 +1,9 @@
+import random
+from pprint import pprint
+
 from generators import *
-from generators.random_generators import get_random_name
+from generators.eos_models_generator import *
+from google_sheet_parser.parse_incident_types import CARDS_INDEXES_INCIDENT_TYPES
 from schemas.string_eos import *
 from schemas.string_eos import Psycho, Consult
 from schemas.eos_for_ukio_models import *
@@ -28,88 +32,6 @@ def _check_eos_probability(eos_value_dict: dict) -> bool:
     """
     if check_event_probability(EOS_SHARE_MIN, EOS_SHARE_MAX):
         return check_event_probability(eos_value_dict['p_min'], eos_value_dict['p_max'])
-
-
-def generate_patients_list() -> list[Patient]:
-    patients = []
-    patients_count = int(get_distribution_var_by_work_type(PATIENTS_COUNT_WORK_TYPE, 'PATIENTS_COUNT'))
-    for _ in range(patients_count):
-        gender = genders[check_event_probability(AMBULANCE_MALE_PROBABILITY)]
-        surname, name, middle_name = get_random_name(gender)
-        age = int(get_distribution_var_by_work_type(AMBULANCE_AGE_WORK_TYPE, "AMBULANCE_AGE"))
-        birth_day = get_random_birth_date_by_year(DATE_ZERO - td(days=365 * age))
-
-        patients.append(
-            Patient(
-                strLastName=surname,
-                strName=name,
-                strMiddleName=middle_name,
-                dtDateBirth=birth_day,
-                iAge=age,
-                strGender=gender,
-                strOccasion=random.choice(OCCASION_TYPES),
-                strAbilityMoveIndependently=random.choice(ABILITY_MOVE_INDEPENDENTLY),
-            )
-        )
-    return patients
-
-
-def generate_wanted_list() -> list[WantedPerson]:
-    wanted_persons = []
-    wanted_count = int(get_distribution_var_by_work_type(HOW_MANY_WANTED_WORK_TYPE, "HOW_MANY_WANTED"))
-    for _ in range(wanted_count):
-        gender = genders[check_event_probability(WANTED_MALE_GENDER_PROBABILITY)]
-        surname, name, middle_name = get_random_name(gender)
-        age = int(get_distribution_var_by_work_type(WANTED_AGE_WORK_TYPE, "WANTED_AGE"))
-        birth_day = get_random_birth_date_by_year(DATE_ZERO - td(days=365 * age))
-        wanted_persons.append(
-            WantedPerson(
-                strGender=gender,
-                iAge=age,
-                strHeightType=random.choice(HEIGHT_TYPES),
-                strBodyType=random.choice(BODY_TYPES),
-                strDressed=random.choice(DRESSES),
-                strSpecialSigns=random.choice(SPECIAL_SIGNS),
-                strLastName=surname,
-                strName=name,
-                strMiddleName=middle_name,
-                dtDateBirth=birth_day,
-            )
-        )
-    return wanted_persons
-
-
-def generate_suspects_list() -> list[Suspect]:
-    suspects = []
-    suspects_count = int(get_distribution_var_by_work_type(HOW_MANY_SUSPECTS_WORK_TYPE, 'HOW_MANY_SUSPECTS'))
-    for _ in range(suspects_count):
-        suspects.append(
-            Suspect(
-                strGender=genders[check_event_probability(SUSPECT_MALE_GENDER_PROBABILITY)],
-                iAge=int(get_distribution_var_by_work_type(SUSPECT_AGE_WORK_TYPE, 'SUSPECT_AGE')),
-                strHeightType=random.choice(HEIGHT_TYPES),
-                strBodyType=random.choice(BODY_TYPES),
-                strDressed=random.choice(DRESSES),
-                strSpecialSigns=random.choice(SPECIAL_SIGNS),
-            )
-        )
-    return suspects
-
-
-def generate_vehicles_list() -> list[Vehicle]:
-    vehicles = []
-    vehicles_count = int(get_distribution_var_by_work_type(VEHICLES_COUNT_WORK_TYPE, "VEHICLES_COUNT"))
-    for _ in range(vehicles_count):
-        vehicles.append(
-            Vehicle(
-                strVehicleType=random.choice(VEHICLE_TYPES),
-                strColorVehicleType=random.choice(VEHICLE_COLORS),
-                strRegistrationNumber=random.choice(VEHICLE_NUMBERS),
-                strRegion=random.choice(VEHICLE_REGIONS),
-                bHidden=check_event_probability(VEHICLE_HIDDEN_PROBABILITY)
-            )
-        )
-    return vehicles
 
 
 def generate_card_from_eos_model(eos_value_dict: dict, date_from: datetime.datetime, operator: Operator) -> T:
@@ -153,9 +75,9 @@ def generate_card_from_eos_model(eos_value_dict: dict, date_from: datetime.datet
             case "card01":
                 return Card01(
                     dtCreate=dt_create,
-                    strIncidentType=random.choice(INCIDENT_TYPES_FOR_CARD01),
+                    strIncidentType=generate_card_incident_types_from_list([eos_value_dict]),
                     strObject=random.choice(OBJECT_FOR_CARD01),
-                    strStoreys=random.choice(INCIDENT_TYPES_FOR_CARD01),
+                    strStoreys=random.choice(INCIDENT_TYPES_FOR_CARD01)['name'],
                     bObjectGasified=check_event_probability(OBJECT_GASIFIED_PROBABILITY),
                     strEstimation=str(int(np.random.normal(ESTIMATION, ESTIMATION_SCALE))),
                     strObservedConsequencesFire=random.choice(OBSERVED_CONSEQUENCES_FIRE),
@@ -169,7 +91,7 @@ def generate_card_from_eos_model(eos_value_dict: dict, date_from: datetime.datet
             case "card02":
                 return Card02(
                     dtCreate=dt_create,
-                    strIncidentType=random.choice(INCIDENT_TYPES_FOR_CARD02),
+                    strIncidentType=generate_card_incident_types_from_list([eos_value_dict]),
                     iNumberOffenders=int(
                         get_distribution_var_by_work_type(OFFENDERS_NUMBER_WORK_TYPE, "OFFENDERS_NUMBER")),
                     iNumberVehicle=int(get_distribution_var_by_work_type(VEHICLE_NUMBER_WORK_TYPE, "VEHICLE_NUMBER")),
@@ -180,7 +102,7 @@ def generate_card_from_eos_model(eos_value_dict: dict, date_from: datetime.datet
             case "card03":
                 return Card03(
                     dtCreate=dt_create,
-                    strIncidentType=random.choice(INCIDENT_TYPES_FOR_CARD03),
+                    strIncidentType=generate_card_incident_types_from_list([eos_value_dict]),
                     strWhoCalled=random.choice(WHO_CALLED),
                     bConsultation=check_event_probability(AMBULANCE_CONSULT_PROBABILITY),
                     patient=generate_patients_list(),
@@ -188,14 +110,14 @@ def generate_card_from_eos_model(eos_value_dict: dict, date_from: datetime.datet
             case "card04":
                 return Card04(
                     dtCreate=dt_create,
-                    strIncidentType=random.choice(GAS_INCIDENT_TYPES),
+                    strIncidentType=generate_card_incident_types_from_list([eos_value_dict]),
                     strInstructions=random.choice(GAS_INSTRUCTIONS),
                     bConsultation=check_event_probability(GAS_CONSULT_PROBABILITY),
                 )
             case "cardcommserv":
                 return CardCommServ(
                     dtCreate=dt_create,
-                    strIncidentType=random.choice(CS_INCIDENT_TYPES),
+                    strIncidentType=generate_card_incident_types_from_list([eos_value_dict]),
                     strCommServ=random.choice(C_S),
                     strInstructions=random.choice(CS_INSTRUCTIONS),
                     bConsultation=check_event_probability(CS_CONSULT_PROBABILITY),
@@ -206,7 +128,7 @@ def generate_card_from_eos_model(eos_value_dict: dict, date_from: datetime.datet
             case "cardat":
                 return CardAT(
                     dtCreate=dt_create,
-                    strIncidentType=random.choice(AT_INCIDENT_TYPES),
+                    strIncidentType=generate_card_incident_types_from_list([eos_value_dict]),
                     iPerishedPeople=int(
                         get_distribution_var_by_work_type(PERISHED_PEOPLE_WORK_TYPE, 'PERISHED_PEOPLE')),
                     iAffectedPeople=int(
@@ -233,6 +155,116 @@ def generate_random_eos_list() -> list[StringEosType]:
             if _check_eos_probability(eos_obj):
                 eos_list.append(eos_obj)
     return eos_list
+
+
+def check_list_equality(l1: list, l2: list) -> bool:
+    return set(l1) == set(l2)
+
+
+def delete_linked_eos_from_list_by_needed_count(incident_type_list: list, eos_count: int = 1,
+                                                ignored_types=None):
+    if ignored_types is None:
+        ignored_types = []
+    ans = []
+    for el in incident_type_list:
+        # if I have linked eoses, I need to check eoses which are ignored
+        if len(el.get('linked_eos', [])) < eos_count:
+            ans.append(el)
+    return ans
+
+
+def get_names_from_eos_type_list(eos_type_list: list[StringEosType]) -> list[str]:
+    ans = []
+    for el in eos_type_list:
+        ans.append(el['name'])
+    return ans
+
+
+def __make_section_from_list(s: list[dict]):
+    counter = 0
+    for el in s:
+        el['section_min'] = counter + 1
+        el['section_max'] = counter + el['ukio_count']
+        counter += el['ukio_count']
+    return s, counter
+
+
+def generate_card_incident_types_from_list(eos_type_list: list[StringEosType]) -> str:
+    return '-'
+    if len(eos_type_list) == 1:
+        string_eos_incident_types_list = delete_linked_eos_from_list_by_needed_count(
+            CARDS_INDEXES_INCIDENT_TYPES[int(eos_type_list[0]['code'])]
+        )
+    else:
+        string_eos_incident_types_list = delete_linked_eos_from_list_by_needed_count(
+            CARDS_INDEXES_INCIDENT_TYPES[int(eos_type_list[0]['code'])]
+        )
+    # else:
+    #
+    #     string_eos_incident_types_list = []
+    #     added_names = []
+    #     for i in range(len(eos_type_list)):
+    #         incident_types_list_by_eos: list = CARDS_INDEXES_INCIDENT_TYPES[int(eos_type_list[i]['code'])]
+    #
+    #         for var in incident_types_list_by_eos:
+    #             if var['name'] in added_names:
+    #                 continue
+    #
+    #             # at first, check double eoses
+    #             if var.get('linked_eos'):
+    #                 if len(var['linked_eos']) <= len(eos_type_list) - 1:  # if I have one linked eos
+    #                     linked_eos_name = var['linked_eos'][0]
+    #                     if linked_eos_name in get_names_from_eos_type_list(eos_type_list):
+    #                         string_eos_incident_types_list.append(var)
+    #             # at second, add without linked
+    #             else:
+    #                 string_eos_incident_types_list.append(var)
+    #             added_names.append(var['name'])
+    if len(eos_type_list) == 1:
+        string_eos_incident_types_list, last_number = __make_section_from_list(string_eos_incident_types_list)
+        one_incident = get_solo_incident_type(string_eos_incident_types_list, last_number)
+    else:
+        # many eoses algorithm
+        pass
+    return one_incident['name']
+
+
+def get_random_eos_incident_type(eos_type_list: list, incident_types_list, max_number):
+    eos_count = len(eos_type_list)
+    random_value = random.randint(1, max_number)  # 13
+    filtered_incident_types_list = []
+    for el in incident_types_list:
+        if el['section_min'] <= random_value <= el['section_max']:
+            if eos_count == 1:
+                filtered_incident_types_list.append(el)
+                break
+            if el.get('linked_eos'):
+                if len(el['linked_eos']) == eos_count - 1:
+                    filtered_incident_types_list.append(el)
+                    break
+                else:
+                    filtered_incident_types_list.append(el)
+                    return get_random_eos_incident_type(
+                        eos_type_list,
+                        delete_linked_eos_from_list_by_needed_count(
+                            incident_types_list,
+                            eos_count - len(el['linked_eos']),
+                            ignored_types=el['linked_eos']
+                        ),
+                        max_number
+                    )
+            else:
+                filtered_incident_types_list.append(el)
+                return  # something
+
+    return filtered_incident_types_list
+
+
+def get_solo_incident_type(section_incident_type_list: list, last_number: int):
+    random_value = random.randint(1, last_number)
+    for el in section_incident_type_list:
+        if el['section_min'] <= random_value <= el['section_max']:
+            return el
 
 
 def __generate_eos_resources(eos_type_list: list[StringEosType]) -> list[EosResource]:
@@ -298,11 +330,23 @@ def generate_eos_item_from_eos_list(eos_type_list: list[StringEosType],
     return eos_items
 
 
+random.seed(1696)
+
+
+def __find_seed():
+    for i in range(100000):
+        random.seed(i)
+        s = generate_random_eos_list()
+        if len(s) == 2:
+            if StringEosType.houseDepartment in s and StringEosType.fireDepartment in s:
+                print(i)
+                break
+
+
 def main():
-    for _ in range(1):
-        d = generate_random_eos_list()
-        for el in d:
-            generate_card_from_eos_model(el, datetime.datetime.now(), Operator())
+    pprint(generate_card_incident_types_from_list(
+        generate_random_eos_list()
+    ))
 
 
 if __name__ == '__main__':

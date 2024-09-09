@@ -14,8 +14,12 @@ config = load_config()
 def __send_file(filename: str):
     print(f'file {filename} was successfully send')
     return
+    headers = {
+        "password": SERVER_PASSWORD,
+        "login": SERVER_LOGIN
+    }
     with open(os.path.join('files', config.output_directory_name, filename), 'rb') as f:
-        requests.post(SERVER_ADDRESS, files={filename: f})
+        requests.post(SERVER_ADDRESS, headers=headers, files={filename: f})
 
 
 def send_by_csv(csv_filename: str):

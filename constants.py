@@ -1,5 +1,5 @@
-xml_count_per_file = 1  # Количество записей в одном файле
-files_count = 10000  # Количество файлов
+xml_count_per_file = 10_00  # Количество записей в одном файле
+files_count = 1  # Количество файлов
 files_prefix = 'TEST'  # префикс перед global_id в ukio и call
 SERVER_ADDRESS = '0.0.0.0'
 # google sheets table information
@@ -248,7 +248,7 @@ ABILITY_MOVE_INDEPENDENTLY = ['ability1', 'ability2']
 # card 04 info
 GAS_SHARE_MIN = 0
 GAS_SHARE_MAX = 10
-GAS_INCIDENT_TYPES = []
+INCIDENT_TYPES_FOR_CARD04 = []
 GAS_INSTRUCTIONS = ['instruction1', 'instruction2']
 GAS_CONSULT_PROBABILITY = 50
 
