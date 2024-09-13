@@ -4,17 +4,17 @@ from decimal import Decimal
 from pprint import pprint
 from datetime import timedelta as td
 
-from config import load_config, ukios_info, calls_info
+from config import load_config, ukios_info, missed_info
 from config.config_data import *
 from generators.eos_generator import generate_card_from_eos_model, generate_random_eos_list, T, \
     generate_eos_item_from_eos_list
-from generators.phonecall_generator import generate_phone_data, generate_phone_date
+from generators.phonecall_generator import generate_phone_data, generate_phone_date, generate_missed_call
 from generators import check_event_probability, genders
 from generators.random_generators import get_address_by_code, get_random_name, get_random_telephone_number
 from google_sheet_parser.parse_addresses import get_random_address, ADDRESSES
 from schemas.string_eos import StringEosType, Consult, Psycho, Operator
 from schemas.ukio_model import Ukio, TransferItem, Address, CallContent
-from schemas.phonecall import PhoneCall, redirectCall, Call
+from schemas.phonecall import PhoneCall, redirectCall, Call, MissedCall
 from schemas.string_schemas import IncidentTypes, CardStates, CallSource
 
 config = load_config()
@@ -109,7 +109,7 @@ def generate_transfer_items_by_ukio_cards(eos_id: str,
     )
 
 
-def generate_ukio_phone_call_data(call_date: datetime.datetime) -> tuple[Ukio, Call] | None:
+def generate_ukio_phone_call_data(call_date: datetime.datetime) -> Ukio | MissedCall:
     """
     creating ukio card with call_source = mobile phone
     :return: Ukio model
@@ -121,9 +121,14 @@ def generate_ukio_phone_call_data(call_date: datetime.datetime) -> tuple[Ukio, C
     operator = Operator()
     phone_calls: list[PhoneCall] = generate_phone_data(call_date, operator)
     eos_type_list: list[StringEosType] = generate_random_eos_list()
-
     ukio_eos_cards = _check_ukio_cards(eos_type_list, phone_calls[-1].dtSend, operator)
-    if check_event_probability(CHILD_PLAY_UKIO_PROBABILITY):
+
+    if check_event_probability(MISSED_CALL_PROBABILITY):
+
+        missed_info.append({'filename': '', 'dt_send': phone_calls[0].dtSend})
+        return generate_missed_call(phone_calls[0])
+
+    elif check_event_probability(CHILD_PLAY_UKIO_PROBABILITY):
         ukio_dict['cardState'] = "child play"
         ukio_dict['bWrong'] = True
         ukio_dict['bChildPlay'] = True
@@ -132,9 +137,6 @@ def generate_ukio_phone_call_data(call_date: datetime.datetime) -> tuple[Ukio, C
         ukio_dict['cardState'] = "wrong"
         ukio_dict['bWrong'] = True
         ukio_dict['bChildPlay'] = False
-    elif check_event_probability(CALLS_WITHOUT_ANSWER_PROBABILITY):
-        # return missed call
-        return None #generate_call_from_phone_call(call_date, 'wrong')
 
     else:
         ukio_dict['cardState'] = card_state
@@ -181,21 +183,12 @@ def generate_ukio_phone_call_data(call_date: datetime.datetime) -> tuple[Ukio, C
     ukio_dict['dtSend'] = phone_calls[-1].dtSend
     ukio_dict['dtUpdate'] = phone_calls[-1].dtSend
     ukio_dict['dtCreate'] = phone_calls[-1].dtConnect
-    calls_info.append({'filename': '', 'dt_send': phone_calls[-1].dtSend})
+
     ukios_info.append({'filename': '', 'dt_send': phone_calls[-1].dtSend})
     ukio_dict['phoneCall'] = phone_calls
 
+    ukio_dict['dtCall'] = phone_calls[-1].dtCall
+    ukio_dict['dtCallEnded'] = phone_calls[-1].dtEndCall
+    ukio_dict['aCallEnded'] = phone_calls[-1].aCallEnded
     # make delay between calls
     return Ukio(**ukio_dict)
-
-
-def main():
-    for _ in range(1):
-        d = generate_ukio_phone_call_data()
-        pprint(d)
-        # if d.get('Psycho') or d.get('Consult'):
-        #     print(d)
-
-
-if __name__ == '__main__':
-    main()

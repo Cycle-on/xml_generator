@@ -1,5 +1,6 @@
 import datetime
 import uuid
+from decimal import Decimal
 
 from pydantic import Field, BaseModel
 
@@ -46,8 +47,17 @@ class Call(BaseModelWithId):
 
 class MissedCall(BaseModelWithId):
     missedCallId: str = Field(default_factory=lambda: BaseModelWithId._BaseModelWithId__get_next_id())
+    dtCall: datetime.datetime
+    dtSend: datetime.datetime
+    dtCallEnd: datetime.datetime = None
+    strCallEndReason: str = None
+    strCgPN: str = None
+    strAddressDevice: str = None
+    appLatitude: Decimal = None
+    appLongitude: Decimal = None
+    appCoordAccuracy: int = None
+    appLocAddress: str = None
 
 
-class Calls(BaseModel):
-    Call: list[Call]
-    dtSend: datetime.datetime = datetime.datetime.now()
+class MissedCalls(BaseModel):
+    missedCalls: list[MissedCall]

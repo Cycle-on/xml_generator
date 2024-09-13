@@ -11,7 +11,7 @@ def check_percent_number(number: int) -> bool:
 
 percents = Annotated[int, AfterValidator(check_percent_number)]
 
-calls_info: list[dict] = []
+missed_info: list[dict] = []
 ukios_info: list[dict] = []
 
 

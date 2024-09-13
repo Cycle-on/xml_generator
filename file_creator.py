@@ -28,7 +28,8 @@ def __generate_xml_from_pydantic(root: ET.Element, model: dict, name='ukio'):
     """
     sub_root = ET.SubElement(root, name)
     for feature_name, feature_value in model.items():
-
+        if feature_name in ('phoneCall', 'callContent', 'address', 'era', 'psycho', 'consult', 'transferItem', 'receptionItem', 'eosItem', 'card01', 'card02', 'card03', 'card04', 'cardAT', 'cardCommServ', 'redirectCall', 'operator'):
+            feature_name = __up_first_verb(feature_name)
         if feature_value is None:
             continue
         elif isinstance(feature_value, dict):  # if we have pydantic model

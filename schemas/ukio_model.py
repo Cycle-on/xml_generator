@@ -176,6 +176,9 @@ class Ukio(BaseModelWithId):
     dtSend: datetime.datetime
     dtCreate: datetime.datetime = None
     dtUpdate: datetime.datetime = None
+    dtCall: datetime.datetime = None
+    dtCallEnd: datetime.datetime = None
+    aCallEnded: bool = None
     nCasualties: int = None
     bHumanThreat: bool = False
     bChs: bool = False

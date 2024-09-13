@@ -81,7 +81,15 @@ AVG_DEPARTMENT_ANSWER_TIME = 15  # среднее время ответа слу
 DEPARTMENT_SCALE = 8
 
 # все вероятности в процентах от 0 до 100
-CALLS_WITHOUT_ANSWER_PROBABILITY = 10  # вероятность вызова без ответа оператора
+MISSED_CALL_PROBABILITY = 20  # вероятность вызова без ответа оператора
+MISSED_CALL_END_REASON = ['reason1', 'reason2']
+MISSED_CALL_RANDOM_ADDRESS = ['address1', 'address2']
+MISSED_CALL_WAIT_ANSWER_TIME_WORK_TYPE = 'normal'
+MISSED_CALL_WAIT_ANSWER_TIME_LOW = 1
+MISSED_CALL_WAIT_ANSWER_TIME_HIGH = 1
+MISSED_CALL_WAIT_ANSWER_TIME_LAMBDA = 1
+AVG_MISSED_CALL_WAIT_ANSWER_TIME = 30  # секунды
+MISSED_CALL_WAIT_ANSWER_TIME_SCALE = 4
 
 CHILD_PLAY_UKIO_PROBABILITY = 5  # вероятность детской шалости
 WRONG_CALLS_PROBABILITY = 5  # вероятность ложного вызова
