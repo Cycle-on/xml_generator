@@ -10,6 +10,10 @@ from schemas.eos_for_ukio_models import Patient, WantedPerson, Suspect, Vehicle
 
 
 def generate_patients_list() -> list[Patient]:
+    """
+    create a patient list for card03
+    :return:
+    """
     patients = []
     patients_count = int(get_distribution_var_by_work_type(PATIENTS_COUNT_WORK_TYPE, 'PATIENTS_COUNT'))
     for _ in range(patients_count):

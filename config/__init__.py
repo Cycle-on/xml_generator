@@ -5,6 +5,11 @@ from config.config_data import *
 
 
 def check_percent_number(number: int) -> bool:
+    """
+    percents validator
+    :param number:
+    :return:
+    """
     assert 0 <= number <= 100, "call probability must be percents"
     return number
 

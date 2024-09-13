@@ -14,13 +14,18 @@ from generators.random_generators import get_address_by_code, get_random_name, g
 from google_sheet_parser.parse_addresses import get_random_address, ADDRESSES
 from schemas.string_eos import StringEosType, Consult, Psycho, Operator
 from schemas.ukio_model import Ukio, TransferItem, Address, CallContent
-from schemas.phonecall import PhoneCall, redirectCall, Call, MissedCall
+from schemas.phonecall import PhoneCall, redirectCall, MissedCall
 from schemas.string_schemas import IncidentTypes, CardStates, CallSource
 
 config = load_config()
 
 
 def generate_phonecall_from_redirect(dt_call: datetime.datetime) -> PhoneCall:
+    """
+    a function creates a phoneCall model which is used to create redirect call
+    :param dt_call:
+    :return:
+    """
     dt_call, dt_connect, dt_end_call, date_send = generate_phone_date(
         dt_call=dt_call
     )
@@ -33,31 +38,11 @@ def generate_phonecall_from_redirect(dt_call: datetime.datetime) -> PhoneCall:
     )
 
 
-def generate_call_from_phone_call(phone_call: PhoneCall | datetime.datetime, rtype='') -> Call:
-    if rtype == 'wrong':
-        return Call(
-            strCallStatus='status1',
-            dtCall=phone_call,
-        )
-
-    phone_call_without_end_params = deepcopy(phone_call)
-
-    phone_call_without_end_params.aCallEnded = None
-    phone_call_without_end_params.bCallEnded = None
-    phone_call_without_end_params.RedirectCall = None
-    phone_call_without_end_params.dtEndCall = None
-    phone_call_without_end_params.bOperatorIniciatied = None
-
-    return Call(
-        strCallStatus=random.choice(list(CardStates)),
-        phoneCall=phone_call_without_end_params,
-        PhoneCallID=phone_call_without_end_params.phoneCallId,
-        dtCall=phone_call.dtCall,
-        dtSend=phone_call.dtCall + td(seconds=random.randint(3, 10))
-    )
-
-
 def __generate_call_content() -> CallContent:
+    """
+    function returning call content for ukio card
+    :return:
+    """
     applicant_number = get_random_telephone_number()
     applicant_surname, applicant_name, applicant_middle_name, = get_random_name(
         genders[check_event_probability(CALL_CONTENT_APPLICANT_MALE_PROBABILITY)])
@@ -77,6 +62,11 @@ def __generate_call_content() -> CallContent:
 
 
 def __decapitalize(s: str):
+    """
+    make the first letter lower
+    :param s:
+    :return:
+    """
     return s[0].lower() + s[1:]
 
 
@@ -102,6 +92,12 @@ def _check_ukio_cards(
 
 def generate_transfer_items_by_ukio_cards(eos_id: str,
                                           transfer_date: datetime.datetime) -> TransferItem:
+    """
+    a function creates transfer item for ukio card
+    :param eos_id:
+    :param transfer_date:
+    :return:
+    """
     return TransferItem(
         eosClassTypeId=eos_id,
         dtTransfer=transfer_date,
@@ -112,53 +108,69 @@ def generate_transfer_items_by_ukio_cards(eos_id: str,
 def generate_ukio_phone_call_data(call_date: datetime.datetime) -> Ukio | MissedCall:
     """
     creating ukio card with call_source = mobile phone
-    :return: Ukio model
+    at first function create card state, random incident type from list, one operator for one card
+    then creating phonecalls and eos cards by probabilities
+    :return: Ukio model or missed call model
     """
     ukio_dict = {}
+    # create non-logic fields
     card_state = random.choice(list(CardStates))
     incident_type = random.choice(list(IncidentTypes))
     call_source = CallSource.mobile_phone
+    # create fields with some logica
     operator = Operator()
     phone_calls: list[PhoneCall] = generate_phone_data(call_date, operator)
     eos_type_list: list[StringEosType] = generate_random_eos_list()
-    ukio_eos_cards = _check_ukio_cards(eos_type_list, phone_calls[-1].dtSend, operator)
-
+    ukio_eos_cards: dict[str, T] = _check_ukio_cards(eos_type_list, phone_calls[-1].dtSend, operator)
+    # start checks random events
+    # missed call without ukio
     if check_event_probability(MISSED_CALL_PROBABILITY):
-
         missed_info.append({'filename': '', 'dt_send': phone_calls[0].dtSend})
         return generate_missed_call(phone_calls[0])
-
+    # child play ukio card
     elif check_event_probability(CHILD_PLAY_UKIO_PROBABILITY):
         ukio_dict['cardState'] = "child play"
         ukio_dict['bWrong'] = True
         ukio_dict['bChildPlay'] = True
-
+    # wrong ukio card
     elif check_event_probability(WRONG_CALLS_PROBABILITY):
         ukio_dict['cardState'] = "wrong"
         ukio_dict['bWrong'] = True
         ukio_dict['bChildPlay'] = False
-
+    # ukio card with some event
     else:
+        # non-logic
         ukio_dict['cardState'] = card_state
         ukio_dict['incidentType'] = incident_type
         ukio_dict['bWrong'] = False
         ukio_dict['bChildPlay'] = False
+        # logic fields
+        ukio_dict['address'] = random.choice(ADDRESSES)
         ukio_dict |= ukio_eos_cards
         ukio_dict['eosItem'] = generate_eos_item_from_eos_list(eos_type_list, operator, call_date)
-        ukio_dict['address'] = random.choice(ADDRESSES)
         ukio_dict['callContent'] = __generate_call_content()
 
-    if ukio_eos_cards and not ukio_dict['bWrong']:
-        ukio_eos_card = ukio_eos_cards[random.choice(list(ukio_eos_cards.keys()))]
+    if ukio_eos_cards and not ukio_dict['bWrong']:  # if card has eos card
+        """
+        conditional creates redirect call to random eos
+        """
+        # take random eos from eoses generated for ukio
+        eos_string_class_name = random.choice(list(ukio_eos_cards.keys()))
+        ukio_eos_card = ukio_eos_cards[eos_string_class_name]
+        # if card need redirect
         if not isinstance(ukio_eos_card, Psycho) and not isinstance(ukio_eos_card, Consult):
+            # creating redirect call
             eos_id = ''
             for eos_card in StringEosType:
-                if eos_card.get('class') == type(ukio_eos_card):
+                # linear search for stringEosType to find eos class type index
+                if eos_card.get('class').lower() == eos_string_class_name.lower():
                     eos_id = str(eos_card['id'])
                     break
+
+            # create redirect call params from phoneCall model
             redirect_time_confirm = ukio_eos_card.dtCreate + td(seconds=random.randint(10, 40))
             redirect_phone_call = generate_phonecall_from_redirect(redirect_time_confirm)
-
+            # fill redirect call
             phone_calls[-1].RedirectCall = redirectCall(
                 eosClassTypeId=eos_id,
                 dtRedirectTime=ukio_eos_card.dtCreate,
@@ -170,6 +182,7 @@ def generate_ukio_phone_call_data(call_date: datetime.datetime) -> Ukio | Missed
 
             # add new phonecall
             if len(phone_calls) > 1:
+                # add phone call with redirect info
                 phone_calls.insert(-2, redirect_phone_call)
             else:
                 phone_calls.insert(0, redirect_phone_call)
@@ -178,17 +191,19 @@ def generate_ukio_phone_call_data(call_date: datetime.datetime) -> Ukio | Missed
 
             # creating transfer item
             ukio_dict['transferItem'] = [generate_transfer_items_by_ukio_cards(eos_id, phone_calls[-1].dtSend)]
-
+    # fill call info to ukio root
     ukio_dict['callSource'] = call_source
+
+    # fill date fields with last phone call information
     ukio_dict['dtSend'] = phone_calls[-1].dtSend
     ukio_dict['dtUpdate'] = phone_calls[-1].dtSend
     ukio_dict['dtCreate'] = phone_calls[-1].dtConnect
-
-    ukios_info.append({'filename': '', 'dt_send': phone_calls[-1].dtSend})
-    ukio_dict['phoneCall'] = phone_calls
-
     ukio_dict['dtCall'] = phone_calls[-1].dtCall
     ukio_dict['dtCallEnded'] = phone_calls[-1].dtEndCall
     ukio_dict['aCallEnded'] = phone_calls[-1].aCallEnded
-    # make delay between calls
+    # add phonecalls to ukio
+    ukio_dict['phoneCall'] = phone_calls
+    # appending to queue for sending module
+    ukios_info.append({'filename': '', 'dt_send': phone_calls[-1].dtSend})
+
     return Ukio(**ukio_dict)

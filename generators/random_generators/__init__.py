@@ -3,6 +3,11 @@ import random
 
 
 def execute_district(address: str):
+    """
+    clear district from address
+    :param address:
+    :return:
+    """
     for el in address:
         district = el.split()
 
@@ -53,6 +58,11 @@ def get_address_by_code(region_code: str | int = "27") -> tuple[str, str, str]:
 
 
 def get_random_name(gender: str) -> list[str]:
+    """
+    create random fake full name from files by gender
+    :param gender:
+    :return:
+    """
     if gender == 'F':
         with open(os.path.join('generators', 'random_generators', 'random_names', 'female.txt')) as f:
             return random.choice(f.readlines())[:-1].split()
@@ -62,6 +72,10 @@ def get_random_name(gender: str) -> list[str]:
 
 
 def get_random_telephone_number():
+    """
+    create random fake telephone number
+    :return:
+    """
     first_part = str(random.randint(950, 999))
     second_part = str(random.randint(0, 9999999))
     return f"+7({first_part})-{second_part[:3]}-{second_part[3:]}"

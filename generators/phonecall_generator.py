@@ -10,7 +10,7 @@ import numpy as np
 from config.config_data import *
 from generators.random_generators import get_random_telephone_number
 from schemas.string_eos import Operator
-from schemas.phonecall import PhoneCall, Call, MissedCall
+from schemas.phonecall import PhoneCall, MissedCall
 from generators import check_event_probability, get_distribution_var_by_work_type
 from schemas.string_schemas import CardStates
 

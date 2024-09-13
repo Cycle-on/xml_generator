@@ -30,6 +30,12 @@ S = TypeVar("S", "poisson", "uniform", "normal")
 
 
 def get_distribution_var_by_work_type(work_type: S, var_name: str) -> int | float:
+    """
+    function get variable work type and returning random value using variables in constants
+    :param work_type:
+    :param var_name:
+    :return:
+    """
     match work_type:
         case "poisson":
             try:

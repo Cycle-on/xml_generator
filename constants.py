@@ -1,7 +1,8 @@
-xml_count_per_file = 10_00  # Количество записей в одном файле
+xml_count_per_file = 100  # Количество записей в одном файле
 files_count = 1  # Количество файлов
 files_prefix = 'TEST'  # префикс перед global_id в ukio и call
 SERVER_ADDRESS = '0.0.0.0'
+
 # google sheets table information
 SHEET_ID = '1bVCN8REheC7NrINGyiB3s837J6VmkOiwufSbyHztA4c'
 INCIDENT_TYPES_LIST_NAME = 'IncidentTypes'
@@ -14,11 +15,14 @@ AVG_DELAY_BETWEEN_CALLS_TIME = 5  # секунды, задержка между 
 
 OPERATOR_STATES = ['вошел в систему', 'вышел из системы']
 ARM_PLACES = ["ЦОВ", "РЦОВ", "ЕДДС", "ДДС 01", "ДДС 02", "ДДС 03", "ДДС 04", "ДДС АТ", "ДДС ЖКХ", "другое"]
-# константы с припиской _SCALE - среднеквадратичное отклонение
 # other eos timings
-CALL_CONTENT_APPLICANT_MALE_PROBABILITY = 50
-CALL_NUMBER_APPLICANT_NUMBER_EQUALITY_PROBABILITY = 30
-INCIDENT_DESCRIPTIONS = ["desc1", "desc2"]
+
+# константы с припиской _SCALE - среднеквадратичное отклонение
+
+# Call Content
+CALL_CONTENT_APPLICANT_MALE_PROBABILITY = 50  # вероятность того что в блоке call content в поле male будет мужской пол
+CALL_NUMBER_APPLICANT_NUMBER_EQUALITY_PROBABILITY = 30  # вероятность того, что номер с которого был совершен вызов равен телефону со слов заявителя
+INCIDENT_DESCRIPTIONS = ["desc1", "desc2"]  # Описания инцидентов для call content
 
 OPERATOR_WAIT_ANSWER_RECALL_WORK_TYPE = 'normal'
 OPERATOR_WAIT_ANSWER_RECALL_LOW = 1
@@ -84,6 +88,7 @@ DEPARTMENT_SCALE = 8
 MISSED_CALL_PROBABILITY = 20  # вероятность вызова без ответа оператора
 MISSED_CALL_END_REASON = ['reason1', 'reason2']
 MISSED_CALL_RANDOM_ADDRESS = ['address1', 'address2']
+
 MISSED_CALL_WAIT_ANSWER_TIME_WORK_TYPE = 'normal'
 MISSED_CALL_WAIT_ANSWER_TIME_LOW = 1
 MISSED_CALL_WAIT_ANSWER_TIME_HIGH = 1
@@ -173,7 +178,7 @@ VEHICLE_NUMBER_WORK_TYPE = 'normal'
 VEHICLE_NUMBER_LOW = 1
 VEHICLE_NUMBER_HIGH = 1
 VEHICLE_NUMBER_LAMBDA = 1
-AVG_VEHICLE_NUMBER = 5
+AVG_VEHICLE_NUMBER = 5  # среднее число для поля vehicle
 VEHICLE_NUMBER_SCALE = 1
 
 # suspect
@@ -196,6 +201,7 @@ HEIGHT_TYPES = ["Рост 1", "Рост 2"]
 BODY_TYPES = ["Тип тела 1", 'тип тела 2', 'тип тела 3']
 DRESSES = ["одежда1", "одежда2", 'одежда3']
 SPECIAL_SIGNS = ['спец знак 1', 'спец знак 2']
+
 # Wanted Person
 HOW_MANY_WANTED_WORK_TYPE = 'normal'
 HOW_MANY_WANTED_LOW = 1
