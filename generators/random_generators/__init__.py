@@ -42,7 +42,7 @@ def execute_district(address: str):
 
 
 def get_address_by_code(region_code: str | int = "27") -> tuple[str, str, str]:
-    with open(os.path.join('generators', 'random_generators', 'addresses', f"{region_code}.txt")) as f:
+    with open(os.path.join('generators', 'random_generators', 'addresses', f"{region_code}.txt"), encoding='utf-8') as f:
         all_streets = f.readlines()
     # with open(f"{region_code}.txt") as f:
     #     all_streets = f.readlines()
@@ -64,10 +64,11 @@ def get_random_name(gender: str) -> list[str]:
     :return:
     """
     if gender == 'F':
-        with open(os.path.join('generators', 'random_generators', 'random_names', 'female.txt')) as f:
+        with open(os.path.join('generators', 'random_generators', 'random_names', 'female.txt'), encoding='utf-8') as f:
             return random.choice(f.readlines())[:-1].split()
 
-    with open(os.path.join('generators', 'random_generators', 'random_names', "male.txt")) as f:
+    with open(os.path.join('generators', 'random_generators', 'random_names', "male.txt"), encoding='utf-8') as f:
+
         return random.choice(f.readlines())[:-1].split()
 
 
