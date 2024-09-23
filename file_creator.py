@@ -7,6 +7,7 @@ import xml.etree.ElementTree as ET
 from pydantic import BaseModel
 
 from config import load_config
+from send_files import modify_xml_file_to_send
 
 config = load_config()
 
@@ -28,7 +29,10 @@ def __generate_xml_from_pydantic(root: ET.Element, model: dict, name='ukio'):
     """
     sub_root = ET.SubElement(root, name)
     for feature_name, feature_value in model.items():
-        if feature_name in ('phoneCall', 'callContent', 'address', 'era', 'psycho', 'consult', 'transferItem', 'receptionItem', 'eosItem', 'card01', 'card02', 'card03', 'card04', 'cardAT', 'cardCommServ', 'redirectCall', 'operator'):
+        if feature_name in (
+                'phoneCall', 'callContent', 'address', 'era', 'psycho', 'consult', 'transferItem', 'receptionItem',
+                'eosItem',
+                'card01', 'card02', 'card03', 'card04', 'cardAT', 'cardCommServ', 'redirectCall', 'operator'):
             feature_name = __up_first_verb(feature_name)
         if feature_value is None:
             continue
@@ -74,7 +78,9 @@ def create_file_from_model(model: BaseModel, filename: str = 'output', basename=
         root_ = ET.Element(basename)
         sub_root = __generate_xml_from_pydantic(root_, model.dict(), basename)
         tree = ET.ElementTree(sub_root)
-        tree.write(os.path.join(config.output_directory_name, f"{filename}.xml"), encoding='utf-8')
+        file_path = os.path.join(config.output_directory_name, f"{filename}.xml")
+        tree.write(file_path, encoding='utf-8')
+        modify_xml_file_to_send(file_path)
         return True
     except Exception as ex:
         print(traceback.print_exc())
@@ -94,6 +100,9 @@ def create_send_info_csv_files(filename: str, config_send_info_list: list[dict])
     filename = f'{filename}.csv'
     # Запись данных в CSV файл
     with open(filename, mode='w', newline='', encoding='utf-8') as file:
-        writer = csv.DictWriter(file, fieldnames=config_send_info_list[0].keys())
-        writer.writeheader()  # Записываем заголовки
-        writer.writerows(config_send_info_list)  # Записываем строки данных
+        try:
+            writer = csv.DictWriter(file, fieldnames=config_send_info_list[0].keys())
+            writer.writeheader()  # Записываем заголовки
+            writer.writerows(config_send_info_list)  # Записываем строки данных
+        except IndexError:
+            return False

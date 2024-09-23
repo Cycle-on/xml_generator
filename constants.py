@@ -1,4 +1,4 @@
-xml_count_per_file = 100  # Количество записей в одном файле
+xml_count_per_file = 2  # Количество записей в одном файле
 files_count = 1  # Количество файлов
 files_prefix = 'TEST'  # префикс перед global_id в ukio и call
 SERVER_ADDRESS = '0.0.0.0'
@@ -85,7 +85,7 @@ AVG_DEPARTMENT_ANSWER_TIME = 15  # среднее время ответа слу
 DEPARTMENT_SCALE = 8
 
 # все вероятности в процентах от 0 до 100
-MISSED_CALL_PROBABILITY = 20  # вероятность вызова без ответа оператора
+MISSED_CALL_PROBABILITY = 0  # вероятность вызова без ответа оператора
 MISSED_CALL_END_REASON = ['reason1', 'reason2']
 MISSED_CALL_RANDOM_ADDRESS = ['address1', 'address2']
 

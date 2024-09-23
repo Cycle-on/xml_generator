@@ -80,7 +80,8 @@ def main(date_zero=DATE_ZERO):
     print("finish time", datetime.datetime.now() - dt_start)
     print("start send files")
     if send_files:
-        create_send_info_csv_files('missed_calls_to_send', missed_info)
+        if create_send_info_csv_files('missed_calls_to_send', missed_info) is False:
+            pass
         create_send_info_csv_files('ukios_to_send', ukios_info)
         send_along()
 
