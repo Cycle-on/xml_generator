@@ -2,6 +2,7 @@ import csv
 import datetime
 import os
 import time
+from idlelib.iomenu import encoding
 
 from constants import SERVER_ADDRESS
 from config import load_config
@@ -13,7 +14,7 @@ config = load_config()
 
 
 def modify_xml_file_to_send(file_path: str):
-    with open(file_path, 'r') as f:
+    with open(file_path, 'r', encoding='utf-8') as f:
         middle_file = ["""<?xml version="1.0" encoding="UTF-8"?> 
     <SOAP-ENV:Envelope 
      xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" 
@@ -24,7 +25,7 @@ def modify_xml_file_to_send(file_path: str):
 
         middle_file.append("""</SOAP-ENV:Body> 
     </SOAP-ENV:Envelope>""")
-    with open(file_path, 'w+') as f:
+    with open(file_path, 'w+', encoding='utf-8') as f:
         f.writelines(middle_file)
 
 
@@ -100,7 +101,7 @@ def __send_file(filename: str):
         </address> 
     </Ukio> 
 </Ukios>"""
-    res = open(os.path.join(config.output_directory_name, filename), 'r').read()
+    res = open(os.path.join(config.output_directory_name, filename), 'r', encoding='utf-8').read()
     data = """<?xml version="1.0" encoding="UTF-8"?> 
 <SOAP-ENV:Envelope 
  xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" 
