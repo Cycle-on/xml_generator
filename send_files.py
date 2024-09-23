@@ -15,9 +15,11 @@ def __send_file(filename: str):
     print(f'file {filename} was successfully send')
     return
     headers = {
-        "password": SERVER_PASSWORD,
-        "login": SERVER_LOGIN
+        "PASSWORD": SERVER_PASSWORD,
+        "USERNAME": SERVER_LOGIN,
     }
+    data = open(os.path.join(config.output_directory_name, filename), 'r').read()
+
     with open(os.path.join('files', config.output_directory_name, filename), 'rb') as f:
         requests.post(SERVER_ADDRESS, headers=headers, files={filename: f})
 
@@ -42,7 +44,7 @@ def send_by_csv(csv_filename: str):
 
 
 def send_along():
-    thread1 = threading.Thread(target=lambda: send_by_csv('calls_to_send.csv'))
+    thread1 = threading.Thread(target=lambda: send_by_csv('missed_calls_to_send.csv'))
     thread2 = threading.Thread(target=lambda: send_by_csv('ukios_to_send.csv'))
 
     thread1.start()
