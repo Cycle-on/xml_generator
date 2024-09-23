@@ -30,85 +30,14 @@ def modify_xml_file_to_send(file_path: str):
 
 
 def __send_file(filename: str):
-    # print(f'file {filename} was successfully send')
     headers = {
-
+        "Content-Type": "application/xml",
+        "Authorization": "Basic cnNjLXJlZ2lvbi0yNzppbW00SjNUa0ZQRGJZbzh5dTRYdXFqZTA4cXlKVnhJVA=="
     }
-    json = {
-        "authentication":
-            {
-                "password": SERVER_PASSWORD,
-                "username": SERVER_LOGIN,
-            }
 
-    }
-    data1 = """<Ukios> 
-    <Ukio> 
-        <globalId>TEST_YYY</globalId> 
-        <dtSend>2024-09-10T20:39:58.684566</dtSend> 
-        <dtCreate>2024-09-10T20:39:35.684566</dtCreate> 
-        <dtUpdate>2024-09-10T20:39:58.684566</dtUpdate> 
-        <bHumanThreat>False</bHumanThreat> 
-        <bChs>False</bChs> 
-        <bWrong>False</bWrong> 
-        <bChildPlay>False</bChildPlay> 
-        <phoneCall> 
-            <phoneCallId>393c4cbf-1a10-411c-84b4-efc3193d562f</phoneCallId> 
-            <dtSend>2024-09-10T20:39:58.684566</dtSend> 
-            <bOperatorIniciatied>False</bOperatorIniciatied> 
-            <dtCall>2024-09-10T20:38:05</dtCall> 
-            <dtConnect>2024-09-10T20:38:05.647146</dtConnect> 
-            <bCallEnded>False</bCallEnded> 
-            <aCallEnded>True</aCallEnded> 
-            <dtEndCall>2024-09-10T20:39:14</dtEndCall> 
-            <OperatorId>e7e96b1d-32a1-4240-ada4-50c7e9b5f968</OperatorId> 
-        </phoneCall> 
-        <phoneCall> 
-            <phoneCallId>63ce549e-d141-4a22-96e6-6a5ef166f87a</phoneCallId> 
-            <dtSend>2024-09-10T20:39:58.684566</dtSend> 
-            <bOperatorIniciatied>True</bOperatorIniciatied> 
-            <dtCall>2024-09-10T20:39:20.787909</dtCall> 
-            <dtConnect>2024-09-10T20:39:35.684566</dtConnect> 
-            <bCallEnded>True</bCallEnded> 
-            <aCallEnded>False</aCallEnded> 
-            <dtEndCall>2024-09-10T20:39:55.684566</dtEndCall> 
-            <OperatorId>e7e96b1d-32a1-4240-ada4-50c7e9b5f968</OperatorId> 
-        </phoneCall> 
-        <callContent> 
-            <callContentId>c6441205-b370-4083-b455-6a4a13e30bc1</callContentId> 
-            <strLastName>Ефимов</strLastName> 
-            <strName>Роман</strName> 
-            <strMiddleName>Игоревич</strMiddleName> 
-            <strCallerContactPhone>+7(964)-921-8599</strCallerContactPhone> 
-            <strCgPN>+7(964)-921-8599</strCgPN> 
-            <appResAddress>Хабаровский край, Солнечный район, ст. Горин</appResAddress> 
-            <strLanguage>ru</strLanguage> 
-            <strIncidentDescription>desc2</strIncidentDescription> 
-            <appLocAddress>Хабаровский край, р-н Имени Полины Осипенко, в долине ручья Большие Сулаки</appLocAddress> 
-        </callContent> 
-        <address> 
-            <addressId>0cf6342a-d164-4ded-9f6b-e12874f43855</addressId> 
-            <strAddress>Промышленная улица, 19к1, Хабаровск</strAddress> 
-            <geoLatitude>48.494561</geoLatitude> 
-            <geoLongitude>135.104112</geoLongitude> 
-            <strDistrict>железнодорожный район</strDistrict> 
-            <strCity>Хабаровск</strCity> 
-            <strStreet>Промышленная</strStreet> 
-            <strHouse>19</strHouse> 
-            <strCorps>1</strCorps> 
-            <strCityKLADR>2701800000000</strCityKLADR> 
-            <strCityFIAS>e037f0b4-b7cc-4a06-9a08-70c4bc429452</strCityFIAS> 
-        </address> 
-    </Ukio> 
-</Ukios>"""
-    res = open(os.path.join(config.output_directory_name, filename), 'r', encoding='utf-8').read()
-    data = """<?xml version="1.0" encoding="UTF-8"?> 
-<SOAP-ENV:Envelope 
- xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" 
- xmlns:ns1="s112"> 
- <SOAP-ENV:Body>""" + data1 + """</SOAP-ENV:Body> 
-</SOAP-ENV:Envelope>"""
-    req = requests.post(url=SERVER_ADDRESS, json=json, data=data)
+    file_data = open(os.path.join(config.output_directory_name, filename), 'r', encoding='utf-8').read()
+
+    req = requests.post(url=SERVER_ADDRESS, data=file_data, headers=headers)
     print(req.status_code)
     print(req.text)
 

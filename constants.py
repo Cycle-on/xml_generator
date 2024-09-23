@@ -1,6 +1,6 @@
-xml_count_per_file = 2  # Количество записей в одном файле
+xml_count_per_file = 1  # Количество записей в одном файле
 files_count = 1  # Количество файлов
-files_prefix = 'TEST'  # префикс перед global_id в ukio и call
+files_prefix = 'TEST_TeSt'  # префикс перед global_id в ukio и call
 SERVER_ADDRESS = '0.0.0.0'
 
 # google sheets table information
