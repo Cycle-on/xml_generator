@@ -180,8 +180,8 @@ class Ukio(BaseModelWithId):
     dtCallEnd: datetime.datetime = None
     aCallEnded: bool = None
     nCasualties: int = None
-    bHumanThreat: bool = False
-    bChs: bool = False
+    bHumanThreat: int = False
+    bChs: int = False
     strCallSource: CallSource = None
     bWrong: bool
     bChildPlay: bool
