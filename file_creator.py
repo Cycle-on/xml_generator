@@ -36,7 +36,7 @@ def __generate_xml_from_pydantic(root: ET.Element, model: dict, name='ukio'):
     sub_root = ET.SubElement(root, name)
     for feature_name, feature_value in model.items():
         if feature_name == 'PhoneCallId':
-            feature_name = __down_first_letter(feature_value)
+            feature_name = __down_first_letter(feature_name)
         if feature_name in (
                 'phoneCall', 'callContent', 'address', 'era', 'psycho', 'consult', 'transferItem', 'receptionItem',
                 'eosItem',
