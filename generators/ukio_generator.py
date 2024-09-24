@@ -12,6 +12,7 @@ from generators.phonecall_generator import generate_phone_data, generate_phone_d
 from generators import check_event_probability, genders
 from generators.random_generators import get_address_by_code, get_random_name, get_random_telephone_number
 from google_sheet_parser.parse_addresses import get_random_address, ADDRESSES
+from google_sheet_parser.parse_incident_types import CARDS_INDEXES_INCIDENT_TYPES
 from schemas.string_eos import StringEosType, Consult, Psycho, Operator
 from schemas.ukio_model import Ukio, TransferItem, Address, CallContent
 from schemas.phonecall import PhoneCall, redirectCall, MissedCall
@@ -121,6 +122,8 @@ def generate_ukio_phone_call_data(call_date: datetime.datetime) -> Ukio | Missed
     operator = Operator()
     phone_calls: list[PhoneCall] = generate_phone_data(call_date, operator)
     eos_type_list: list[StringEosType] = generate_random_eos_list()
+    incident_type_id = random.choice(eos_type_list).get("id") - 1
+    incident_type = random.choice(CARDS_INDEXES_INCIDENT_TYPES[incident_type_id]).get("name")
     ukio_eos_cards: dict[str, T] = _check_ukio_cards(eos_type_list, phone_calls[-1].dtSend, operator)
     # start checks random events
     # missed call without ukio
@@ -141,7 +144,8 @@ def generate_ukio_phone_call_data(call_date: datetime.datetime) -> Ukio | Missed
     else:
         # non-logic
         ukio_dict['cardState'] = card_state
-        ukio_dict['incidentType'] = incident_type
+        print(incident_type)
+        ukio_dict['strIncidentType'] = incident_type
         ukio_dict['bWrong'] = False
         ukio_dict['bChildPlay'] = False
         ukio_dict['bChs'] = check_event_probability(CHS_PROBABILITY)

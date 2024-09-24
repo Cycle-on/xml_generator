@@ -172,7 +172,7 @@ class Ukio(BaseModelWithId):
     globalId: str = Field(default_factory=lambda: f"{files_prefix}_{Ukio._BaseModelWithId__get_next_id()}")
     parentGlobalId: str = None
     strCardState: CardStates = None
-    strIncidentType: IncidentTypes = None
+    strIncidentType: str = None
     dtSend: datetime.datetime
     dtCreate: datetime.datetime = None
     dtUpdate: datetime.datetime = None
