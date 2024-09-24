@@ -12,10 +12,16 @@ from send_files import modify_xml_file_to_send
 config = load_config()
 
 
-def __up_first_verb(s: str) -> str:
+def __up_first_letter(s: str) -> str:
     if not s:
         return s
     return s[0].capitalize() + s[1:]
+
+
+def __down_first_letter(s: str) -> str:
+    if not s:
+        return s
+    return s[0].lower() + s[1:]
 
 
 def __generate_xml_from_pydantic(root: ET.Element, model: dict, name='ukio'):
@@ -29,11 +35,13 @@ def __generate_xml_from_pydantic(root: ET.Element, model: dict, name='ukio'):
     """
     sub_root = ET.SubElement(root, name)
     for feature_name, feature_value in model.items():
+        if feature_name == 'PhoneCallId':
+            feature_name = __down_first_letter(feature_value)
         if feature_name in (
                 'phoneCall', 'callContent', 'address', 'era', 'psycho', 'consult', 'transferItem', 'receptionItem',
                 'eosItem',
                 'card01', 'card02', 'card03', 'card04', 'cardAT', 'cardCommServ', 'redirectCall', 'operator'):
-            feature_name = __up_first_verb(feature_name)
+            feature_name = __up_first_letter(feature_name)
         if feature_value is None:
             continue
         elif isinstance(feature_value, dict):  # if we have pydantic model
@@ -42,7 +50,7 @@ def __generate_xml_from_pydantic(root: ET.Element, model: dict, name='ukio'):
 
         elif feature_name == 'Ukios':
             for phone_call in feature_value:
-                __generate_xml_from_pydantic(sub_root, phone_call, name=__up_first_verb(feature_name)[:-1])
+                __generate_xml_from_pydantic(sub_root, phone_call, name=__up_first_letter(feature_name)[:-1])
             continue
 
         elif isinstance(feature_value, list):
