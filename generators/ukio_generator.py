@@ -144,6 +144,9 @@ def generate_ukio_phone_call_data(call_date: datetime.datetime) -> Ukio | Missed
         ukio_dict['incidentType'] = incident_type
         ukio_dict['bWrong'] = False
         ukio_dict['bChildPlay'] = False
+        ukio_dict['bChs'] = check_event_probability(CHS_PROBABILITY)
+        ukio_dict['bHumanThreat'] = check_event_probability(HUMAN_TREET_PROBABILITY)
+
         # logic fields
         ukio_dict['address'] = random.choice(ADDRESSES)
         ukio_dict |= ukio_eos_cards

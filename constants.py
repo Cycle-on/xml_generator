@@ -17,6 +17,9 @@ OPERATOR_STATES = ['вошел в систему', 'вышел из систем
 ARM_PLACES = ["ЦОВ", "РЦОВ", "ЕДДС", "ДДС 01", "ДДС 02", "ДДС 03", "ДДС 04", "ДДС АТ", "ДДС ЖКХ", "другое"]
 # other eos timings
 
+# percents
+CHS_PROBABILITY = 100
+HUMAN_TREET_PROBABILITY = 100
 # константы с припиской _SCALE - среднеквадратичное отклонение
 
 # Call Content
