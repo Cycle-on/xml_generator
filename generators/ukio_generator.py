@@ -122,8 +122,7 @@ def generate_ukio_phone_call_data(call_date: datetime.datetime) -> Ukio | Missed
     operator = Operator()
     phone_calls: list[PhoneCall] = generate_phone_data(call_date, operator)
     eos_type_list: list[StringEosType] = generate_random_eos_list()
-    incident_type_id = random.choice(eos_type_list).get("id") - 1
-    incident_type = random.choice(CARDS_INDEXES_INCIDENT_TYPES[incident_type_id]).get("name")
+
     ukio_eos_cards: dict[str, T] = _check_ukio_cards(eos_type_list, phone_calls[-1].dtSend, operator)
     # start checks random events
     # missed call without ukio
@@ -144,8 +143,15 @@ def generate_ukio_phone_call_data(call_date: datetime.datetime) -> Ukio | Missed
     else:
         # non-logic
         ukio_dict['cardState'] = card_state
-        print(incident_type)
-        ukio_dict['strIncidentType'] = incident_type
+        try:
+            incident_type_id = random.choice(eos_type_list).get("id")
+            incident_type = random.choice(CARDS_INDEXES_INCIDENT_TYPES[incident_type_id]).get("name")
+            ukio_dict['strIncidentType'] = incident_type
+
+        except IndexError:
+            pass
+        except KeyError:
+            pass
         ukio_dict['bWrong'] = False
         ukio_dict['bChildPlay'] = False
         ukio_dict['bChs'] = check_event_probability(CHS_PROBABILITY)
