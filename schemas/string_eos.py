@@ -1,11 +1,13 @@
 from enum import Enum
 
+from pydantic import BaseModel
+
 from config.config_data import *
+from generators import check_event_probability
 from schemas.eos_for_ukio_models import *
 
 
 class StringEosType(dict, Enum):
-
     s112 = {
         'name': 'Система 112',
         'code': "112",
@@ -16,7 +18,7 @@ class StringEosType(dict, Enum):
 
     }
     fireDepartment = {
-        "name": 'Пожарная Служба',
+        "name": 'Пожарная служба',
         "code": "01",
         "p_min": FIRE_SHARE_MIN,
         'p_max': FIRE_SHARE_MAX,
@@ -129,7 +131,7 @@ class Operator(BaseModelWithId):
     strOperatorInfo: str = None
     isPsychologist: bool = None
     bOperatorTranslator: bool = None
-    strLanguage: str = None
+    strLanguage: list[str] = None
     eosClassTypeId: list[StringEosType] = None
     dtSend: datetime.datetime = None
 
@@ -141,8 +143,8 @@ class Arm(BaseModelWithId):
     dtSend: datetime.datetime = None
 
 
-class ArmWork:
-    armStatusId: str = None
+class ArmWork(BaseModelWithId):
+    armStatusId: str = Field(default_factory=lambda: ArmWork._BaseModelWithId__get_next_id())
     arm: Arm = None
     armId: str = None
     strArmStatus: str = None
@@ -151,7 +153,7 @@ class ArmWork:
 
 
 class OperatorWork(BaseModelWithId):
-    operatorStatusId: str = None
+    operatorStatusId: str = Field(default_factory=lambda: OperatorWork._BaseModelWithId__get_next_id())
     strOperatorStatus: str = None
     dtAction: datetime.datetime = None
     operator: Operator = None
@@ -176,6 +178,26 @@ class Psycho(BaseModelWithId):
     bPsychoInHouse: bool = None
     dtPsychoStart: datetime.datetime
     dtPsychoEnd: datetime.datetime
+
+
+class OperatorWorks(BaseModel):
+    operatorWork: list[OperatorWork]
+
+
+class ArmWorks(BaseModel):
+    armWork: list[ArmWork]
+
+
+class IncidentType(BaseModel):
+    incidentId: int
+    parentIncidentId: int = None
+    incidentTitle: str = None
+    eosClassTypeId: list[int] = None
+    dtSend: datetime.datetime = None
+
+
+class IncidentTypes(BaseModel):
+    incidentType: list[IncidentType]
 
 
 if __name__ == '__main__':

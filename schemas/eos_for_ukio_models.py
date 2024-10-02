@@ -116,11 +116,3 @@ class CardAT(BaseModelWithId):
     strVehicles: list[str] = None
     strDirection: str = None
     strInjurySuspect: str = None
-
-
-class IncidentType(BaseModelWithId):
-    incidentId: str = Field(default_factory=lambda: IncidentType._BaseModelWithId__get_next_id())
-    parentIncidentId: str = None
-    incidentTitle: str = None
-    eosClassTypeId: str = None
-    dtSend: datetime.datetime = None

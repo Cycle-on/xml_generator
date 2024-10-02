@@ -1,9 +1,11 @@
-xml_count_per_file = 1  # Количество записей в одном файле
+xml_count_per_file = 100  # Количество записей в одном файле
 files_count = 1  # Количество файлов
 files_prefix = 'TEST_TeSt'  # префикс перед global_id в ukio и call
 SERVER_ADDRESS = '0.0.0.0'
 
 # google sheets table information
+ADDRESSES_URL = "c1.csv"  # "https://docs.google.com/spreadsheets/d/1bVCN8REheC7NrINGyiB3s837J6VmkOiwufSbyHztA4c/pub?gid=1174057849&single=true&output=csv"
+INCIDENT_TYPES_URL = "c2.csv"  # "https://docs.google.com/spreadsheets/d/e/2PACX-1vQe6coOM-V5T95TUWbWii11qX6IvFeZuP_Fr0wKCwNDlGz_s0KCY0_fHx7SrSWjJegFoRgyTE035IAO/pub?gid=0&single=true&output=csv"
 SHEET_ID = '1bVCN8REheC7NrINGyiB3s837J6VmkOiwufSbyHztA4c'
 INCIDENT_TYPES_LIST_NAME = 'IncidentTypes'
 ADDRESSES_LIST_NAME = 'Addresses'
@@ -16,7 +18,8 @@ AVG_DELAY_BETWEEN_CALLS_TIME = 5  # секунды, задержка между 
 OPERATOR_STATES = ['вошел в систему', 'вышел из системы']
 ARM_PLACES = ["ЦОВ", "РЦОВ", "ЕДДС", "ДДС 01", "ДДС 02", "ДДС 03", "ДДС 04", "ДДС АТ", "ДДС ЖКХ", "другое"]
 # other eos timings
-
+# OPERATOR CONSTANTS
+OPERATOR_PSYCHOLOGIST_PROBABILITY = 50
 # percents
 CHS_PROBABILITY = 100
 HUMAN_TREET_PROBABILITY = 100
@@ -102,7 +105,7 @@ MISSED_CALL_WAIT_ANSWER_TIME_SCALE = 4
 CHILD_PLAY_UKIO_PROBABILITY = 5  # вероятность детской шалости
 WRONG_CALLS_PROBABILITY = 5  # вероятность ложного вызова
 
-DROP_CALL_PROBABILITY = 20  # Вероятность того что вызов будет сброшен
+DROP_CALL_PROBABILITY = 0  # Вероятность того что вызов будет сброшен
 # Eos Type info
 EOS_ITEM_CANCEL_PROBABILITY = 10  # проценты
 

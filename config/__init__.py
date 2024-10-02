@@ -26,6 +26,7 @@ class Config(BaseModel):
     logs_directory_name: str
     output_directory_name: str
     date_zero: datetime.datetime
+    low_date: datetime.datetime
 
 
 def load_config() -> Config:
@@ -35,4 +36,5 @@ def load_config() -> Config:
         logs_directory_name=logs_directory_name,
         output_directory_name=output_directory_name,
         date_zero=DATE_ZERO,
+        low_date=datetime.datetime(1, 1, 1, hour=1, minute=0, second=0)
     )

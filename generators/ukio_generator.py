@@ -8,11 +8,14 @@ from config import load_config, ukios_info, missed_info
 from config.config_data import *
 from generators.eos_generator import generate_card_from_eos_model, generate_random_eos_list, T, \
     generate_eos_item_from_eos_list
+from generators.operators_and_arms import get_operator
 from generators.phonecall_generator import generate_phone_data, generate_phone_date, generate_missed_call
 from generators import check_event_probability, genders
 from generators.random_generators import get_address_by_code, get_random_name, get_random_telephone_number
+
 from google_sheet_parser.parse_addresses import get_random_address, ADDRESSES
 from google_sheet_parser.parse_incident_types import CARDS_INDEXES_INCIDENT_TYPES
+
 from schemas.string_eos import StringEosType, Consult, Psycho, Operator
 from schemas.ukio_model import Ukio, TransferItem, Address, CallContent
 from schemas.phonecall import PhoneCall, redirectCall, MissedCall
@@ -119,10 +122,15 @@ def generate_ukio_phone_call_data(call_date: datetime.datetime) -> Ukio | Missed
     incident_type = random.choice(list(IncidentTypes))
     call_source = CallSource.mobile_phone
     # create fields with some logica
-    operator = Operator()
+
+    operator_info = get_operator(call_date)
+    if operator_info is None:
+        print('no free ops')
+        return
+    operator = operator_info['operator']
+
     phone_calls: list[PhoneCall] = generate_phone_data(call_date, operator)
     eos_type_list: list[StringEosType] = generate_random_eos_list()
-
     ukio_eos_cards: dict[str, T] = _check_ukio_cards(eos_type_list, phone_calls[-1].dtSend, operator)
     # start checks random events
     # missed call without ukio
@@ -218,5 +226,6 @@ def generate_ukio_phone_call_data(call_date: datetime.datetime) -> Ukio | Missed
     ukio_dict['phoneCall'] = phone_calls
     # appending to queue for sending module
     ukios_info.append({'filename': '', 'dt_send': phone_calls[-1].dtSend})
-
+    # update operator info
+    operator_info['end_time'] = phone_calls[-1].dtEndCall
     return Ukio(**ukio_dict)

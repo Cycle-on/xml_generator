@@ -3,8 +3,7 @@ from pprint import pprint
 
 from generators import *
 from generators.eos_models_generator import *
-from generators.incident_type_generator import generate_card_incident_types_from_list
-from google_sheet_parser.parse_incident_types import CARDS_INDEXES_INCIDENT_TYPES
+from .incident_type_generator.incident_type_generator import generate_card_incident_types_from_list
 from schemas.string_eos import *
 from schemas.string_eos import Psycho, Consult
 from schemas.eos_for_ukio_models import *

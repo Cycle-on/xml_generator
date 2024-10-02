@@ -40,7 +40,8 @@ def __generate_xml_from_pydantic(root: ET.Element, model: dict, name='ukio'):
         if feature_name in (
                 'phoneCall', 'callContent', 'address', 'era', 'psycho', 'consult', 'transferItem', 'receptionItem',
                 'eosItem',
-                'card01', 'card02', 'card03', 'card04', 'cardAT', 'cardCommServ', 'redirectCall', 'operator'):
+                'card01', 'card02', 'card03', 'card04', 'cardAT', 'cardCommServ', 'redirectCall', 'operator',
+                'operatorWork', 'armWork', 'incidentType'):
             feature_name = __up_first_letter(feature_name)
         if feature_value is None:
             continue
@@ -55,7 +56,7 @@ def __generate_xml_from_pydantic(root: ET.Element, model: dict, name='ukio'):
 
         elif isinstance(feature_value, list):
             for value in feature_value:
-                if isinstance(value, str):
+                if isinstance(value, str) or isinstance(value, int):
                     el = ET.SubElement(sub_root, feature_name)
                     el.text = str(value)
 

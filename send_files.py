@@ -1,3 +1,4 @@
+import base64
 import csv
 import datetime
 import os
@@ -32,12 +33,12 @@ def modify_xml_file_to_send(file_path: str):
 def __send_file(filename: str):
     headers = {
         "Content-Type": "application/xml",
-        "Authorization": "Basic cnNjLXJlZ2lvbi0yNzppbW00SjNUa0ZQRGJZbzh5dTRYdXFqZTA4cXlKVnhJVA=="
     }
 
     file_data = open(os.path.join(config.output_directory_name, filename), 'r', encoding='utf-8').read()
-
-    req = requests.post(url=SERVER_ADDRESS, data=file_data, headers=headers)
+    session = requests.Session()
+    session.auth = (SERVER_LOGIN, SERVER_PASSWORD)
+    req = session.post(url=SERVER_ADDRESS, data=file_data, headers=headers)
     print(req.status_code)
     print(req.text)
 

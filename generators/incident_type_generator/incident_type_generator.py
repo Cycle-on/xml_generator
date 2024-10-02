@@ -3,8 +3,14 @@ module in progress...
 """
 
 import random
+from venv import create
 
-from schemas.string_eos import StringEosType
+from six import integer_types
+
+from file_creator import create_file_from_model
+from google_sheet_parser.parse_incident_types import INCIDENT_TYPES_LIST
+from generators.operators_and_arms import create_arm_ops_files
+from schemas.string_eos import StringEosType, IncidentTypes
 
 
 def check_list_equality(l1: list, l2: list) -> bool:
@@ -115,3 +121,9 @@ def get_solo_incident_type(section_incident_type_list: list, last_number: int):
     for el in section_incident_type_list:
         if el['section_min'] <= random_value <= el['section_max']:
             return el
+
+
+def create_incident_type_file():
+    print(INCIDENT_TYPES_LIST)
+    incident_types = IncidentTypes(incidentType=INCIDENT_TYPES_LIST)
+    create_file_from_model(incident_types, 'incident_types', 'IncidentTypes')

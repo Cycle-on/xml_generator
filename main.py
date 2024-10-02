@@ -2,6 +2,8 @@ from datetime import timedelta as td
 from config import load_config, ukios_info, missed_info
 from config.config_data import *
 from file_creator import create_file_from_model, create_send_info_csv_files
+from generators.incident_type_generator.incident_type_generator import create_incident_type_file
+from generators.operators_and_arms import create_operators, create_arm_ops_files
 from generators.ukio_generator import generate_ukio_phone_call_data
 from config.dirs import create_dirs
 from google_sheet_parser.parse_addresses import fill_addresses
@@ -42,6 +44,7 @@ def parse_args():
 def main(date_zero=DATE_ZERO):
     send_files: bool = parse_args()
     create_dirs()
+    create_operators()
     ukios_list = []
     missed_list = []
     dt_start = datetime.datetime.now()
@@ -76,10 +79,12 @@ def main(date_zero=DATE_ZERO):
         # print("models done", models_create_time)
         create_file_from_model(ukios, filename=f'ukios_{i}', basename="Ukios")
         create_file_from_model(missed, filename=f'missed_{i}', basename='MissedCalls')
-
+        create_arm_ops_files()
+        create_incident_type_file()
     print("finish time", datetime.datetime.now() - dt_start)
-    print("start send files")
+
     if send_files:
+        print("start send files")
         if create_send_info_csv_files('missed_calls_to_send', missed_info) is False:
             pass
         create_send_info_csv_files('ukios_to_send', ukios_info)

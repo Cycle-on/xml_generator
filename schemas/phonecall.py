@@ -25,11 +25,11 @@ class PhoneCall(BaseModelWithId):
     phoneCallId: str = Field(default_factory=lambda: PhoneCall._BaseModelWithId__get_next_id())
     dtSend: datetime.datetime = None
     bOperatorIniciatied: bool
-    dtCall: datetime.datetime = datetime.datetime.now()
+    dtCall: datetime.datetime = None
     dtConnect: datetime.datetime | str = None
     bCallEnded: bool = None
     aCallEnded: bool = None
-    dtEndCall: datetime.datetime = datetime.datetime.now()
+    dtEndCall: datetime.datetime = None
     OperatorId: str = None
     RedirectCall: redirectCall | None = None
 
