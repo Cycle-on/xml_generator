@@ -9,7 +9,7 @@ base_directory_name = 'files'
 
 output_directory_name: str = os.path.join(
     base_directory_name,
-    f'file_{datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}'
+    files_prefix,
 )
 logs_directory_name = 'errors'
 

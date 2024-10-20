@@ -17,6 +17,12 @@ CARDS_INDEXES_INCIDENT_TYPES = {
 }
 
 
+def __clear_incident_types():
+    global CARDS_INDEXES_INCIDENT_TYPES
+    for k in CARDS_INDEXES_INCIDENT_TYPES.keys():
+        CARDS_INDEXES_INCIDENT_TYPES[k].clear()
+
+
 def __delete_duplicates_from_list():
     for k, lst in CARDS_INDEXES_INCIDENT_TYPES.items():
         doubles = []
@@ -37,10 +43,13 @@ def get_string_eos_type_id_by_eos_name(eos_name: str):
     return None
 
 
-def fill_incident_type_lists():
+def fill_incident_type_lists(region_name: str = ''):
     global CARDS_INDEXES_INCIDENT_TYPES
+    __clear_incident_types()
     resp: pd.Series = get_csv_from_url(INCIDENT_TYPES_URL)
     for el in resp:
+        if el['region_name'] != region_name:
+            continue
         incident_type_info_dict = {}
         incident_type_info_dict['incidentId'] = el['IncidentId']
         incident_type_info_dict['parentIncidentId'] = el['parentIncidentId']
@@ -52,7 +61,6 @@ def fill_incident_type_lists():
         ukio_count = el['count_ukio']
         F: list[int] = []  # list with indexes
         incident_type_names = []
-
         column_names = ['Пожарная служба', 'Полиция', "Скорая помощь", 'Газовая служба', 'Антитеррор', 'ЖКХ']
         eos_columns = [el[column_names[i]] for i in range(len(column_names))]
 
@@ -95,13 +103,9 @@ def fill_incident_type_lists():
                     incident_type_names.append(incident_type_name)
 
                 F.append(i)
-        print(incident_type_info_dict)
         INCIDENT_TYPES_LIST.append(IncidentType(**incident_type_info_dict))
     __delete_duplicates_from_list()
     return CARDS_INDEXES_INCIDENT_TYPES
-
-
-fill_incident_type_lists()
 
 
 def main():

@@ -1,36 +1,27 @@
-import base64
 import csv
-import datetime
-import os
 import time
-from idlelib.iomenu import encoding
-
-from constants import SERVER_ADDRESS
 from config import load_config
 import requests
 import threading
 from config.config_data import *
+from constants.sender import *
 
 config = load_config()
 
 
-def modify_xml_file_to_send(file_path: str):
+def modify_xml_file_to_send(file_path: str, prefix_var_name: str, postfix_var_name: str):
     with open(file_path, 'r', encoding='utf-8') as f:
-        middle_file = ["""<?xml version="1.0" encoding="UTF-8"?> 
-    <SOAP-ENV:Envelope 
-     xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" 
-     xmlns:ns1="s112"> 
-     <SOAP-ENV:Body>"""]
+        middle_file = [prefix_var_name]
         for row in f:
             middle_file.append(row)
-
-        middle_file.append("""</SOAP-ENV:Body> 
-    </SOAP-ENV:Envelope>""")
+        middle_file.append(postfix_var_name)
     with open(file_path, 'w+', encoding='utf-8') as f:
         f.writelines(middle_file)
 
 
 def __send_file(filename: str):
+    print('ЗАТЫЧКА! - файл отправлен')
+    return
     headers = {
         "Content-Type": "application/xml",
     }
@@ -44,31 +35,31 @@ def __send_file(filename: str):
 
 
 def send_by_csv(csv_filename: str):
-    # Укажите путь к вашему CSV файлу
     file_path = csv_filename
 
-    # Открываем файл на чтение
     with open(file_path, mode='r', encoding='utf-8') as file:
         reader = csv.DictReader(file)  # Используем DictReader для чтения в виде словарей
         for row in reader:
             filename = row['filename']
-            while 1:
-                __send_file(filename)
-                time.sleep(3)
-
-            # date_send: datetime.datetime = datetime.datetime.strptime(row['dt_send'], '%Y-%m-%d %H:%M:%S.%f')
-            # while 1:
-            #     now = datetime.datetime.now()
-            #     if now >= date_send:
-            #         __send_file(filename)
-            #         break
-            #     time.sleep(0.5)
+            if SENDER_WORK_TYPE == 'by_delay':
+                while 1:
+                    __send_file(filename)
+                    time.sleep(SENDER_DELAY)
+                    break
+            elif SENDER_WORK_TYPE == 'by_date':
+                date_send: datetime.datetime = datetime.datetime.strptime(row['dt_send'], '%Y-%m-%d %H:%M:%S.%f')
+                while 1:
+                    now = datetime.datetime.now()
+                    if now >= date_send:
+                        __send_file(filename)
+                        break
+                    time.sleep(0.5)
 
 
 def send_along():
-    # thread1 = threading.Thread(target=lambda: send_by_csv('missed_calls_to_send.csv'))
-    # thread1.start()
-    # thread1.join()
+    thread1 = threading.Thread(target=lambda: send_by_csv('missed_calls_to_send.csv'))
+    thread1.start()
+    thread1.join()
 
     thread2 = threading.Thread(target=lambda: send_by_csv('ukios_to_send.csv'))
     thread2.start()

@@ -1,3 +1,4 @@
+import shutil
 from pathlib import Path, PosixPath
 import os
 from config import load_config, base_directory_name
@@ -16,3 +17,12 @@ def create_dirs() -> list[PosixPath]:
     logs_xml_dir = Path(os.path.join(config.logs_directory_name, 'xml_generator'))
     for dir_name in locals().values():
         dir_name.mkdir(exist_ok=True)
+
+
+def clear_dir(dir_path: str = './files/'):
+    if os.path.exists(dir_path):
+        shutil.rmtree(dir_path)
+        os.makedirs(dir_path)
+
+
+

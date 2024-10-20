@@ -1,7 +1,4 @@
 import random
-from copy import deepcopy
-from decimal import Decimal
-from pprint import pprint
 from datetime import timedelta as td
 
 from config import load_config, ukios_info, missed_info
@@ -150,7 +147,7 @@ def generate_ukio_phone_call_data(call_date: datetime.datetime) -> Ukio | Missed
     # ukio card with some event
     else:
         # non-logic
-        ukio_dict['cardState'] = card_state
+        ukio_dict['strCardState'] = card_state
         try:
             incident_type_id = random.choice(eos_type_list).get("id")
             incident_type = random.choice(CARDS_INDEXES_INCIDENT_TYPES[incident_type_id]).get("name")
@@ -163,7 +160,7 @@ def generate_ukio_phone_call_data(call_date: datetime.datetime) -> Ukio | Missed
         ukio_dict['bWrong'] = False
         ukio_dict['bChildPlay'] = False
         ukio_dict['bChs'] = check_event_probability(CHS_PROBABILITY)
-        ukio_dict['bHumanThreat'] = check_event_probability(HUMAN_TREET_PROBABILITY)
+        ukio_dict['bHumanThreat'] = check_event_probability(HUMAN_TREAT_PROBABILITY)
 
         # logic fields
         ukio_dict['address'] = random.choice(ADDRESSES)
@@ -213,14 +210,14 @@ def generate_ukio_phone_call_data(call_date: datetime.datetime) -> Ukio | Missed
             # creating transfer item
             ukio_dict['transferItem'] = [generate_transfer_items_by_ukio_cards(eos_id, phone_calls[-1].dtSend)]
     # fill call info to ukio root
-    ukio_dict['callSource'] = call_source
+    ukio_dict['strCallSource'] = call_source
 
     # fill date fields with last phone call information
     ukio_dict['dtSend'] = phone_calls[-1].dtSend
     ukio_dict['dtUpdate'] = phone_calls[-1].dtSend
     ukio_dict['dtCreate'] = phone_calls[-1].dtConnect
     ukio_dict['dtCall'] = phone_calls[-1].dtCall
-    ukio_dict['dtCallEnded'] = phone_calls[-1].dtEndCall
+    ukio_dict['dtCallEnd'] = phone_calls[-1].dtEndCall
     ukio_dict['aCallEnded'] = phone_calls[-1].aCallEnded
     # add phonecalls to ukio
     ukio_dict['phoneCall'] = phone_calls

@@ -22,16 +22,20 @@ def fill_with_address_headers(headers: list[str], address: list[str]):
     return address_dict
 
 
-def fill_addresses():
+def fill_addresses(region_name: str = ''):
     """
     send request to google sheets and saving addresses in the list
     :return:
     """
     global ADDRESSES
     resp: pd.Series = get_csv_from_url(ADDRESSES_URL)
+    ADDRESSES.clear()
     for el in resp:
         el = el.dropna().astype(str).to_dict()
-        ADDRESSES.append(Address(**el))
+        if el['region_name'] == region_name and region_name != '':
+            ADDRESSES.append(Address(**el))
+        elif region_name == '':
+            ADDRESSES.append(Address(**el))
 
 
 def get_random_address() -> tuple[str, str, str, str, str, str, str]:

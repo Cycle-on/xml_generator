@@ -1,25 +1,24 @@
 from datetime import timedelta as td
 from config import load_config, ukios_info, missed_info
 from config.config_data import *
-from file_creator import create_file_from_model, create_send_info_csv_files
-from generators.incident_type_generator.incident_type_generator import create_incident_type_file
-from generators.operators_and_arms import create_operators, create_arm_ops_files
+from constants.constants_remaker import get_next_constants
+from file_creator import create_file_from_model, create_send_info_csv_files, prepare_files_to_send
+from generators.operators_and_arms import ARM_WORK, OPERATOR_WORK, create_arms_and_operators
 from generators.ukio_generator import generate_ukio_phone_call_data
-from config.dirs import create_dirs
-from google_sheet_parser.parse_addresses import fill_addresses
-from google_sheet_parser.parse_incident_types import fill_incident_type_lists
+from config.dirs import create_dirs, clear_dir
+from google_sheet_parser.parse_addresses import fill_addresses, ADDRESSES
+from google_sheet_parser.parse_incident_types import fill_incident_type_lists, INCIDENT_TYPES_LIST
 from schemas.phonecall import MissedCall, MissedCalls
+from schemas.string_eos import OperatorWorks, ArmWorks, IncidentTypes
 from schemas.ukio_model import Ukios, Ukio
 from config.config_data import DATE_ZERO
-from send_files import send_along
+from send_files import send_along, modify_xml_file_to_send
 import argparse
 import constants
+from wsdl_parser.wsdl_tester import check_fields_by_file_path
+from pprint import pprint
 
 config = load_config()
-
-"""
-Не забудь заменить запросы в гугл таблице
-"""
 
 
 def parse_args():
@@ -41,32 +40,32 @@ def parse_args():
     return send_files
 
 
-def main(date_zero=DATE_ZERO):
+def generate_region_files(date_zero=DATE_ZERO, region_name: str = ''):
+    global ukios, missed
     send_files: bool = parse_args()
     create_dirs()
-    create_operators()
+    create_arms_and_operators()
     ukios_list = []
     missed_list = []
     dt_start = datetime.datetime.now()
     models_create_time = None
     # fill with the Google sheets
-    fill_incident_type_lists()
-    fill_addresses()
-
-    print("заполнил incident types")
+    fill_incident_type_lists(region_name)
+    fill_addresses(region_name)
+    # generate dicts with info
     for i in range(config.files_count):
-        for _ in range(xml_count_per_file):
+        for j in range(xml_count_per_file):
 
             u = generate_ukio_phone_call_data(date_zero)
             date_zero += td(seconds=AVG_DELAY_BETWEEN_CALLS_TIME)
             if u is not None:
                 if isinstance(u, Ukio):
                     ukios_list.append(u)
-                    ukios_info[-1]['filename'] = f'ukios_{i}.xml'
+                    ukios_info[-1]['filename'] = f'ukios_{i + j}.xml'
                 elif isinstance(u, MissedCall):
                     missed_list.append(u)
-                    missed_info[-1]['filename'] = f'missed_{i}.xml'
-
+                    missed_info[-1]['filename'] = f'missed_{i + j}.xml'
+        # make pydantic models for dicts
         ukios = Ukios(
             Ukios=ukios_list
         )
@@ -74,21 +73,70 @@ def main(date_zero=DATE_ZERO):
             missedCalls=missed_list
         )
 
-        ukios_list = []
         models_create_time = datetime.datetime.now() - dt_start
         # print("models done", models_create_time)
-        create_file_from_model(ukios, filename=f'ukios_{i}', basename="Ukios")
-        create_file_from_model(missed, filename=f'missed_{i}', basename='MissedCalls')
-        create_arm_ops_files()
-        create_incident_type_file()
-    print("finish time", datetime.datetime.now() - dt_start)
+        if GENERATE_UKIO:
+            ukio_file_path = create_file_from_model(ukios, filename=f'ukios_{i}', basename="Ukios",
+                                                    region_name=region_name)
+            modify_xml_file_to_send(ukio_file_path, get_file_prefix(UKIO_SOAP_PREFIX),
+                                    get_file_postfix(UKIO_SOAP_POSTFIX))
+            print('start check ukio with wsdl fields')
+            check_fields_by_file_path(ukio_file_path, 'wsdl_4_3.wsdl')
+        if GENERATE_MISSED_CALLS:
+            missed_calls_file_path = create_file_from_model(missed, filename=f'missed_{i}', basename='MissedCalls',
+                                                            region_name=region_name)
+            modify_xml_file_to_send(missed_calls_file_path, get_file_prefix(MISSED_SOAP_PREFIX),
+                                    get_file_postfix(MISSED_SOAP_POSTFIX))
+        if GENERATE_ARM_WORK:
+            arm_works = ArmWorks(
+                armWork=ARM_WORK
+            )
 
-    if send_files:
+            arm_works_file_path = create_file_from_model(arm_works, f"ArmWork_{i}", basename="ArmWorks",
+                                                         region_name=region_name)
+            modify_xml_file_to_send(arm_works_file_path, get_file_prefix(ARMWORK_SOAP_PREFIX),
+                                    get_file_postfix(ARMWORK_SOAP_POSTFIX))
+        if GENERATE_OPERATOR_WORKS:
+            operator_works = OperatorWorks(
+                operatorWork=OPERATOR_WORK
+            )
+            operator_works_file_path = create_file_from_model(operator_works, f"OperatorWork_{i}",
+                                                              basename="OperatorWorks", region_name=region_name)
+            modify_xml_file_to_send(operator_works_file_path, get_file_prefix(OPERATOR_WORK_SOAP_PREFIX),
+                                    OPERATOR_WORK_SOAP_POSTFIX)
+
+        if GENERATE_INCIDENT_TYPES:
+            incident_types = IncidentTypes(incidentType=INCIDENT_TYPES_LIST)
+            incident_types_file_path = create_file_from_model(incident_types, f'incident_types_{i}',
+                                                              'IncidentTypes', region_name=region_name)
+            modify_xml_file_to_send(incident_types_file_path,
+                                    get_file_prefix(INCIDENT_SOAP_PREFIX),
+                                    get_file_postfix(INCIDENT_SOAP_POSTFIX))
+
+    print("finish time", datetime.datetime.now() - dt_start)
+    if send_files or 1:
+        prepare_files_to_send(ukios, missed, region_name)  # split files
         print("start send files")
-        if create_send_info_csv_files('missed_calls_to_send', missed_info) is False:
+        if create_send_info_csv_files('missed_calls_to_send',
+                                      config_send_info_list=missed_info,
+                                      region_name=region_name) is False:
             pass
-        create_send_info_csv_files('ukios_to_send', ukios_info)
+        create_send_info_csv_files('ukios_to_send',
+                                   config_send_info_list=ukios_info,
+                                   region_name=region_name)
         send_along()
+
+
+def main():
+    clear_dir()
+    if TAKE_CONSTANTS_FROM_FILE:
+        generate_region_files()
+    else:
+        for constants_dict in get_next_constants():
+            ukios_info.clear()
+            missed_info.clear()
+            globals().update(constants_dict)
+            generate_region_files(region_name=constants_dict["region_name/constant name"])
 
 
 if __name__ == '__main__':

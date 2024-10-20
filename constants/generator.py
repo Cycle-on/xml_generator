@@ -1,28 +1,39 @@
-xml_count_per_file = 100  # Количество записей в одном файле
-files_count = 1  # Количество файлов
-files_prefix = 'TEST_TeSt'  # префикс перед global_id в ukio и call
-SERVER_ADDRESS = '0.0.0.0'
+TAKE_CONSTANTS_FROM_FILE = False
 
-# google sheets table information
-ADDRESSES_URL = "c1.csv"  # "https://docs.google.com/spreadsheets/d/1bVCN8REheC7NrINGyiB3s837J6VmkOiwufSbyHztA4c/pub?gid=1174057849&single=true&output=csv"
-INCIDENT_TYPES_URL = "c2.csv"  # "https://docs.google.com/spreadsheets/d/e/2PACX-1vQe6coOM-V5T95TUWbWii11qX6IvFeZuP_Fr0wKCwNDlGz_s0KCY0_fHx7SrSWjJegFoRgyTE035IAO/pub?gid=0&single=true&output=csv"
-SHEET_ID = '1bVCN8REheC7NrINGyiB3s837J6VmkOiwufSbyHztA4c'
-INCIDENT_TYPES_LIST_NAME = 'IncidentTypes'
-ADDRESSES_LIST_NAME = 'Addresses'
+GENERATE_UKIO = True
+GENERATE_MISSED_CALLS = True
+GENERATE_ARM_WORK = True
+GENERATE_INCIDENT_TYPES = True
+GENERATE_OPERATOR_WORKS = True
+
+OPERATOR_MALE_PROBABILITY = 50
+SHIFT_TIME = 300  # seconds
+OPERATORS_COUNT_PER_WORKING_SHIFT = 25
+ARMS_COUNT = 100
+
+OPERATORS_POSTS = ["POST1", "POST2"]
+OPERATOR_TRANSLATOR_PROBABILITY = 20
+
+MIN_OPERATORS_COUNT = 5
+MAX_OPERATORS_COUNT = 5
+
+files_prefix = 'TEST_TeSt'  # префикс перед global_id в ukio и call
+
+xml_count_per_file = 5  # Количество записей в одном файле
+files_count = 1  # Количество файлов
 
 MAX_RECALL_ATTEMPTS = 3  # максимальное количество попыток перезвона при сброшенном вызове
-DATE_ZERO_FORMAT = "2024-08-31_20-38-00"  # формат: YYYY-MM-DD_HH-MM-SS
 
 AVG_DELAY_BETWEEN_CALLS_TIME = 5  # секунды, задержка между каждым вызовом
-
 OPERATOR_STATES = ['вошел в систему', 'вышел из системы']
 ARM_PLACES = ["ЦОВ", "РЦОВ", "ЕДДС", "ДДС 01", "ДДС 02", "ДДС 03", "ДДС 04", "ДДС АТ", "ДДС ЖКХ", "другое"]
 # other eos timings
 # OPERATOR CONSTANTS
 OPERATOR_PSYCHOLOGIST_PROBABILITY = 50
+
 # percents
 CHS_PROBABILITY = 100
-HUMAN_TREET_PROBABILITY = 100
+HUMAN_TREAT_PROBABILITY = 100
 # константы с припиской _SCALE - среднеквадратичное отклонение
 
 # Call Content
@@ -168,6 +179,7 @@ WORKING_CONDITIONS_CHARACTERS = ["нахождение объекта в огр�
 NEED_RESCUE_WORK_PROBABILITY = 20  # проценты
 EVACUATIONS_POSSIBILITIES = ["наличие незадымленных лестничных клеток", "лестниц между балконами", "открытых галерей"]
 OWNERS_INFO = ["номер-имя1 номер-имя2", "номер-имя2 номер-имя2"]
+
 # police info
 POLICE_SHARE_MIN = 15
 POLICE_SHARE_MAX = 25
@@ -289,6 +301,7 @@ SERVICES_COUNT_SCALE = 1
 
 CS_SERVICES = ['service1', 'service2', 'service3']
 CS_APPEALS = ['appeal 1', 'appeal 2']
+
 # Anti Terror card info
 CARD_AT_SHARE_MIN = 0
 CARD_AT_SHARE_MAX = 2
@@ -350,6 +363,3 @@ CONSULT_SHARE_MAX = 10
 
 PSYCHO_SHARE_MIN = 5
 PSYCHO_SHARE_MAX = 10
-
-""""⌄⌄⌄ ❌DONT TOUCH ❌⌄⌄⌄"""
-ALL_PROJ_CONSTANTS = globals()
