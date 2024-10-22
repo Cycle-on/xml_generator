@@ -20,8 +20,8 @@ def modify_xml_file_to_send(file_path: str, prefix_var_name: str, postfix_var_na
 
 
 def __send_file(filename: str):
-    print('ЗАТЫЧКА! - файл отправлен')
-    return
+    # print('ЗАТЫЧКА! - файл отправлен')
+    # return
     headers = {
         "Content-Type": "application/xml",
     }
@@ -56,12 +56,13 @@ def send_by_csv(csv_filename: str):
                     time.sleep(0.5)
 
 
-def send_along():
-    thread1 = threading.Thread(target=lambda: send_by_csv('missed_calls_to_send.csv'))
+def send_along(region_name: str):
+    csv_files_dir_path = os.path.join('files', files_prefix, region_name)
+    thread1 = threading.Thread(target=lambda: send_by_csv(os.path.join(csv_files_dir_path, 'missed_calls_to_send.csv')))
     thread1.start()
     thread1.join()
 
-    thread2 = threading.Thread(target=lambda: send_by_csv('ukios_to_send.csv'))
+    thread2 = threading.Thread(target=lambda: send_by_csv(os.path.join(csv_files_dir_path, 'ukios_to_send.csv')))
     thread2.start()
     thread2.join()
 

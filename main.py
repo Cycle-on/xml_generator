@@ -14,9 +14,8 @@ from schemas.ukio_model import Ukios, Ukio
 from config.config_data import DATE_ZERO
 from send_files import send_along, modify_xml_file_to_send
 import argparse
-import constants
+from constants import generator
 from wsdl_parser.wsdl_tester import check_fields_by_file_path
-from pprint import pprint
 
 config = load_config()
 
@@ -32,10 +31,10 @@ def parse_args():
 
     # Парсим аргументы
     args = parser.parse_args()
-    constants.files_count = args.files_count
-    constants.xml_count_per_file = args.xmls
+    generator.files_count = args.files_count
+    generator.xml_count_per_file = args.xmls
     send_files: bool = args.send
-    constants.DATE_ZERO_FORMAT = args.date
+    generator.DATE_ZERO_FORMAT = args.date
 
     return send_files
 
@@ -53,8 +52,8 @@ def generate_region_files(date_zero=DATE_ZERO, region_name: str = ''):
     fill_incident_type_lists(region_name)
     fill_addresses(region_name)
     # generate dicts with info
-    for i in range(config.files_count):
-        for j in range(xml_count_per_file):
+    for i in range(generator.files_count):
+        for j in range(generator.xml_count_per_file):
 
             u = generate_ukio_phone_call_data(date_zero)
             date_zero += td(seconds=AVG_DELAY_BETWEEN_CALLS_TIME)
@@ -114,7 +113,7 @@ def generate_region_files(date_zero=DATE_ZERO, region_name: str = ''):
                                     get_file_postfix(INCIDENT_SOAP_POSTFIX))
 
     print("finish time", datetime.datetime.now() - dt_start)
-    if send_files or 1:
+    if send_files:
         prepare_files_to_send(ukios, missed, region_name)  # split files
         print("start send files")
         if create_send_info_csv_files('missed_calls_to_send',
@@ -124,7 +123,7 @@ def generate_region_files(date_zero=DATE_ZERO, region_name: str = ''):
         create_send_info_csv_files('ukios_to_send',
                                    config_send_info_list=ukios_info,
                                    region_name=region_name)
-        send_along()
+        send_along(region_name)
 
 
 def main():
@@ -141,3 +140,5 @@ def main():
 
 if __name__ == '__main__':
     main()
+
+
