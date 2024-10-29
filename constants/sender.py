@@ -1,4 +1,4 @@
-SENDER_WORK_TYPE = 'by_delay'  # can be 'by_delay' or 'by_date'
+SENDER_WORK_TYPE = 'by_delay'  # can be: 'by_delay' or 'by_date'
 SENDER_DELAY = 3  # seconds
 
 BASE_SOAP_PREFIX = """<?xml version="1.0" encoding="UTF-8"?>

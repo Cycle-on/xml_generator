@@ -23,8 +23,9 @@ config = load_config()
 def parse_args():
     parser = argparse.ArgumentParser()
     # Добавляем параметры со значениями по умолчанию
-    parser.add_argument('--files-count', type=int, default=1, help='количество файлов')
-    parser.add_argument('--xmls', type=int, default=100, help='Количество документов в одном файле')
+    parser.add_argument('--files-count', type=int, default=generator.files_count, help='количество файлов')
+    parser.add_argument('--xmls', type=int, default=generator.xml_count_per_file,
+                        help='Количество документов в одном файле')
     parser.add_argument('--send', action='store_true', help='Режим генератора')
     parser.add_argument('--date', type=str, default=datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S'),
                         help='Дата в формате: YYYY-MM-DD_HH-MM-SS')
@@ -39,7 +40,7 @@ def parse_args():
     return send_files
 
 
-def generate_region_files(date_zero=DATE_ZERO, region_name: str = ''):
+def generate_region_files(date_zero=DATE_ZERO, region_name: str = 'region1'):
     global ukios, missed
     send_files: bool = parse_args()
     create_dirs()
