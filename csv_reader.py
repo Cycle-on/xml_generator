@@ -1,6 +1,8 @@
 import numpy as np
 import pandas as pd
+import ssl
 
+ssl._create_default_https_context = ssl._create_stdlib_context
 
 def get_csv_from_url(url: str) -> pd.Series:
     s: pd.DataFrame = pd.read_csv(url)
