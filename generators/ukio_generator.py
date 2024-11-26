@@ -10,8 +10,8 @@ from generators.phonecall_generator import generate_phone_data, generate_phone_d
 from generators import check_event_probability, genders
 from generators.random_generators import get_address_by_code, get_random_name, get_random_telephone_number
 
-from google_sheet_parser.parse_addresses import get_random_address, ADDRESSES
-from google_sheet_parser.parse_incident_types import CARDS_INDEXES_INCIDENT_TYPES
+from csv_parser.parse_addresses import get_random_address, ADDRESSES
+from csv_parser.parse_incident_types import CARDS_INDEXES_INCIDENT_TYPES
 
 from schemas.string_eos import StringEosType, Consult, Psycho, Operator
 from schemas.ukio_model import Ukio, TransferItem, Address, CallContent

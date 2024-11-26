@@ -6,8 +6,8 @@ from file_creator import create_file_from_model, create_send_info_csv_files, pre
 from generators.operators_and_arms import ARM_WORK, OPERATOR_WORK, create_arms_and_operators
 from generators.ukio_generator import generate_ukio_phone_call_data
 from config.dirs import create_dirs, clear_dir
-from google_sheet_parser.parse_addresses import fill_addresses, ADDRESSES
-from google_sheet_parser.parse_incident_types import fill_incident_type_lists, INCIDENT_TYPES_LIST
+from csv_parser.parse_addresses import fill_addresses, ADDRESSES
+from csv_parser.parse_incident_types import fill_incident_type_lists, INCIDENT_TYPES_LIST
 from schemas.phonecall import MissedCall, MissedCalls
 from schemas.string_eos import OperatorWorks, ArmWorks, IncidentTypes
 from schemas.ukio_model import Ukios, Ukio
