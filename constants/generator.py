@@ -29,7 +29,7 @@ OPERATOR_STATES = ['вошел в систему', 'вышел из систем
 ARM_PLACES = ["ЦОВ", "РЦОВ", "ЕДДС", "ДДС 01", "ДДС 02", "ДДС 03", "ДДС 04", "ДДС АТ", "ДДС ЖКХ", "другое"]
 # other eos timings
 # OPERATOR CONSTANTS
-OPERATOR_PSYCHOLOGIST_PROBABILITY = 100
+OPERATOR_PSYCHOLOGIST_PROBABILITY = 50
 
 # percents
 CHS_PROBABILITY = 100
@@ -159,12 +159,13 @@ DT_CANCEL_SCALE = 30
 MEMBERSHIP = ["mem1", "mem2", "mem3"]
 
 # in %
-EOS_SHARE_MIN = 100  # две вероятности выпадения службы
-EOS_SHARE_MAX = 100  # будет выбираться рандомное значение из этих двух
+
+EOS_SHARE_MIN = 55  # две вероятности выпадения службы
+EOS_SHARE_MAX = 65  # будет выбираться рандомное значение из этих двух
 
 # main eos in %
-FIRE_SHARE_MIN = 100
-FIRE_SHARE_MAX = 100
+FIRE_SHARE_MIN = 2
+FIRE_SHARE_MAX = 10
 
 INCIDENT_TYPES_FOR_CARD01 = []
 OBJECT_FOR_CARD01 = ["01obj1", "01obj2"]
@@ -176,13 +177,15 @@ OBSERVED_CONSEQUENCES_FIRE = ['разрушение Перекрытий', 'об
 ROADS_CHARACTERS = ["Пробки", 'скопление автомобилей во дворах']
 WORKING_CONDITIONS_CHARACTERS = ["нахождение объекта в огражденной", "охраняемой зоне", "наличие ворот", "шлагбаумов",
                                  "решеток и жалюзи на окнах"]
-NEED_RESCUE_WORK_PROBABILITY = 50  # проценты
+
+NEED_RESCUE_WORK_PROBABILITY = 20  # проценты
 EVACUATIONS_POSSIBILITIES = ["наличие незадымленных лестничных клеток", "лестниц между балконами", "открытых галерей"]
 OWNERS_INFO = ["номер-имя1 номер-имя2", "номер-имя2 номер-имя2"]
 
 # police info
-POLICE_SHARE_MIN = 100
-POLICE_SHARE_MAX = 100
+
+POLICE_SHARE_MIN = 15
+POLICE_SHARE_MAX = 25
 INCIDENT_TYPES_FOR_CARD02 = []
 
 OFFENDERS_NUMBER_WORK_TYPE = 'normal'
@@ -251,8 +254,9 @@ VEHICLE_REGIONS = ["region 1", "region2 "]
 VEHICLE_HIDDEN_PROBABILITY = 30
 
 # ambulance info
-AMBULANCE_SHARE_MIN = 100
-AMBULANCE_SHARE_MAX = 100
+
+AMBULANCE_SHARE_MIN = 55
+AMBULANCE_SHARE_MAX = 70
 
 PATIENTS_COUNT_WORK_TYPE = 'normal'
 PATIENTS_COUNT_LOW = 1
@@ -278,15 +282,17 @@ OCCASION_TYPES = ["повод 1", 'повод2']
 ABILITY_MOVE_INDEPENDENTLY = ['ability1', 'ability2']
 
 # card 04 info
-GAS_SHARE_MIN = 100
-GAS_SHARE_MAX = 100
+
+GAS_SHARE_MIN = 0
+GAS_SHARE_MAX = 10
 INCIDENT_TYPES_FOR_CARD04 = []
 GAS_INSTRUCTIONS = ['instruction1', 'instruction2']
 GAS_CONSULT_PROBABILITY = 50
 
 # card comm serv info
-CARD_CS_SHARE_MIN = 100
-CARD_CS_SHARE_MAX = 100
+
+CARD_CS_SHARE_MIN = 0
+CARD_CS_SHARE_MAX = 5
 CS_INCIDENT_TYPES = []
 C_S = ['служба 1', 'служба 2']
 CS_INSTRUCTIONS = ['instruction 1', 'instruction 2']
@@ -303,8 +309,9 @@ CS_SERVICES = ['service1', 'service2', 'service3']
 CS_APPEALS = ['appeal 1', 'appeal 2']
 
 # Anti Terror card info
-CARD_AT_SHARE_MIN = 100
-CARD_AT_SHARE_MAX = 100
+
+CARD_AT_SHARE_MIN = 0
+CARD_AT_SHARE_MAX = 2
 AT_INCIDENT_TYPES = []
 
 PERISHED_PEOPLE_WORK_TYPE = 'normal'
@@ -340,26 +347,27 @@ DIRECTION_TYPES = ['dir1', 'dir2']
 AT_INJURIES = ['inj1', 'inj2']
 
 # other eos in %
-MCHS_SHARE_MIN = 100
-MCHS_SHARE_MAX = 100
 
-EDDS_SHARE_MIN = 100
-EDDS_SHARE_MAX = 100
+MCHS_SHARE_MIN = 0
+MCHS_SHARE_MAX = 1
 
-ROSGV_SHARE_MIN = 100
-ROSGV_SHARE_MAX = 100
+EDDS_SHARE_MIN = 0
+EDDS_SHARE_MAX = 1
 
-AVIALES_SHARE_MIN = 100
-AVIALES_SHARE_MAX = 100
+ROSGV_SHARE_MIN = 0
+ROSGV_SHARE_MAX = 1
 
-ROSAVTODOR_SHARE_MIN = 100
-ROSAVTODOR_SHARE_MAX = 100
+AVIALES_SHARE_MIN = 0
+AVIALES_SHARE_MAX = 1
 
-ROSLESHOZ_SHARE_MIN = 100
-ROSLESHOZ_SHARE_MAX = 100
+ROSAVTODOR_SHARE_MIN = 0
+ROSAVTODOR_SHARE_MAX = 1
 
-CONSULT_SHARE_MIN = 100
-CONSULT_SHARE_MAX = 100
+ROSLESHOZ_SHARE_MIN = 0
+ROSLESHOZ_SHARE_MAX = 1
 
-PSYCHO_SHARE_MIN = 100
-PSYCHO_SHARE_MAX = 100
+CONSULT_SHARE_MIN = 5
+CONSULT_SHARE_MAX = 10
+
+PSYCHO_SHARE_MIN = 5
+PSYCHO_SHARE_MAX = 10
