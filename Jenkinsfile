@@ -1,5 +1,5 @@
 pipeline {
-    agent xml_generator
+    { node { label 'xml_generator' } }
     stages {
         stage ('Test'){
             steps{
