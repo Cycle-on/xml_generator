@@ -5,7 +5,7 @@ pipeline {
             steps{
                 sh'''
                 python3.12 -m venv venv
-                source venv/bin/active
+                ./venv/bin/active
                 pip install -r requirements.txt                
                 '''
             }
