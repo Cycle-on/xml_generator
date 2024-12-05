@@ -4,7 +4,7 @@ pipeline {
         stage ('Test'){
             steps{
                     sh '''
-                    echo "Test agent ${env.NODE_NAME}"
+                    echo "Test agent"
                     '''
             }
         }
