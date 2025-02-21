@@ -10,5 +10,12 @@ pipeline {
                 '''
             }
         }
+        stage ('Cp to user tester'){
+            steps{
+                sh'''
+                cp ~/jenkins_jobs/workspace/xmml_generator /home/tester/
+            }
+        }
+        
     }
 }
