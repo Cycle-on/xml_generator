@@ -13,6 +13,7 @@ pipeline {
         stage ('Cp to user tester'){
             steps{
                 sh'''
+                rm -r /home/tester/xml_generator
                 cp -r ~/jenkins_jobs/workspace/xml_generator /home/tester/
                 echo "Done"
                 '''
