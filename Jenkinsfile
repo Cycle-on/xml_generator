@@ -14,6 +14,7 @@ pipeline {
             steps{
                 sh'''
                 cp ~/jenkins_jobs/workspace/xmml_generator /home/tester/
+                echo "Done"
             }
         }
         
