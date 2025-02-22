@@ -13,7 +13,10 @@ pipeline {
         stage ('Cp to user tester'){
             steps{
                 sh'''
-                rm -r /home/tester/xml_generator
+                if [ -d "/home/tester/xml_generator" ]; then
+                  sudo chown -R ubuntu:ubuntu /home/tester/xml_generator  # Временно меняем владельца на ubuntu
+                  rm -r /home/tester/xml_generator
+                fi
                 cp -r ~/jenkins_jobs/workspace/xml_generator /home/tester/
                 sudo chown -R ubuntu:tester /home/tester/xml_generator  # Рекурсивно меняет владельца на tester:tester для всей папки
                 sudo chmod 755 /home/tester/xml_generator  # Устанавливает права 755 для папки xml_generator
