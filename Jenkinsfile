@@ -15,7 +15,6 @@ pipeline {
                 sh'''
                 rm -r /home/tester/xml_generator
                 cp -r ~/jenkins_jobs/workspace/xml_generator /home/tester/
-                rm -r /home/tester/xml_generator/venv
                 sudo chown -R tester:tester /home/tester/xml_generator  # Рекурсивно меняет владельца на tester:tester для всей папки
                 sudo chmod 755 /home/tester/xml_generator  # Устанавливает права 755 для папки xml_generator
                 sudo chmod 700 /home/tester/xml_generator/files  # Устанавливает права 700 для папки files (только владелец)
