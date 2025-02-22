@@ -22,7 +22,7 @@ pipeline {
                 sudo chmod 755 /home/tester/xml_generator  # Устанавливает права 755 для папки xml_generator
                 sudo chmod 700 /home/tester/xml_generator/files  # Устанавливает права 700 для папки files (только владелец)
                 sudo chmod 600 /home/tester/xml_generator/.env.example  # Устанавливает права 600 для файла .env.example (только владелец)
-                sudo chmod 700 /home/tester/xml_generator/main.py  # Устанавливает права 700 для файла main.py (только владелец) 
+                sudo chmod 755 /home/tester/xml_generator/main.py # Устанавливает права 755 для файла main.py (только владелец, на запуск) 
 
                 cd /home/tester/xml_generator/venv
 
