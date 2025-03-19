@@ -23,6 +23,9 @@ pipeline {
                 sudo chmod 700 /home/tester/xml_generator/files  # Устанавливает права 700 для папки files (только владелец)
                 sudo chmod 600 /home/tester/xml_generator/.env.example  # Устанавливает права 600 для файла .env.example (только владелец)
                 sudo chmod 755 /home/tester/xml_generator/main.py # Устанавливает права 755 для файла main.py (только владелец, на запуск) 
+                sudo cp -r /home/ubuntu/wsdl_4_3.wsdl /home/tester/xml_generator/
+                sudo chown -R tester:tester /home/tester/xml_generator
+                
 
                 cd /home/tester/xml_generator/venv
 
