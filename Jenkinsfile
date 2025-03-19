@@ -35,6 +35,9 @@ pipeline {
                 find bin -type f -exec sed -i "s|$OLD_PATH|$NEW_PATH|g" {} +                
                 
                 sudo rm -r /home/tester/xml_generator/Jenkinsfile
+                sudo rm -r /home/tester/xml_generator/todo.txt
+                sudo rm -r /home/tester/xml_generator/ToDo.txt
+
 
                 echo "Done"
                 '''
