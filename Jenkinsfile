@@ -33,6 +33,9 @@ pipeline {
                 OLD_PATH="/home/ubuntu/jenkins_jobs/workspace/xml_generator/venv"
                 NEW_PATH="/home/tester/xml_generator/venv"
                 find bin -type f -exec sed -i "s|$OLD_PATH|$NEW_PATH|g" {} +                
+                
+                sudo rm -r /home/tester/xml_generator/Jenkinsfile
+
                 echo "Done"
                 '''
             }
