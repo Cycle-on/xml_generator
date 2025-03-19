@@ -15,7 +15,7 @@ pipeline {
                 sh'''
                 if [ -d "/home/tester/xml_generator" ]; then
                   sudo chown -R ubuntu:ubuntu /home/tester/xml_generator  # Временно меняем владельца на ubuntu
-                  rm -r /home/tester/xml_generator
+                  sudo rm -r /home/tester/xml_generator
                 fi
                 cp -r ~/jenkins_jobs/workspace/xml_generator /home/tester/
                 sudo chown -R ubuntu:tester /home/tester/xml_generator  # Рекурсивно меняет владельца на tester:tester для всей папки
