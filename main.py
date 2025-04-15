@@ -1,48 +1,27 @@
+import datetime
 from datetime import timedelta as td
-from config import load_config, ukios_info, missed_info
-from config.config_data import *
+
+from config import ukios_info, missed_info, load_config
+from config.dirs import create_dirs, clear_dir
+from constants import generator
+from constants import *
 from constants.constants_remaker import get_next_constants
+from csv_parser.parse_addresses import fill_addresses
+from csv_parser.parse_incident_types import fill_incident_type_lists, INCIDENT_TYPES_LIST
 from file_creator import create_file_from_model, create_send_info_csv_files, prepare_files_to_send
 from generators.operators_and_arms import ARM_WORK, OPERATOR_WORK, create_arms_and_operators
 from generators.ukio_generator import generate_ukio_phone_call_data
-from config.dirs import create_dirs, clear_dir
-from csv_parser.parse_addresses import fill_addresses, ADDRESSES
-from csv_parser.parse_incident_types import fill_incident_type_lists, INCIDENT_TYPES_LIST
 from schemas.phonecall import MissedCall, MissedCalls
 from schemas.string_eos import OperatorWorks, ArmWorks, IncidentTypes
 from schemas.ukio_model import Ukios, Ukio
-from config.config_data import DATE_ZERO
 from send_files import send_along, modify_xml_file_to_send
-import argparse
-from constants import generator
 from wsdl_parser.wsdl_tester import check_fields_by_file_path
 
 config = load_config()
 
 
-def parse_args():
-    parser = argparse.ArgumentParser()
-    # Добавляем параметры со значениями по умолчанию
-    parser.add_argument('--files-count', type=int, default=generator.files_count, help='количество файлов')
-    parser.add_argument('--xmls', type=int, default=generator.xml_count_per_file,
-                        help='Количество документов в одном файле')
-    parser.add_argument('--send', action='store_true', help='Режим генератора')
-    parser.add_argument('--date', type=str, default=datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S'),
-                        help='Дата в формате: YYYY-MM-DD_HH-MM-SS')
-
-    # Парсим аргументы
-    args = parser.parse_args()
-    generator.files_count = args.files_count
-    generator.xml_count_per_file = args.xmls
-    send_files: bool = args.send
-    generator.DATE_ZERO_FORMAT = args.date
-
-    return send_files
-
-
-def generate_region_files(date_zero=DATE_ZERO, region_name: str = 'region1'):
+def generate_region_files(send_files, date_zero=config.date_zero, region_name: str = 'region1'):
     global ukios, missed
-    send_files: bool = parse_args()
     create_dirs()
     create_arms_and_operators()
     ukios_list = []
@@ -53,8 +32,8 @@ def generate_region_files(date_zero=DATE_ZERO, region_name: str = 'region1'):
     fill_incident_type_lists(region_name)
     fill_addresses(region_name)
     # generate dicts with info
-    for i in range(generator.files_count):
-        for j in range(generator.xml_count_per_file):
+    for i in range(globals().get("files_count")):
+        for j in range(globals().get("xml_count_per_file")):
 
             u = generate_ukio_phone_call_data(date_zero)
             date_zero += td(seconds=AVG_DELAY_BETWEEN_CALLS_TIME)
@@ -129,14 +108,17 @@ def generate_region_files(date_zero=DATE_ZERO, region_name: str = 'region1'):
 
 def main():
     clear_dir()
+
     if TAKE_CONSTANTS_FROM_FILE:
-        generate_region_files()
+        generate_region_files(send_files=config.send_files)
     else:
         for constants_dict in get_next_constants():
             ukios_info.clear()
             missed_info.clear()
+            # GLOBALS_DICT = (globals())
+            # GLOBALS_DICT.update(constants_dict)
             globals().update(constants_dict)
-            generate_region_files(region_name=constants_dict["region_name/constant name"])
+            generate_region_files(send_files=config.send_files, region_name=constants_dict["region_name/constant name"])
 
 
 if __name__ == '__main__':

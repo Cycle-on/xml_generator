@@ -1,4 +1,4 @@
-TAKE_CONSTANTS_FROM_FILE = True
+TAKE_CONSTANTS_FROM_FILE = False
 
 GENERATE_UKIO = True
 GENERATE_MISSED_CALLS = True
@@ -17,7 +17,7 @@ OPERATOR_TRANSLATOR_PROBABILITY = 20
 MIN_OPERATORS_COUNT = 5
 MAX_OPERATORS_COUNT = 5
 
-files_prefix = 'TEST_TeSt'  # префикс перед global_id в ukio и call
+files_prefix = 'TEST'  # префикс перед global_id в ukio и call
 
 xml_count_per_file = 10  # Количество записей в одном файле
 files_count = 1  # Количество файлов

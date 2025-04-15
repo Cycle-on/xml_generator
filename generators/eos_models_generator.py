@@ -1,12 +1,15 @@
 import random
 from datetime import timedelta as td
 
-from config import DATE_ZERO
+import config
+from config import DATE_ZERO, load_config
 from constants import *
 from generators import get_distribution_var_by_work_type, check_event_probability, genders, \
     get_random_birth_date_by_year
 from generators.random_generators import get_random_name
 from schemas.eos_for_ukio_models import Patient, WantedPerson, Suspect, Vehicle
+
+cfg = load_config()
 
 
 def generate_patients_list() -> list[Patient]:
@@ -20,7 +23,7 @@ def generate_patients_list() -> list[Patient]:
         gender = genders[check_event_probability(AMBULANCE_MALE_PROBABILITY)]
         surname, name, middle_name = get_random_name(gender)
         age = int(get_distribution_var_by_work_type(AMBULANCE_AGE_WORK_TYPE, "AMBULANCE_AGE"))
-        birth_day = get_random_birth_date_by_year(DATE_ZERO - td(days=365 * age))
+        birth_day = get_random_birth_date_by_year(cfg.date_zero - td(days=365 * age))
 
         patients.append(
             Patient(
@@ -44,7 +47,7 @@ def generate_wanted_list() -> list[WantedPerson]:
         gender = genders[check_event_probability(WANTED_MALE_GENDER_PROBABILITY)]
         surname, name, middle_name = get_random_name(gender)
         age = int(get_distribution_var_by_work_type(WANTED_AGE_WORK_TYPE, "WANTED_AGE"))
-        birth_day = get_random_birth_date_by_year(DATE_ZERO - td(days=365 * age))
+        birth_day = get_random_birth_date_by_year(cfg.date_zero - td(days=365 * age))
         wanted_persons.append(
             WantedPerson(
                 strGender=gender,
