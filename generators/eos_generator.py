@@ -212,7 +212,7 @@ def generate_eos_item_from_eos_list(eos_type_list: list[StringEosType],
     return eos_items
 
 
-random.seed(1696)
+# random.seed(1696)
 
 
 def __find_seed():
