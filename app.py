@@ -411,12 +411,12 @@ def auto_generation_worker(url, username, password):
             log_message({'type': 'generation_complete'})
             
             # Ожидание следующего цикла
-            log_message({'type': 'waiting', 'seconds': 60})
-            time.sleep(60)
+            log_message({'type': 'waiting', 'seconds': int(auto_generation_interval * 60)})
+            time.sleep(auto_generation_interval * 60)  # Конвертируем минуты в секунды
             
         except Exception as e:
             log_message({'type': 'error', 'message': f'Ошибка в цикле генерации: {str(e)}'})
-            time.sleep(60)
+            time.sleep(auto_generation_interval * 60)  # Конвертируем минуты в секунды
 
 if __name__ == '__main__':
     app.run(debug=True) 
