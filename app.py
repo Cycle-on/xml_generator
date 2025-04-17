@@ -25,6 +25,52 @@ auto_generation_interval = None
 total_files_sent = 0
 log_callbacks = []
 
+# Color formatting utilities
+class Colors:
+    HEADER = '\033[95m'
+    BLUE = '\033[94m'
+    CYAN = '\033[96m'
+    GREEN = '\033[92m'
+    YELLOW = '\033[93m'
+    RED = '\033[91m'
+    ENDC = '\033[0m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
+
+def print_colored(text, color):
+    print(f"{color}{text}{Colors.ENDC}")
+
+def print_request_details(url, headers, data):
+    print_colored("\n=== Request Details ===", Colors.HEADER)
+    print_colored(f"URL: {url}", Colors.BLUE)
+    print_colored("\nHeaders:", Colors.CYAN)
+    for key, value in headers.items():
+        if key.lower() == 'authorization':
+            # Mask the password in the Authorization header
+            auth_parts = value.split(' ')
+            if len(auth_parts) == 2 and auth_parts[0].lower() == 'basic':
+                try:
+                    decoded = base64.b64decode(auth_parts[1]).decode()
+                    username, _ = decoded.split(':')
+                    print_colored(f"{key}: Basic {base64.b64encode(f'{username}:******'.encode()).decode()}", Colors.CYAN)
+                except:
+                    print_colored(f"{key}: {value}", Colors.CYAN)
+            else:
+                print_colored(f"{key}: {value}", Colors.CYAN)
+        else:
+            print_colored(f"{key}: {value}", Colors.CYAN)
+    print_colored("\nRequest Body:", Colors.GREEN)
+    print_colored(data, Colors.GREEN)
+
+def print_response_details(response):
+    print_colored("\n=== Response Details ===", Colors.HEADER)
+    print_colored(f"Status Code: {response.status_code}", Colors.YELLOW)
+    print_colored("\nResponse Headers:", Colors.CYAN)
+    for key, value in response.headers.items():
+        print_colored(f"{key}: {value}", Colors.CYAN)
+    print_colored("\nResponse Body:", Colors.GREEN)
+    print_colored(response.text, Colors.GREEN)
+
 class OutputCapture:
     def __init__(self):
         self.output = io.StringIO()
@@ -168,48 +214,61 @@ def send_file():
         }
         
         try:
+            print_colored(f"\n[Отправка файла: {filename}]", Colors.BOLD)
+            print_request_details(url, headers, content)
+            
             response = requests.post(
                 url,
                 data=content,
                 headers=headers,
-                timeout=30
+                timeout=30,
+                verify=False  # Отключаем проверку сертификата
             )
+            
+            print_response_details(response)
             
             # Проверяем ответ
             if response.status_code == 200:
                 try:
                     # Пробуем распарсить как XML
                     root = ET.fromstring(response.text)
-                    error_code = root.find('.//ins:errorCode', {'ins': 'http://system112.ru/112/integration'})
+                    # Ищем статус в новом формате ответа
+                    status = root.find('.//ns2:status', {'ns2': 's112'})
                     
-                    if error_code is not None and error_code.text == '0':
+                    if status is not None and status.text.lower() == 'true':
+                        print_colored("\nРезультат: Успешно", Colors.GREEN)
                         return jsonify({
                             'success': True,
                             'message': 'Файл успешно отправлен'
                         })
                     else:
+                        print_colored("\nРезультат: Ошибка в ответе сервера", Colors.RED)
                         return jsonify({
                             'success': False,
                             'message': 'Ошибка при отправке файла'
                         })
-                except ET.ParseError:
+                except ET.ParseError as e:
+                    print_colored(f"\nОшибка парсинга XML: {str(e)}", Colors.RED)
                     return jsonify({
                         'success': False,
                         'message': 'Ошибка при отправке файла'
                     })
             else:
+                print_colored(f"\nРезультат: Ошибка HTTP {response.status_code}", Colors.RED)
                 return jsonify({
                     'success': False,
                     'message': 'Ошибка при отправке файла'
                 })
 
-        except requests.exceptions.RequestException:
+        except requests.exceptions.RequestException as e:
+            print_colored(f"\nОшибка при отправке запроса: {str(e)}", Colors.RED)
             return jsonify({
                 'success': False,
                 'message': 'Ошибка при отправке файла'
             })
 
-    except Exception:
+    except Exception as e:
+        print_colored(f"\nНепредвиденная ошибка: {str(e)}", Colors.RED)
         return jsonify({
             'success': False,
             'message': 'Ошибка при отправке файла'
@@ -384,23 +443,25 @@ def auto_generation_worker(url, username, password):
                 log_message({'type': 'sending_file', 'current': i, 'total': total_files})
                 
                 try:
-                    with open(os.path.join('files', 'TEST', filename), 'r', encoding='utf-8') as f:
-                        file_content = f.read()
-                    
-                    # Исправляем префикс XML
-                    file_content = file_content.replace('<?сбитый префикс для ukio', '<?xml')
-                    
-                    # Отправляем файл
+                    # Отправляем файл через /api/send
                     response = requests.post(
-                        url,
-                        auth=(username, password),
-                        data=file_content,
-                        headers={'Content-Type': 'text/xml;charset=UTF-8'}
+                        'http://localhost:5000/api/send',  # Используем локальный эндпоинт
+                        json={
+                            'url': url,
+                            'username': username,
+                            'password': password,
+                            'file': filename
+                        },
+                        headers={'Content-Type': 'application/json'}
                     )
                     
                     if response.status_code == 200:
-                        total_files_sent += 1
-                        log_message({'type': 'file_sent', 'current': i, 'total': total_files})
+                        result = response.json()
+                        if result.get('success'):
+                            total_files_sent += 1
+                            log_message({'type': 'file_sent', 'current': i, 'total': total_files})
+                        else:
+                            log_message({'type': 'error', 'message': f'Ошибка при отправке файла {filename}: {result.get("message")}'})
                     else:
                         log_message({'type': 'error', 'message': f'Ошибка при отправке файла {filename}: {response.status_code}'})
                     
@@ -412,11 +473,11 @@ def auto_generation_worker(url, username, password):
             
             # Ожидание следующего цикла
             log_message({'type': 'waiting', 'seconds': int(auto_generation_interval * 60)})
-            time.sleep(auto_generation_interval * 60)  # Конвертируем минуты в секунды
+            time.sleep(auto_generation_interval * 60)
             
         except Exception as e:
             log_message({'type': 'error', 'message': f'Ошибка в цикле генерации: {str(e)}'})
-            time.sleep(auto_generation_interval * 60)  # Конвертируем минуты в секунды
+            time.sleep(auto_generation_interval * 60)
 
 if __name__ == '__main__':
     app.run(debug=True) 
