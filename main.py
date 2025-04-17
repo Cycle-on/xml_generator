@@ -98,7 +98,6 @@ def generate_region_files(date_zero=config.date_zero, region_name: str = 'region
 
 
 def send_files(region_name):
-
     # prepare_files_to_send(ukios, missed, region_name)  # split files
     print("start send files")
     # if create_send_info_csv_files('missed_calls_to_send',
@@ -121,17 +120,36 @@ def send_files(region_name):
 
 def main():
     clear_dir()
+    if config.send_files:
+        pass
+        for _ in range(ALL_TIME // SENDER_DELAY):
+            ukios_info.clear()
+            missed_info.clear()
 
-    for _ in range(ALL_TIME // SENDER_DELAY):
-        ukios_info.clear()
-        missed_info.clear()
+            if config.send_files:
+                # print(random.randint(sender.COEF_MIN, sender.COEF_MAX))
+                globals()["xml_count_per_file"] *= random.randint(sender.COEF_MIN, sender.COEF_MAX) / 100
+                globals()["xml_count_per_file"] = int(globals()["xml_count_per_file"])
+                # print("ff", globals()["xml_count_per_file"])
+                globals()["files_count"] = 1
 
-        if config.send_files:
-            # print(random.randint(sender.COEF_MIN, sender.COEF_MAX))
-            globals()["xml_count_per_file"] *= random.randint(sender.COEF_MIN, sender.COEF_MAX) / 100
-            globals()["xml_count_per_file"] = int(globals()["xml_count_per_file"])
-            # print("ff", globals()["xml_count_per_file"])
-            globals()["files_count"] = 1
+            if TAKE_CONSTANTS_FROM_FILE:
+                generate_region_files()
+                if config.send_files:
+                    send_files('region1')
+            else:
+                for constants_dict in get_next_constants():
+                    ukios_info.clear()
+                    missed_info.clear()
+                    # GLOBALS_DICT = (globals())
+                    # GLOBALS_DICT.update(constants_dict)
+                    globals().update(constants_dict)
+
+                    generate_region_files(region_name=constants_dict["region_name/constant name"])
+                    if config.send_files:
+                        send_files(constants_dict["region_name/constant name"])
+            time.sleep(SENDER_DELAY)
+    else:
 
         if TAKE_CONSTANTS_FROM_FILE:
             generate_region_files()
@@ -146,9 +164,7 @@ def main():
                 globals().update(constants_dict)
 
                 generate_region_files(region_name=constants_dict["region_name/constant name"])
-                if config.send_files:
-                    send_files(constants_dict["region_name/constant name"])
-        time.sleep(SENDER_DELAY)
+
 
 
 if __name__ == '__main__':
