@@ -31,6 +31,10 @@
             background: #3d1a1a;
             color: #ff6b6b;
         }
+        .console-line.success {
+            background: #1a3d1a;
+            color: #6bff6b;
+        }
         .console-time {
             color: #888;
             margin-right: 10px;
@@ -284,11 +288,11 @@
             return now.toLocaleTimeString('ru-RU', { hour12: false });
         }
 
-        function log(message, isError = false) {
+        function log(message, type = 'normal') {
             const console = document.getElementById('console');
             const time = getTime();
             const line = document.createElement('div');
-            line.className = `console-line ${isError ? 'error' : ''}`;
+            line.className = `console-line ${type}`;
             line.innerHTML = `<span class="console-time">[${time}]</span> ${message}`;
             console.appendChild(line);
             console.scrollTop = console.scrollHeight;
@@ -407,7 +411,7 @@
                 const spinner = logLine.querySelector('.console-spinner');
                 if (spinner) spinner.remove();
                 
-                log(`Ответ сервера: ${data.message}`);
+                log(`Ответ сервера: ${data.message}`, data.success ? 'success' : 'error');
                 
                 if (data.success) {
                     status.textContent = 'Файл успешно отправлен';
@@ -422,7 +426,7 @@
                 const spinner = logLine.querySelector('.console-spinner');
                 if (spinner) spinner.remove();
                 
-                log(`Ошибка: ${error.message}`);
+                log(`Ошибка: ${error.message}`, 'error');
                 status.textContent = `Ошибка: ${error.message}`;
                 status.className = 'status error';
             })
@@ -536,7 +540,7 @@
                     isAutoGenerating = true;
                     document.getElementById('startAutoButton').disabled = true;
                     document.getElementById('stopAutoButton').disabled = false;
-                    showStatus(`Запущена автоматическая генерация длительность: ${duration} минут`, 'success');
+                    log(`Запущена автоматическая генерация на ${duration} минут`, 'normal');
                 } else {
                     showStatus(data.message, 'error');
                 }
@@ -547,58 +551,88 @@
             });
         }
 
+        // Подключаемся к серверу событий
+        const eventSource = new EventSource('/api/auto-generate/logs');
+        
+        eventSource.onopen = function() {
+            console.log('Соединение с сервером событий установлено');
+        };
+        
+        // Добавляем счетчики для статистики
+        let statsTotal = 0;
+        let statsSuccess = 0;
+        let statsError = 0;
+        let isCompleted = false;
+        
         // Функция для обработки сообщений от сервера
         function handleServerMessage(event) {
             try {
                 const data = JSON.parse(event.data);
                 
                 if (data.type === 'status_update') {
-                    // Обновляем счетчик файлов только если значение изменилось
-                    const currentCount = document.getElementById('filesCount').textContent;
+                    // Обновляем счетчик файлов
                     const newCount = data.files_sent || 0;
+                    document.getElementById('filesCount').textContent = newCount;
                     
-                    if (currentCount !== newCount.toString()) {
-                        document.getElementById('filesCount').textContent = newCount;
-                        if (newCount > 0) {
-                            log(`Отправлено файлов: ${newCount}`);
-                        }
+                    // Если время вышло и мы еще не показывали статистику
+                    if (data.time_left <= 0 && !isCompleted) {
+                        isCompleted = true;
+                        log('Автоматическая генерация завершена');
+                        showFinalStats();
                     }
                 } else if (data.type === 'console_output') {
                     // Выводим сообщение в консоль
                     log(data.text);
+                    
+                    // Проверяем успешную отправку файла (учитываем DEBUG: префикс)
+                    if (data.text.includes('DEBUG:') && data.text.includes('успешно отправлен')) {
+                        statsSuccess++;
+                        statsTotal++;
+                        log(`Файл успешно отправлен (${statsSuccess}/${statsTotal})`, 'success');
+                    }
+                    // Проверяем ошибку отправки файла
+                    else if (data.text.includes('DEBUG:') && data.text.includes('Ошибка при отправке')) {
+                        statsError++;
+                        statsTotal++;
+                        log(`Ошибка при отправке файла (${statsError}/${statsTotal})`, 'error');
+                    }
                 } else if (data.type === 'generation_start') {
-                    log('Начало цикла генерации');
+                    log('Начинаю генерацию...');
                 } else if (data.type === 'generation_complete') {
-                    log('Цикл генерации завершен');
+                    log('Генерация файлов завершена');
                 } else if (data.type === 'files_found') {
-                    log(`Найдено файлов: ${data.count}`);
+                    log(`Сгенерировано файлов: ${data.count}`);
                 } else if (data.type === 'sending_file') {
-                    log(`Отправка файла ${data.current}/${data.total}`);
+                    log(`Отправляю файл ${data.current} / ${data.total}`);
                 } else if (data.type === 'file_sent') {
-                    log(`Файл успешно отправлен (${data.current}/${data.total})`);
+                    statsSuccess++;
+                    statsTotal++;
                 } else if (data.type === 'error') {
-                    log(`Ошибка: ${data.message}`, 'error');
+                    statsError++;
+                    statsTotal++;
                 }
             } catch (error) {
-                console.error('Ошибка при обработке сообщения:', error);
                 log(`Ошибка при обработке сообщения: ${error.message}`, 'error');
             }
         }
 
-        // Подключаемся к серверу событий
-        const eventSource = new EventSource('/api/auto-generate/logs');
-        
-        eventSource.onopen = function() {
-            console.log('Соединение с сервером событий установлено');
-            log('Соединение с сервером событий установлено');
-        };
-        
         eventSource.onmessage = handleServerMessage;
         
         eventSource.onerror = function(error) {
             console.error('Ошибка соединения с сервером событий:', error);
             log('Ошибка соединения с сервером событий', 'error');
         };
+
+        // Функция для отображения итоговой статистики
+        function showFinalStats() {
+            const stats = `=== Итоговая статистика ===\n` +
+                         `Всего файлов отправлено: ${statsTotal}\n` +
+                         `Успешно отправлено: ${statsSuccess}\n` +
+                         `Ошибок при отправке: ${statsError}\n` +
+                         `Процент успешных отправок: ${statsTotal > 0 ? ((statsSuccess / statsTotal) * 100).toFixed(2) : 0}%\n` +
+                         `========================`;
+            log(stats);
+        }
 
         // Функция для остановки автоматической генерации
         function stopAutoGeneration() {
@@ -611,11 +645,16 @@
                     isAutoGenerating = false;
                     document.getElementById('startAutoButton').disabled = false;
                     document.getElementById('stopAutoButton').disabled = true;
-                    showStatus('Автоматическая генерация остановлена', 'success');
                     clearInterval(updateProgressTimer);
                     document.getElementById('timeLeft').textContent = '00:00';
                     document.getElementById('progressBar').style.width = '0%';
-                    log('Автоматическая генерация остановлена');
+                    
+                    // Показываем статистику при остановке
+                    if (!isCompleted) {
+                        isCompleted = true;
+                        log('Автоматическая генерация остановлена');
+                        showFinalStats();
+                    }
                     
                     // Закрываем соединение с сервером событий
                     eventSource.close();
