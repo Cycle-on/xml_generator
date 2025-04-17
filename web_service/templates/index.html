@@ -599,25 +599,28 @@
                         log('Автоматическая генерация завершена');
                         showFinalStats();
                         eventSource.close();
+                        // Возвращаем кнопки в исходное состояние
+                        document.getElementById('startAutoButton').disabled = false;
+                        document.getElementById('stopAutoButton').disabled = true;
+                        isAutoGenerating = false;
                     }
                 } else if (data.type === 'console_output') {
-                    // Выводим только важные сообщения
+                    // Выводим все сообщения о процессе
                     if (data.text.includes('Генерация файла') || 
                         data.text.includes('Отправка файла') ||
                         data.text.includes('успешно отправлен') ||
-                        data.text.includes('Ошибка при отправке')) {
+                        data.text.includes('Ошибка при отправке') ||
+                        data.text.includes('Ожидание') ||
+                        data.text.includes('Подготовка')) {
                         stopSpinner();
                         log(data.text);
                     }
                 } else if (data.type === 'generation_start') {
-                    logWithSpinner('Генерирую файл');
+                    logWithSpinner('Начало цикла генерации');
                 } else if (data.type === 'generation_complete') {
                     stopSpinner();
-                    log('Генерация файлов завершена');
-                    showFinalStats();
-                    eventSource.close();
-                    // Начинаем новый цикл генерации
-                    logWithSpinner('Генерирую файл');
+                    log('Генерация файла завершена');
+                    logWithSpinner('Отправляю файл');
                 } else if (data.type === 'files_found') {
                     stopSpinner();
                     log(`Сгенерировано файлов: ${data.count}`);
@@ -711,7 +714,7 @@
                     document.getElementById('startAutoButton').disabled = true;
                     document.getElementById('stopAutoButton').disabled = false;
                     log(`Запущена автоматическая генерация на ${duration} минут`);
-                    logWithSpinner('Генерирую файл');
+                    logWithSpinner('Начало цикла генерации');
                 } else {
                     showStatus(data.message, 'error');
                 }
@@ -745,7 +748,10 @@
                     }
                     
                     // Закрываем соединение с сервером событий
-                    eventSource.close();
+                    if (eventSource) {
+                        eventSource.close();
+                        eventSource = null;
+                    }
                 } else {
                     showStatus(data.message, 'error');
                     log(`Ошибка при остановке генерации: ${data.message}`, 'error');

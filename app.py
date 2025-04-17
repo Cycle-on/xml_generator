@@ -11,6 +11,8 @@ from threading import Thread
 import time
 from datetime import datetime
 import json
+import constants.generator as generator
+import random
 
 # Константы для генерации
 TAKE_CONSTANTS_FROM_FILE = True  # Если True - берем константы из файла, если False - из get_next_constants()
@@ -140,6 +142,9 @@ def generate():
         try:
             # Очищаем директорию перед генерацией
             clear_dir()
+            
+            # Пересоздаем константы генератора
+            reset_generator_constants()
             
             # Выводим сообщение о начале генерации
             yield f"data: Начинаю генерацию...\n\n"
@@ -497,6 +502,9 @@ def auto_generation_worker(url, username, password):
                 # Очищаем директорию перед генерацией
                 clear_dir()
                 
+                # Пересоздаем константы генератора
+                reset_generator_constants()
+                
                 # Генерируем файлы
                 if TAKE_CONSTANTS_FROM_FILE:
                     generate_region_files()
@@ -580,6 +588,15 @@ def auto_generation_worker(url, username, password):
             print(f"DEBUG: Ошибка в цикле генерации: {str(e)}")
             log_message({'type': 'error', 'message': f'Ошибка в цикле генерации: {str(e)}'})
             time.sleep(1)
+
+def reset_generator_constants():
+    """Пересоздает случайные константы генератора"""
+    import main
+    import sys
+    value = random.choice([1, 10])
+    globals()["xml_count_per_file"] = value
+    sys.modules['main'].xml_count_per_file = value
+    print(f"\n[DEBUG] Текущее значение xml_count_per_file: {value}\n")
 
 if __name__ == '__main__':
     app.run(debug=True) 
