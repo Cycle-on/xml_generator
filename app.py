@@ -5,11 +5,17 @@ import os
 import base64
 import requests
 import xml.etree.ElementTree as ET
-from main import main
+from main import main, generate_region_files, clear_dir
+from constants.constants_remaker import get_next_constants
 from threading import Thread
 import time
 from datetime import datetime
 import json
+import constants.generator as generator
+import random
+
+# Константы для генерации
+TAKE_CONSTANTS_FROM_FILE = True  # Если True - берем константы из файла, если False - из get_next_constants()
 
 app = Flask(__name__, template_folder='web_service/templates')
 
@@ -24,6 +30,7 @@ auto_generation_end_time = None
 auto_generation_interval = None
 total_files_sent = 0
 log_callbacks = []
+is_generating = False  # Добавляем новую глобальную переменную
 
 # Color formatting utilities
 class Colors:
@@ -133,9 +140,27 @@ def generate():
         capture.add_callback(output_callback)
         
         try:
-            main()
+            # Очищаем директорию перед генерацией
+            clear_dir()
+            
+            # Пересоздаем константы генератора
+            reset_generator_constants()
+            
+            # Выводим сообщение о начале генерации
+            yield f"data: Начинаю генерацию...\n\n"
+            
+            # Запускаем генерацию
+            generate_region_files()
+            
+            # Подсчитываем количество сгенерированных файлов
+            ukios_files = get_ukios_files()
+            file_count = len(ukios_files)
+            
+            # Выводим сообщение о завершении
+            yield f"data: Генерация завершена успешно, сгенерировано файлов: {file_count}\n\n"
+            
         except Exception as e:
-            yield f"data: Ошибка: {str(e)}\n\n"
+            yield f"data: Ошибка в генерации: {str(e)}\n\n"
         finally:
             sys.stdout = capture.stdout
             sys.stderr = capture.stderr
@@ -387,65 +412,128 @@ def get_auto_generation_status():
 @app.route('/api/auto-generate/logs')
 def auto_generate_logs():
     def generate_logs():
-        last_message = None
-        while True:
-            if not auto_generation_running:
-                break
-            time.sleep(0.1)
+        try:
+            # Отправляем начальное сообщение для установки соединения
+            yield ": keep-alive\n\n"
             
-            # Создаем словарь для хранения текущего состояния
-            current_state = {
-                'type': 'status_update',
-                'files_sent': total_files_sent,
-                'messages': []
-            }
-            
-            # Добавляем сообщения в массив
-            if last_message != total_files_sent:
-                last_message = total_files_sent
-                if total_files_sent > 0:
-                    current_state['messages'].append({
-                        'type': 'files_sent',
-                        'count': total_files_sent
-                    })
-            
-            # Отправляем обновленное состояние
-            if current_state['messages']:
-                yield f"data: {json.dumps(current_state)}\n\n"
+            while True:
+                try:
+                    if not auto_generation_running:
+                        # Если генерация остановлена, отправляем сообщение и ждем
+                        yield f"data: {json.dumps({'type': 'status_update', 'status': 'stopped'})}\n\n"
+                        time.sleep(1)
+                        continue
+                        
+                    # Создаем словарь для хранения текущего состояния
+                    current_state = {
+                        'type': 'status_update',
+                        'files_sent': total_files_sent,
+                        'time_left': max(0, auto_generation_end_time - time.time())
+                    }
+                    
+                    # Отправляем обновленное состояние
+                    yield f"data: {json.dumps(current_state)}\n\n"
+                    time.sleep(0.1)
+                    
+                except GeneratorExit:
+                    # Клиент закрыл соединение
+                    break
+                except Exception as e:
+                    print(f"Ошибка в генераторе логов: {str(e)}")
+                    time.sleep(1)
+                    continue
+                    
+        except Exception as e:
+            print(f"Критическая ошибка в генераторе логов: {str(e)}")
     
-    return Response(stream_with_context(generate_logs()), 
-                   mimetype='text/event-stream',
-                   headers={
-                       'Cache-Control': 'no-cache',
-                       'Connection': 'keep-alive',
-                       'X-Accel-Buffering': 'no'
-                   })
+    response = Response(stream_with_context(generate_logs()), 
+                       mimetype='text/event-stream')
+    
+    # Добавляем необходимые заголовки для SSE
+    response.headers['Cache-Control'] = 'no-cache'
+    response.headers['Connection'] = 'keep-alive'
+    response.headers['X-Accel-Buffering'] = 'no'
+    response.headers['Access-Control-Allow-Origin'] = '*'
+    
+    return response
 
 def auto_generation_worker(url, username, password):
     global auto_generation_running, total_files_sent
     total_files_sent = 0
     
+    print(f"DEBUG: Запущен worker с параметрами - url: {url}, username: {username}")
+    print(f"DEBUG: Время работы - start: {auto_generation_start_time}, end: {auto_generation_end_time}, interval: {auto_generation_interval}")
+    
     while auto_generation_running:
         try:
+            current_time = time.time()
+            time_left = auto_generation_end_time - current_time
+            minutes_left = int(time_left // 60)
+            seconds_left = int(time_left % 60)
+            
+            print(f"DEBUG: Осталось времени: {minutes_left:02d}:{seconds_left:02d}")
+            
+            # Проверяем, не истекло ли время
+            if current_time >= auto_generation_end_time:
+                print("DEBUG: Время генерации истекло")
+                log_message({'type': 'console_output', 'text': 'Время генерации истекло'})
+                auto_generation_running = False
+                print("DEBUG: Автогенерация завершена")
+                log_message({'type': 'console_output', 'text': 'Автогенерация завершена'})
+                break
+                
             # Начало генерации
+            print("DEBUG: Начало цикла генерации")
             log_message({'type': 'generation_start'})
             
-            # Генерируем файлы с перехватом вывода
-            capture_main_output()
+            # Генерируем файлы
+            capture = OutputCapture()
+            sys.stdout = capture
+            sys.stderr = capture
+            
+            def output_callback(text):
+                # Пропускаем отладочные сообщения, чтобы избежать рекурсии
+                if not text.startswith("DEBUG:"):
+                    log_message({'type': 'console_output', 'text': text})
+            
+            capture.add_callback(output_callback)
+            
+            try:
+                # Очищаем директорию перед генерацией
+                clear_dir()
+                
+                # Пересоздаем константы генератора
+                reset_generator_constants()
+                
+                # Генерируем файлы
+                if TAKE_CONSTANTS_FROM_FILE:
+                    generate_region_files()
+                else:
+                    for constants_dict in get_next_constants():
+                        region_name = constants_dict["region_name/constant name"]
+                        globals().update(constants_dict)
+                        generate_region_files(region_name=region_name)
+                
+            finally:
+                sys.stdout = capture.stdout
+                sys.stderr = capture.stderr
+                capture.remove_callback(output_callback)
             
             # Получаем список файлов
             files = get_ukios_files()
             total_files = len(files)
+            print(f"DEBUG: Найдено файлов: {total_files}")
             log_message({'type': 'files_found', 'count': total_files})
             
             # Отправляем файлы
             for i, filename in enumerate(files, 1):
+                print(f"DEBUG: Отправка файла {i}/{total_files}: {filename}")
                 log_message({'type': 'sending_file', 'current': i, 'total': total_files})
                 
                 try:
                     # Отправляем файл через /api/send
                     response = requests.post(
-                        'http://localhost:5000/api/send',  # Используем локальный эндпоинт
+                        'http://localhost:5000/api/send',
                         json={
                             'url': url,
                             'username': username,
@@ -459,25 +547,56 @@ def auto_generation_worker(url, username, password):
                         result = response.json()
                         if result.get('success'):
                             total_files_sent += 1
+                            print(f"DEBUG: Файл {filename} успешно отправлен")
                             log_message({'type': 'file_sent', 'current': i, 'total': total_files})
                         else:
+                            print(f"DEBUG: Ошибка при отправке файла {filename}: {result.get('message')}")
                             log_message({'type': 'error', 'message': f'Ошибка при отправке файла {filename}: {result.get("message")}'})
                     else:
+                        print(f"DEBUG: Ошибка при отправке файла {filename}: {response.status_code}")
                         log_message({'type': 'error', 'message': f'Ошибка при отправке файла {filename}: {response.status_code}'})
                     
                 except Exception as e:
+                    print(f"DEBUG: Ошибка при обработке файла {filename}: {str(e)}")
                     log_message({'type': 'error', 'message': f'Ошибка при обработке файла {filename}: {str(e)}'})
             
             # Генерация завершена
+            print("DEBUG: Цикл генерации завершен")
             log_message({'type': 'generation_complete'})
             
+            # Проверяем, не истекло ли время после завершения цикла
+            if time.time() >= auto_generation_end_time:
+                print("DEBUG: Время генерации истекло после завершения цикла")
+                log_message({'type': 'console_output', 'text': 'Время генерации истекло'})
+                auto_generation_running = False
+                break
+            
             # Ожидание следующего цикла
-            log_message({'type': 'waiting', 'seconds': int(auto_generation_interval * 60)})
-            time.sleep(auto_generation_interval * 60)
+            wait_seconds = int(auto_generation_interval * 60)
+            print(f"DEBUG: Ожидание {wait_seconds} секунд до следующего цикла")
+            log_message({'type': 'waiting', 'seconds': wait_seconds})
+            
+            # Проверяем, не истекло ли время во время ожидания
+            end_time = time.time() + wait_seconds
+            while time.time() < end_time and auto_generation_running:
+                if time.time() >= auto_generation_end_time:
+                    auto_generation_running = False
+                    break
+                time.sleep(1)
             
         except Exception as e:
+            print(f"DEBUG: Ошибка в цикле генерации: {str(e)}")
             log_message({'type': 'error', 'message': f'Ошибка в цикле генерации: {str(e)}'})
-            time.sleep(auto_generation_interval * 60)
+            time.sleep(1)
+
+def reset_generator_constants():
+    """Пересоздает случайные константы генератора"""
+    import main
+    import sys
+    value = random.choice([1, 10])
+    globals()["xml_count_per_file"] = value
+    sys.modules['main'].xml_count_per_file = value
+    print(f"\n[DEBUG] Текущее значение xml_count_per_file: {value}\n")
 
 if __name__ == '__main__':
     app.run(debug=True) 
