@@ -451,7 +451,11 @@ def auto_generation_worker(url, username, password):
     while auto_generation_running:
         try:
             current_time = time.time()
-            print(f"DEBUG: Текущее время: {current_time}, время окончания: {auto_generation_end_time}")
+            time_left = auto_generation_end_time - current_time
+            minutes_left = int(time_left // 60)
+            seconds_left = int(time_left % 60)
+            
+            print(f"DEBUG: Осталось времени: {minutes_left:02d}:{seconds_left:02d}")
             
             # Проверяем, не истекло ли время
             if current_time >= auto_generation_end_time:
@@ -538,6 +542,13 @@ def auto_generation_worker(url, username, password):
             # Генерация завершена
             print("DEBUG: Цикл генерации завершен")
             log_message({'type': 'generation_complete'})
+            
+            # Проверяем, не истекло ли время после завершения цикла
+            if time.time() >= auto_generation_end_time:
+                print("DEBUG: Время генерации истекло после завершения цикла")
+                log_message({'type': 'console_output', 'text': 'Время генерации истекло'})
+                auto_generation_running = False
+                break
             
             # Ожидание следующего цикла
             wait_seconds = int(auto_generation_interval * 60)
