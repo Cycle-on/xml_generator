@@ -1,3 +1,5 @@
+import random
+
 TAKE_CONSTANTS_FROM_FILE = True
 
 GENERATE_UKIO = True
@@ -19,7 +21,7 @@ MAX_OPERATORS_COUNT = 5
 
 files_prefix = 'TEST'  # префикс перед global_id в ukio и call
 
-xml_count_per_file = 300  # Количество записей в одном файле
+xml_count_per_file = random.choice([5 ,6 ,7, 8, 9, 10])  # Количество записей в одном файле
 files_count = 1  # Количество файлов
 
 MAX_RECALL_ATTEMPTS = 3  # максимальное количество попыток перезвона при сброшенном вызове
