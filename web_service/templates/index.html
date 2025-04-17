@@ -243,7 +243,8 @@
         let totalFilesGenerated = 0;
         let updateProgressTimer;
         let lastStatusUpdate = 0;
-        let eventSource = null; // Объявляем переменную для EventSource
+        let eventSource = null;
+        let currentSpinnerLine = null;
 
         // Глобальные переменные для статистики
         let statsTotal = 0;
@@ -251,6 +252,50 @@
         let statsError = 0;
         let isCompleted = false;
         let eventCounter = 0;
+
+        // Функция для анимации спиннера
+        function startSpinner(line) {
+            if (spinnerInterval) {
+                clearInterval(spinnerInterval);
+            }
+            currentSpinnerLine = line;
+            let spinnerChars = ['|', '/', '-', '\\'];
+            let spinnerIndex = 0;
+            
+            spinnerInterval = setInterval(() => {
+                if (currentSpinnerLine) {
+                    const text = currentSpinnerLine.textContent.replace(/[|/\\-]$/, '');
+                    currentSpinnerLine.textContent = text + spinnerChars[spinnerIndex];
+                    spinnerIndex = (spinnerIndex + 1) % spinnerChars.length;
+                }
+            }, 100);
+        }
+
+        // Функция для остановки спиннера
+        function stopSpinner() {
+            if (spinnerInterval) {
+                clearInterval(spinnerInterval);
+                spinnerInterval = null;
+            }
+            if (currentSpinnerLine) {
+                const text = currentSpinnerLine.textContent.replace(/[|/\\-]$/, '');
+                currentSpinnerLine.textContent = text;
+                currentSpinnerLine = null;
+            }
+        }
+
+        // Функция для логирования с поддержкой спиннера
+        function logWithSpinner(message) {
+            const console = document.getElementById('console');
+            const time = getTime();
+            const line = document.createElement('div');
+            line.className = 'console-line';
+            line.innerHTML = `<span class="console-time">[${time}]</span> ${message}`;
+            console.appendChild(line);
+            console.scrollTop = console.scrollHeight;
+            startSpinner(line);
+            return line;
+        }
 
         // Функция для логирования отладочной информации
         function debugLog(message, data = null) {
@@ -269,11 +314,10 @@
             eventSource = new EventSource('/api/auto-generate/logs');
             
             eventSource.onopen = function() {
-                debugLog('SSE соединение установлено');
+                // Убираем сообщение о соединении
             };
             
             eventSource.onerror = function(error) {
-                debugLog('Ошибка SSE соединения', error);
                 log('Ошибка соединения с сервером событий', 'error');
             };
             
@@ -532,22 +576,11 @@
         // Функция для обработки сообщений от сервера
         function handleServerMessage(event) {
             eventCounter++;
-            debugLog(`Получено событие #${eventCounter}`, event.data);
             
             try {
                 const data = JSON.parse(event.data);
-                debugLog('Распарсенные данные', data);
                 
                 if (data.type === 'status_update') {
-                    debugLog('Обработка status_update', data);
-                    
-                    // Проверяем статус stopped только если генерация не запущена
-                    if (data.status === 'stopped' && !isAutoGenerating) {
-                        debugLog('Получен статус stopped, закрываем соединение');
-                        eventSource.close();
-                        return;
-                    }
-                    
                     const newCount = data.files_sent || 0;
                     document.getElementById('filesCount').textContent = newCount;
                     
@@ -556,89 +589,64 @@
                         const diff = newCount - statsTotal;
                         statsSuccess += diff;
                         statsTotal = newCount;
-                        debugLog('Обновлена статистика после status_update', {
-                            success: statsSuccess,
-                            total: statsTotal,
-                            diff: diff
-                        });
-                        log(`Файл успешно отправлен (${statsSuccess}/${statsTotal})`, 'success');
+                        stopSpinner();
+                        log(`Файл успешно отправлен`, 'success');
+                        // Начинаем новый цикл генерации
+                        logWithSpinner('Начинаю генерацию файла');
                     }
                     
                     if (data.time_left <= 0 && !isCompleted) {
                         isCompleted = true;
+                        stopSpinner();
                         log('Автоматическая генерация завершена');
                         showFinalStats();
-                        // Закрываем соединение после завершения
                         eventSource.close();
                     }
                 } else if (data.type === 'console_output') {
-                    debugLog('Обработка console_output', data);
-                    log(data.text);
-                    
-                    // Проверяем все возможные варианты сообщений об успешной отправке
-                    const isSuccess = data.text.includes('успешно отправлен') || 
-                                    (data.text.includes('DEBUG:') && data.text.includes('успешно отправлен')) ||
-                                    (data.message && data.message.includes('успешно отправлен'));
-                    
-                    const isError = data.text.includes('Ошибка при отправке') ||
-                                  (data.text.includes('DEBUG:') && data.text.includes('Ошибка при отправке')) ||
-                                  (data.message && data.message.includes('Ошибка при отправке'));
-                    
-                    if (isSuccess) {
-                        debugLog('Обнаружено сообщение об успешной отправке');
-                        statsSuccess++;
-                        statsTotal++;
-                        debugLog('Обновлена статистика после успеха', {success: statsSuccess, total: statsTotal});
-                        log(`Файл успешно отправлен (${statsSuccess}/${statsTotal})`, 'success');
-                    } else if (isError) {
-                        debugLog('Обнаружено сообщение об ошибке');
-                        statsError++;
-                        statsTotal++;
-                        debugLog('Обновлена статистика после ошибки', {error: statsError, total: statsTotal});
-                        log(`Ошибка при отправке файла (${statsError}/${statsTotal})`, 'error');
+                    // Выводим только важные сообщения
+                    if (data.text.includes('Генерация файла') || 
+                        data.text.includes('Отправка файла') ||
+                        data.text.includes('успешно отправлен') ||
+                        data.text.includes('Ошибка при отправке')) {
+                        stopSpinner();
+                        log(data.text);
                     }
                 } else if (data.type === 'generation_start') {
-                    debugLog('Начало генерации');
-                    log('Начинаю генерацию...');
+                    logWithSpinner('Начинаю генерацию файла');
                 } else if (data.type === 'generation_complete') {
-                    debugLog('Генерация завершена');
+                    stopSpinner();
                     log('Генерация файлов завершена');
                     showFinalStats();
-                    // Закрываем соединение после завершения генерации
                     eventSource.close();
                 } else if (data.type === 'files_found') {
-                    debugLog('Найдены файлы', data);
+                    stopSpinner();
                     log(`Сгенерировано файлов: ${data.count}`);
+                    logWithSpinner('Отправляю файл');
                 } else if (data.type === 'sending_file') {
-                    debugLog('Отправка файла', data);
-                    log(`Отправляю файл ${data.current} / ${data.total}`);
+                    logWithSpinner(`Отправляю файл ${data.current} / ${data.total}`);
                 } else if (data.type === 'file_sent') {
-                    debugLog('Файл отправлен', data);
                     statsSuccess++;
                     statsTotal++;
-                    debugLog('Обновлена статистика после file_sent', {success: statsSuccess, total: statsTotal});
-                    log(`Файл успешно отправлен (${statsSuccess}/${statsTotal})`, 'success');
+                    stopSpinner();
+                    log(`Файл успешно отправлен`, 'success');
+                    // Начинаем новый цикл генерации
+                    logWithSpinner('Начинаю генерацию файла');
                 } else if (data.type === 'error') {
-                    debugLog('Получена ошибка', data);
                     statsError++;
                     statsTotal++;
-                    debugLog('Обновлена статистика после ошибки', {error: statsError, total: statsTotal});
-                    log(`Ошибка при отправке файла (${statsError}/${statsTotal})`, 'error');
+                    stopSpinner();
+                    log(`Ошибка при отправке файла`, 'error');
+                    // Начинаем новый цикл генерации
+                    logWithSpinner('Начинаю генерацию файла');
                 }
             } catch (error) {
-                debugLog('Ошибка при обработке сообщения', error);
+                stopSpinner();
                 log(`Ошибка при обработке сообщения: ${error.message}`, 'error');
             }
         }
 
         // Функция для отображения итоговой статистики
         function showFinalStats() {
-            debugLog('Показываем финальную статистику', {
-                total: statsTotal,
-                success: statsSuccess,
-                error: statsError
-            });
-            
             const stats = `=== Итоговая статистика ===\n` +
                          `Всего файлов отправлено: ${statsTotal}\n` +
                          `Успешно отправлено: ${statsSuccess}\n` +
@@ -706,7 +714,8 @@
                     isAutoGenerating = true;
                     document.getElementById('startAutoButton').disabled = true;
                     document.getElementById('stopAutoButton').disabled = false;
-                    log(`Запущена автоматическая генерация на ${duration} минут`, 'normal');
+                    log(`Запущена автоматическая генерация на ${duration} минут`);
+                    logWithSpinner('Начинаю генерацию файла');
                 } else {
                     showStatus(data.message, 'error');
                 }
