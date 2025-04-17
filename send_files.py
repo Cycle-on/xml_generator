@@ -19,19 +19,21 @@ def modify_xml_file_to_send(file_path: str, prefix_var_name: str, postfix_var_na
         f.writelines(middle_file)
 
 
-def __send_file(filename: str):
+def __send_file(region_name:str, filename: str, prefix:str):
     # print('ЗАТЫЧКА! - файл отправлен')
     # return
     headers = {
         "Content-Type": "application/xml",
     }
 
-    file_data = open(os.path.join(config.output_directory_name, filename), 'r', encoding='utf-8').read()
+    file_data = open(os.path.join(config.output_directory_name,region_name,prefix, filename), 'r', encoding='utf-8').read()
+    # print("send file_data", filename)
     session = requests.Session()
     session.auth = (SERVER_LOGIN, SERVER_PASSWORD)
     req = session.post(url=SERVER_ADDRESS, data=file_data, headers=headers)
     print(req.status_code)
     print(req.text)
+
 
 
 def send_by_csv(csv_filename: str):

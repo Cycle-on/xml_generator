@@ -1,5 +1,11 @@
+COEF_MIN = 50  # коэффициент на который будет умножаться кол во файлов для отправки
+COEF_MAX = 150  # оба числа будут разделены на 100
+
 SENDER_WORK_TYPE = 'by_delay'  # can be: 'by_delay' or 'by_date'
-SENDER_DELAY = 3  # seconds
+# print('sender')
+SENDER_DELAY = 20  # seconds
+# print(SENDER_DELAY, 'sender')
+ALL_TIME = 2 * 60 * 60  # seconds
 
 BASE_SOAP_PREFIX = """<?xml version="1.0" encoding="UTF-8"?>
 <SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ns1="s112">
