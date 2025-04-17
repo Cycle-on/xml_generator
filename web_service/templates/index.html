@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>XML Generator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .console {
+            background: #1e1e1e;
+            color: #fff;
+            padding: 20px;
+            border-radius: 5px;
+            margin-top: 20px;
+            white-space: pre-wrap;
+            font-family: monospace;
+            height: 400px;
+            overflow-y: auto;
+        }
+        .console-line {
+            margin: 5px 0;
+        }
+        .console-time {
+            color: #888;
+            margin-right: 10px;
+        }
+        .console-spinner {
+            display: inline-block;
+            margin-left: 10px;
+            animation: spin 1s linear infinite;
+        }
+        .console-spinner::after {
+            content: '|';
+            animation: spinner 1s steps(4) infinite;
+        }
+        @keyframes spinner {
+            0% { content: '|'; }
+            25% { content: '/'; }
+            50% { content: '-'; }
+            75% { content: '\\'; }
+        }
+        .test-block, .params-block {
+            background: #f8f9fa;
+            border-radius: 5px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .test-block h1, .params-block h1 {
+            margin-top: 0;
+            margin-bottom: 20px;
+            color: #333;
+        }
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        button {
+            padding: 10px 20px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .file-selector {
+            margin-top: 20px;
+        }
+        select {
+            width: 100%;
+            padding: 8px;
+            margin-top: 5px;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+        }
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #3498db;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-left: 10px;
+            vertical-align: middle;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .status {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 4px;
+            display: none;
+        }
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            display: block;
+        }
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            display: block;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #333;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        .auto-block {
+            background: #f8f9fa;
+            border-radius: 5px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .progress-container {
+            margin-top: 20px;
+        }
+        .progress-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background: #e9ecef;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        .progress-bar-fill {
+            height: 100%;
+            background: #007bff;
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+    </style>
+</head>
+<body>
+    <div class="params-block">
+        <h1>Параметры запроса</h1>
+        <div class="form-group">
+            <label for="url">URL:</label>
+            <input type="text" id="url" placeholder="Введите URL">
+        </div>
+        <div class="form-group">
+            <label for="username">Логин:</label>
+            <input type="text" id="username" placeholder="Введите логин">
+        </div>
+        <div class="form-group">
+            <label for="password">Пароль:</label>
+            <input type="password" id="password" placeholder="Введите пароль">
+        </div>
+    </div>
+
+    <div class="test-block">
+        <h1>Тестовая генерация</h1>
+        
+        <div class="button-group">
+            <button id="generateButton" onclick="generate()">Сгенерировать</button>
+            <button id="sendButton" onclick="sendFiles()">Отправить</button>
+        </div>
+        
+        <div class="file-selector">
+            <h3>Выберите файл для отправки:</h3>
+            <select id="fileSelect" onchange="loadFile()">
+                <option value="">Выберите файл...</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="auto-block">
+        <h1>Автоматическая генерация</h1>
+        <div class="form-group">
+            <label for="interval">Интервал отправки (минут):</label>
+            <input type="number" id="interval" step="0.5" min="0.5" value="0.5">
+        </div>
+        <div class="form-group">
+            <label for="duration">Продолжительность (минут):</label>
+            <input type="number" id="duration" min="1" value="2">
+        </div>
+        <div class="button-group">
+            <button id="startAutoButton" onclick="startAutoGeneration()">Начать</button>
+            <button id="stopAutoButton" onclick="stopAutoGeneration()" disabled>Остановить</button>
+        </div>
+        <div class="progress-container">
+            <div class="progress-info">
+                <span>Осталось: <span id="timeLeft">00:00</span></span>
+                <span>Файлов: <span id="filesCount">0</span></span>
+            </div>
+            <div class="progress-bar">
+                <div id="progressBar" class="progress-bar-fill"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="status" class="status"></div>
+    <div id="console" class="console"></div>
+
+    <script>
+        let isGenerating = false;
+        let isSending = false;
+        let spinnerInterval;
+        let autoGenerationInterval;
+        let autoGenerationStartTime;
+        let autoGenerationEndTime;
+        let isAutoGenerating = false;
+        let totalFilesGenerated = 0;
+        let updateProgressTimer;
+
+        // Функция для сохранения параметров
+        function saveParams() {
+            const url = document.getElementById('url').value;
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            
+            localStorage.setItem('xmlGenerator_url', url);
+            localStorage.setItem('xmlGenerator_username', username);
+            localStorage.setItem('xmlGenerator_password', password);
+        }
+
+        // Функция для загрузки параметров
+        function loadParams() {
+            const url = localStorage.getItem('xmlGenerator_url') || '';
+            const username = localStorage.getItem('xmlGenerator_username') || '';
+            const password = localStorage.getItem('xmlGenerator_password') || '';
+            
+            document.getElementById('url').value = url;
+            document.getElementById('username').value = username;
+            document.getElementById('password').value = password;
+        }
+
+        // Загружаем параметры при загрузке страницы
+        document.addEventListener('DOMContentLoaded', loadParams);
+
+        // Сохраняем параметры при изменении
+        document.getElementById('url').addEventListener('change', saveParams);
+        document.getElementById('username').addEventListener('change', saveParams);
+        document.getElementById('password').addEventListener('change', saveParams);
+
+        function getTime() {
+            const now = new Date();
+            return now.toLocaleTimeString('ru-RU', { hour12: false });
+        }
+
+        function log(message, showSpinner = false) {
+            const console = document.getElementById('console');
+            const time = getTime();
+            const line = document.createElement('div');
+            line.className = 'console-line';
+            line.innerHTML = `<span class="console-time">[${time}]</span> ${message}`;
+            if (showSpinner) {
+                const spinner = document.createElement('span');
+                spinner.className = 'console-spinner';
+                line.appendChild(spinner);
+            }
+            console.appendChild(line);
+            console.scrollTop = console.scrollHeight;
+            return line;
+        }
+
+        function generate() {
+            if (isGenerating) return;
+            
+            const button = document.getElementById('generateButton');
+            const status = document.getElementById('status');
+            
+            isGenerating = true;
+            button.disabled = true;
+            button.innerHTML = 'Генерация... <span class="spinner"></span>';
+            const logLine = log('Начинаю генерацию...', true);
+            status.className = 'status';
+            
+            fetch('/generate')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Ошибка при генерации');
+                    }
+                    return response.text();
+                })
+                .then(data => {
+                    // Удаляем спиннер из предыдущей строки
+                    const spinner = logLine.querySelector('.console-spinner');
+                    if (spinner) spinner.remove();
+                    
+                    log('Генерация успешно завершена');
+                    status.textContent = 'Генерация успешно завершена';
+                    status.className = 'status success';
+                })
+                .catch(error => {
+                    // Удаляем спиннер из предыдущей строки
+                    const spinner = logLine.querySelector('.console-spinner');
+                    if (spinner) spinner.remove();
+                    
+                    log(`Ошибка: ${error.message}`);
+                    status.textContent = `Ошибка: ${error.message}`;
+                    status.className = 'status error';
+                })
+                .finally(() => {
+                    isGenerating = false;
+                    button.disabled = false;
+                    button.textContent = 'Сгенерировать';
+                    updateFileList();
+                });
+        }
+
+        function sendFiles() {
+            if (isSending) return;
+            
+            const url = document.getElementById('url').value;
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const fileSelect = document.getElementById('fileSelect');
+            const status = document.getElementById('status');
+            const button = document.getElementById('sendButton');
+            
+            if (!url || !username || !password || !fileSelect.value) {
+                status.textContent = 'Пожалуйста, заполните все поля и выберите файл';
+                status.className = 'status error';
+                return;
+            }
+            
+            isSending = true;
+            button.disabled = true;
+            button.innerHTML = 'Отправка... <span class="spinner"></span>';
+            const logLine = log('Отправляю файл...', true);
+            status.className = 'status';
+            
+            fetch('/api/send', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    url: url,
+                    username: username,
+                    password: password,
+                    file: fileSelect.value
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Удаляем спиннер из предыдущей строки
+                const spinner = logLine.querySelector('.console-spinner');
+                if (spinner) spinner.remove();
+                
+                log(`Ответ сервера: ${data.message}`);
+                
+                if (data.success) {
+                    status.textContent = 'Файл успешно отправлен';
+                    status.className = 'status success';
+                } else {
+                    status.textContent = data.message || 'Ошибка при отправке';
+                    status.className = 'status error';
+                }
+            })
+            .catch(error => {
+                // Удаляем спиннер из предыдущей строки
+                const spinner = logLine.querySelector('.console-spinner');
+                if (spinner) spinner.remove();
+                
+                log(`Ошибка: ${error.message}`);
+                status.textContent = `Ошибка: ${error.message}`;
+                status.className = 'status error';
+            })
+            .finally(() => {
+                isSending = false;
+                button.disabled = false;
+                button.textContent = 'Отправить';
+            });
+        }
+
+        function updateFileList() {
+            fetch('/files')
+                .then(response => response.json())
+                .then(data => {
+                    const select = document.getElementById('fileSelect');
+                    select.innerHTML = '<option value="">Выберите файл...</option>';
+                    data.forEach(file => {
+                        const option = document.createElement('option');
+                        option.value = file;
+                        option.textContent = file;
+                        select.appendChild(option);
+                    });
+                });
+        }
+
+        function loadFile() {
+            const fileSelect = document.getElementById('fileSelect');
+            if (fileSelect.value) {
+                fetch(`/file/${fileSelect.value}`)
+                    .then(response => response.text())
+                    .then(content => {
+                        log(`Загружен файл: ${fileSelect.value}`);
+                    });
+            }
+        }
+
+        // Загружаем список файлов при загрузке страницы
+        updateFileList();
+
+        function startAutoGeneration() {
+            if (isAutoGenerating) return;
+            
+            const interval = parseFloat(document.getElementById('interval').value);
+            const duration = parseFloat(document.getElementById('duration').value);
+            const url = document.getElementById('url').value;
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            
+            if (interval <= 0 || duration <= 0) {
+                log('Ошибка: интервал и продолжительность должны быть больше 0');
+                return;
+            }
+            
+            if (!url || !username || !password) {
+                log('Ошибка: заполните все поля (URL, логин, пароль)');
+                return;
+            }
+            
+            isAutoGenerating = true;
+            document.getElementById('startAutoButton').disabled = true;
+            document.getElementById('stopAutoButton').disabled = false;
+            
+            log('Запускаю автоматическую генерацию...');
+            
+            fetch('/api/auto-generate', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    interval: interval,
+                    duration: duration,
+                    url: url,
+                    username: username,
+                    password: password
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    log('Автоматическая генерация запущена');
+                    autoGenerationStartTime = data.start_time * 1000; // конвертируем в миллисекунды
+                    autoGenerationEndTime = data.end_time * 1000;
+                    startStatusUpdates();
+                } else {
+                    log(`Ошибка: ${data.message}`);
+                    isAutoGenerating = false;
+                    document.getElementById('startAutoButton').disabled = false;
+                    document.getElementById('stopAutoButton').disabled = true;
+                }
+            })
+            .catch(error => {
+                log(`Ошибка при запуске автоматической генерации: ${error.message}`);
+                isAutoGenerating = false;
+                document.getElementById('startAutoButton').disabled = false;
+                document.getElementById('stopAutoButton').disabled = true;
+            });
+        }
+
+        function stopAutoGeneration() {
+            if (!isAutoGenerating) return;
+            
+            fetch('/api/auto-generate/stop', {
+                method: 'POST'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    log('Автоматическая генерация остановлена');
+                    isAutoGenerating = false;
+                    document.getElementById('startAutoButton').disabled = false;
+                    document.getElementById('stopAutoButton').disabled = true;
+                    clearInterval(autoGenerationInterval);
+                } else {
+                    log(`Ошибка: ${data.message}`);
+                }
+            })
+            .catch(error => {
+                log(`Ошибка при остановке автоматической генерации: ${error.message}`);
+            });
+        }
+
+        function startStatusUpdates() {
+            const eventSource = new EventSource('/api/auto-generate/logs');
+            
+            eventSource.onmessage = function(event) {
+                const data = JSON.parse(event.data);
+                
+                if (data.type === 'status_update') {
+                    // Обновляем только счетчик файлов
+                    document.getElementById('filesCount').textContent = data.files_sent;
+                    
+                    // Обрабатываем сообщения
+                    data.messages.forEach(message => {
+                        switch(message.type) {
+                            case 'files_sent':
+                                log(`Отправлено файлов: ${message.count}`);
+                                break;
+                            case 'generation_start':
+                                log('Начало генерации файлов...', true);
+                                break;
+                            case 'files_found':
+                                log(`Найдено файлов для отправки: ${message.count}`);
+                                break;
+                            case 'sending_file':
+                                log(`Отправка файла ${message.current} из ${message.total}...`);
+                                break;
+                            case 'file_sent':
+                                log(`Файл ${message.current} из ${message.total} успешно отправлен`);
+                                break;
+                            case 'generation_complete':
+                                log('Генерация файлов завершена');
+                                break;
+                            case 'waiting':
+                                log(`Ожидание ${message.seconds} секунд до следующего цикла...`);
+                                break;
+                            case 'error':
+                                log(`Ошибка: ${message.message}`);
+                                break;
+                            case 'console_output':
+                                // Для сообщений из консоли не добавляем время
+                                const console = document.getElementById('console');
+                                const line = document.createElement('div');
+                                line.className = 'console-line';
+                                line.textContent = message.text;
+                                console.appendChild(line);
+                                console.scrollTop = console.scrollHeight;
+                                break;
+                        }
+                    });
+                }
+            };
+            
+            eventSource.onerror = function(error) {
+                if (eventSource.readyState === EventSource.CLOSED) {
+                    // Соединение закрыто, пытаемся переподключиться
+                    log('Соединение закрыто, пытаюсь переподключиться...');
+                    setTimeout(() => {
+                        if (isAutoGenerating) {
+                            startStatusUpdates();
+                        }
+                    }, 1000);
+                } else {
+                    log('Ошибка подключения к серверу событий');
+                    eventSource.close();
+                }
+            };
+        }
+    </script>
+</body>
+</html> 
