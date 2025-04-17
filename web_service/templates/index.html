@@ -290,7 +290,7 @@
             const time = getTime();
             const line = document.createElement('div');
             line.className = 'console-line';
-            line.innerHTML = `<span class="console-time">[${time}]</span> ${message}`;
+            line.innerHTML = `<span class="console-time">[${time}]</span> ${message} `;
             console.appendChild(line);
             console.scrollTop = console.scrollHeight;
             startSpinner(line);
@@ -591,8 +591,6 @@
                         statsTotal = newCount;
                         stopSpinner();
                         log(`Файл успешно отправлен`, 'success');
-                        // Начинаем новый цикл генерации
-                        logWithSpinner('Начинаю генерацию файла');
                     }
                     
                     if (data.time_left <= 0 && !isCompleted) {
@@ -612,12 +610,14 @@
                         log(data.text);
                     }
                 } else if (data.type === 'generation_start') {
-                    logWithSpinner('Начинаю генерацию файла');
+                    logWithSpinner('Генерирую файл');
                 } else if (data.type === 'generation_complete') {
                     stopSpinner();
                     log('Генерация файлов завершена');
                     showFinalStats();
                     eventSource.close();
+                    // Начинаем новый цикл генерации
+                    logWithSpinner('Генерирую файл');
                 } else if (data.type === 'files_found') {
                     stopSpinner();
                     log(`Сгенерировано файлов: ${data.count}`);
@@ -629,15 +629,11 @@
                     statsTotal++;
                     stopSpinner();
                     log(`Файл успешно отправлен`, 'success');
-                    // Начинаем новый цикл генерации
-                    logWithSpinner('Начинаю генерацию файла');
                 } else if (data.type === 'error') {
                     statsError++;
                     statsTotal++;
                     stopSpinner();
                     log(`Ошибка при отправке файла`, 'error');
-                    // Начинаем новый цикл генерации
-                    logWithSpinner('Начинаю генерацию файла');
                 }
             } catch (error) {
                 stopSpinner();
@@ -715,7 +711,7 @@
                     document.getElementById('startAutoButton').disabled = true;
                     document.getElementById('stopAutoButton').disabled = false;
                     log(`Запущена автоматическая генерация на ${duration} минут`);
-                    logWithSpinner('Начинаю генерацию файла');
+                    logWithSpinner('Генерирую файл');
                 } else {
                     showStatus(data.message, 'error');
                 }
