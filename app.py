@@ -407,39 +407,50 @@ def get_auto_generation_status():
 @app.route('/api/auto-generate/logs')
 def auto_generate_logs():
     def generate_logs():
-        last_message = None
-        while True:
-            if not auto_generation_running:
-                break
-            time.sleep(0.1)
+        try:
+            # Отправляем начальное сообщение для установки соединения
+            yield ": keep-alive\n\n"
             
-            # Создаем словарь для хранения текущего состояния
-            current_state = {
-                'type': 'status_update',
-                'files_sent': total_files_sent,
-                'messages': []
-            }
-            
-            # Добавляем сообщения в массив
-            if last_message != total_files_sent:
-                last_message = total_files_sent
-                if total_files_sent > 0:
-                    current_state['messages'].append({
-                        'type': 'files_sent',
-                        'count': total_files_sent
-                    })
-            
-            # Отправляем обновленное состояние
-            if current_state['messages']:
-                yield f"data: {json.dumps(current_state)}\n\n"
+            while True:
+                try:
+                    if not auto_generation_running:
+                        # Если генерация остановлена, отправляем сообщение и ждем
+                        yield f"data: {json.dumps({'type': 'status_update', 'status': 'stopped'})}\n\n"
+                        time.sleep(1)
+                        continue
+                        
+                    # Создаем словарь для хранения текущего состояния
+                    current_state = {
+                        'type': 'status_update',
+                        'files_sent': total_files_sent,
+                        'time_left': max(0, auto_generation_end_time - time.time())
+                    }
+                    
+                    # Отправляем обновленное состояние
+                    yield f"data: {json.dumps(current_state)}\n\n"
+                    time.sleep(0.1)
+                    
+                except GeneratorExit:
+                    # Клиент закрыл соединение
+                    break
+                except Exception as e:
+                    print(f"Ошибка в генераторе логов: {str(e)}")
+                    time.sleep(1)
+                    continue
+                    
+        except Exception as e:
+            print(f"Критическая ошибка в генераторе логов: {str(e)}")
     
-    return Response(stream_with_context(generate_logs()), 
-                   mimetype='text/event-stream',
-                   headers={
-                       'Cache-Control': 'no-cache',
-                       'Connection': 'keep-alive',
-                       'X-Accel-Buffering': 'no'
-                   })
+    response = Response(stream_with_context(generate_logs()), 
+                       mimetype='text/event-stream')
+    
+    # Добавляем необходимые заголовки для SSE
+    response.headers['Cache-Control'] = 'no-cache'
+    response.headers['Connection'] = 'keep-alive'
+    response.headers['X-Accel-Buffering'] = 'no'
+    response.headers['Access-Control-Allow-Origin'] = '*'
+    
+    return response
 
 def auto_generation_worker(url, username, password):
     global auto_generation_running, total_files_sent
@@ -462,6 +473,8 @@ def auto_generation_worker(url, username, password):
                 print("DEBUG: Время генерации истекло")
                 log_message({'type': 'console_output', 'text': 'Время генерации истекло'})
                 auto_generation_running = False
+                print("DEBUG: Автогенерация завершена")
+                log_message({'type': 'console_output', 'text': 'Автогенерация завершена'})
                 break
                 
             # Начало генерации
