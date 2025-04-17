@@ -284,49 +284,76 @@
             return line;
         }
 
-        function generate() {
-            if (isGenerating) return;
-            
-            const button = document.getElementById('generateButton');
+        function addToConsole(text) {
+            const console = document.getElementById('console');
+            const time = getTime();
+            const line = document.createElement('div');
+            line.className = 'console-line';
+            line.innerHTML = `<span class="console-time">[${time}]</span> ${text}`;
+            console.appendChild(line);
+            console.scrollTop = console.scrollHeight;
+        }
+
+        function showStatus(message, type) {
             const status = document.getElementById('status');
+            status.textContent = message;
+            status.className = `status ${type}`;
+        }
+
+        function generate() {
+            const button = document.getElementById('generateButton');
+            const console = document.getElementById('console');
             
-            isGenerating = true;
+            // Очищаем консоль перед новой генерацией
+            console.innerHTML = '';
+            
+            // Блокируем кнопку и показываем спиннер
             button.disabled = true;
             button.innerHTML = 'Генерация... <span class="spinner"></span>';
-            const logLine = log('Начинаю генерацию...', true);
-            status.className = 'status';
             
-            fetch('/generate')
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error('Ошибка при генерации');
-                    }
-                    return response.text();
-                })
-                .then(data => {
-                    // Удаляем спиннер из предыдущей строки
-                    const spinner = logLine.querySelector('.console-spinner');
-                    if (spinner) spinner.remove();
-                    
-                    log('Генерация успешно завершена');
-                    status.textContent = 'Генерация успешно завершена';
-                    status.className = 'status success';
-                })
-                .catch(error => {
-                    // Удаляем спиннер из предыдущей строки
-                    const spinner = logLine.querySelector('.console-spinner');
-                    if (spinner) spinner.remove();
-                    
-                    log(`Ошибка: ${error.message}`);
-                    status.textContent = `Ошибка: ${error.message}`;
-                    status.className = 'status error';
-                })
-                .finally(() => {
-                    isGenerating = false;
+            const eventSource = new EventSource('/generate');
+            
+            eventSource.onmessage = function(e) {
+                if (e.data.trim() === '') {
+                    // Завершение генерации
+                    eventSource.close();
                     button.disabled = false;
                     button.textContent = 'Сгенерировать';
+                    
+                    // Удаляем все спиннеры из консоли
+                    const spinners = console.querySelectorAll('.console-spinner');
+                    spinners.forEach(spinner => spinner.remove());
+                    
                     updateFileList();
-                });
+                    return;
+                }
+                
+                // Добавляем новую строку в консоль
+                const time = getTime();
+                const line = document.createElement('div');
+                line.className = 'console-line';
+                
+                // Если это первое сообщение, добавляем спиннер
+                if (console.children.length === 0) {
+                    line.innerHTML = `<span class="console-time">[${time}]</span> ${e.data} <span class="console-spinner"></span>`;
+                } else {
+                    line.innerHTML = `<span class="console-time">[${time}]</span> ${e.data}`;
+                }
+                
+                console.appendChild(line);
+                console.scrollTop = console.scrollHeight;
+            };
+            
+            eventSource.onerror = function() {
+                // При любой ошибке просто закрываем соединение и разблокируем кнопку
+                eventSource.close();
+                button.disabled = false;
+                button.textContent = 'Сгенерировать';
+                
+                // Удаляем все спиннеры из консоли
+                const spinners = console.querySelectorAll('.console-spinner');
+                spinners.forEach(spinner => spinner.remove());
+            };
         }
 
         function sendFiles() {

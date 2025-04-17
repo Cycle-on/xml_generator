@@ -5,7 +5,7 @@ import os
 import base64
 import requests
 import xml.etree.ElementTree as ET
-from main import main
+from main import main, generate_region_files, clear_dir
 from threading import Thread
 import time
 from datetime import datetime
@@ -24,6 +24,7 @@ auto_generation_end_time = None
 auto_generation_interval = None
 total_files_sent = 0
 log_callbacks = []
+is_generating = False  # Добавляем новую глобальную переменную
 
 # Color formatting utilities
 class Colors:
@@ -133,9 +134,24 @@ def generate():
         capture.add_callback(output_callback)
         
         try:
-            main()
+            # Очищаем директорию перед генерацией
+            clear_dir()
+            
+            # Выводим сообщение о начале генерации
+            yield f"data: Начинаю генерацию...\n\n"
+            
+            # Запускаем генерацию
+            generate_region_files()
+            
+            # Подсчитываем количество сгенерированных файлов
+            ukios_files = get_ukios_files()
+            file_count = len(ukios_files)
+            
+            # Выводим сообщение о завершении
+            yield f"data: Генерация завершена успешно, сгенерировано файлов: {file_count}\n\n"
+            
         except Exception as e:
-            yield f"data: Ошибка: {str(e)}\n\n"
+            yield f"data: Ошибка в генерации: {str(e)}\n\n"
         finally:
             sys.stdout = capture.stdout
             sys.stderr = capture.stderr
