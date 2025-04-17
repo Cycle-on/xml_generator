@@ -474,7 +474,7 @@
             document.getElementById('startAutoButton').disabled = true;
             document.getElementById('stopAutoButton').disabled = false;
             
-            log('Запускаю автоматическую генерацию...');
+            log(`Запущена автоматическая генерация длительность: ${duration} минут`);
             
             fetch('/api/auto-generate', {
                 method: 'POST',
@@ -492,8 +492,7 @@
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    log('Автоматическая генерация запущена');
-                    autoGenerationStartTime = data.start_time * 1000; // конвертируем в миллисекунды
+                    autoGenerationStartTime = data.start_time * 1000;
                     autoGenerationEndTime = data.end_time * 1000;
                     startStatusUpdates();
                 } else {
@@ -541,26 +540,33 @@
                 const data = JSON.parse(event.data);
                 
                 if (data.type === 'status_update') {
-                    // Обновляем только счетчик файлов
+                    // Обновляем счетчик файлов
                     document.getElementById('filesCount').textContent = data.files_sent;
+                    
+                    // Обновляем оставшееся время
+                    const minutes = Math.floor(data.time_left / 60);
+                    const seconds = Math.floor(data.time_left % 60);
+                    document.getElementById('timeLeft').textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+                    
+                    // Обновляем прогресс-бар
+                    const totalDuration = (autoGenerationEndTime - autoGenerationStartTime) / 1000;
+                    const progress = ((totalDuration - data.time_left) / totalDuration) * 100;
+                    document.getElementById('progressBar').style.width = `${progress}%`;
                     
                     // Обрабатываем сообщения
                     data.messages.forEach(message => {
                         switch(message.type) {
-                            case 'files_sent':
-                                log(`Отправлено файлов: ${message.count}`);
-                                break;
                             case 'generation_start':
-                                log('Начало генерации файлов...', true);
+                                log('Начало генерации файлов...');
                                 break;
                             case 'files_found':
                                 log(`Найдено файлов для отправки: ${message.count}`);
                                 break;
                             case 'sending_file':
-                                log(`Отправка файла ${message.current} из ${message.total}...`);
+                                log(`Отправляю файл ${message.current}/${message.total}`);
                                 break;
                             case 'file_sent':
-                                log(`Файл ${message.current} из ${message.total} успешно отправлен`);
+                                log(`Файл ${message.current}/${message.total} успешно отправлен`);
                                 break;
                             case 'generation_complete':
                                 log('Генерация файлов завершена');
@@ -572,13 +578,7 @@
                                 log(`Ошибка: ${message.message}`);
                                 break;
                             case 'console_output':
-                                // Для сообщений из консоли не добавляем время
-                                const console = document.getElementById('console');
-                                const line = document.createElement('div');
-                                line.className = 'console-line';
-                                line.textContent = message.text;
-                                console.appendChild(line);
-                                console.scrollTop = console.scrollHeight;
+                                log(message.text);
                                 break;
                         }
                     });
@@ -587,7 +587,6 @@
             
             eventSource.onerror = function(error) {
                 if (eventSource.readyState === EventSource.CLOSED) {
-                    // Соединение закрыто, пытаемся переподключиться
                     log('Соединение закрыто, пытаюсь переподключиться...');
                     setTimeout(() => {
                         if (isAutoGenerating) {

@@ -6,10 +6,14 @@ import base64
 import requests
 import xml.etree.ElementTree as ET
 from main import main, generate_region_files, clear_dir
+from constants.constants_remaker import get_next_constants
 from threading import Thread
 import time
 from datetime import datetime
 import json
+
+# Константы для генерации
+TAKE_CONSTANTS_FROM_FILE = True  # Если True - берем константы из файла, если False - из get_next_constants()
 
 app = Flask(__name__, template_folder='web_service/templates')
 
@@ -441,27 +445,70 @@ def auto_generation_worker(url, username, password):
     global auto_generation_running, total_files_sent
     total_files_sent = 0
     
+    print(f"DEBUG: Запущен worker с параметрами - url: {url}, username: {username}")
+    print(f"DEBUG: Время работы - start: {auto_generation_start_time}, end: {auto_generation_end_time}, interval: {auto_generation_interval}")
+    
     while auto_generation_running:
         try:
+            current_time = time.time()
+            print(f"DEBUG: Текущее время: {current_time}, время окончания: {auto_generation_end_time}")
+            
+            # Проверяем, не истекло ли время
+            if current_time >= auto_generation_end_time:
+                print("DEBUG: Время генерации истекло")
+                log_message({'type': 'console_output', 'text': 'Время генерации истекло'})
+                auto_generation_running = False
+                break
+                
             # Начало генерации
+            print("DEBUG: Начало цикла генерации")
             log_message({'type': 'generation_start'})
             
-            # Генерируем файлы с перехватом вывода
-            capture_main_output()
+            # Генерируем файлы
+            capture = OutputCapture()
+            sys.stdout = capture
+            sys.stderr = capture
+            
+            def output_callback(text):
+                # Пропускаем отладочные сообщения, чтобы избежать рекурсии
+                if not text.startswith("DEBUG:"):
+                    log_message({'type': 'console_output', 'text': text})
+            
+            capture.add_callback(output_callback)
+            
+            try:
+                # Очищаем директорию перед генерацией
+                clear_dir()
+                
+                # Генерируем файлы
+                if TAKE_CONSTANTS_FROM_FILE:
+                    generate_region_files()
+                else:
+                    for constants_dict in get_next_constants():
+                        region_name = constants_dict["region_name/constant name"]
+                        globals().update(constants_dict)
+                        generate_region_files(region_name=region_name)
+                
+            finally:
+                sys.stdout = capture.stdout
+                sys.stderr = capture.stderr
+                capture.remove_callback(output_callback)
             
             # Получаем список файлов
             files = get_ukios_files()
             total_files = len(files)
+            print(f"DEBUG: Найдено файлов: {total_files}")
             log_message({'type': 'files_found', 'count': total_files})
             
             # Отправляем файлы
             for i, filename in enumerate(files, 1):
+                print(f"DEBUG: Отправка файла {i}/{total_files}: {filename}")
                 log_message({'type': 'sending_file', 'current': i, 'total': total_files})
                 
                 try:
                     # Отправляем файл через /api/send
                     response = requests.post(
-                        'http://localhost:5000/api/send',  # Используем локальный эндпоинт
+                        'http://localhost:5000/api/send',
                         json={
                             'url': url,
                             'username': username,
@@ -475,25 +522,40 @@ def auto_generation_worker(url, username, password):
                         result = response.json()
                         if result.get('success'):
                             total_files_sent += 1
+                            print(f"DEBUG: Файл {filename} успешно отправлен")
                             log_message({'type': 'file_sent', 'current': i, 'total': total_files})
                         else:
+                            print(f"DEBUG: Ошибка при отправке файла {filename}: {result.get('message')}")
                             log_message({'type': 'error', 'message': f'Ошибка при отправке файла {filename}: {result.get("message")}'})
                     else:
+                        print(f"DEBUG: Ошибка при отправке файла {filename}: {response.status_code}")
                         log_message({'type': 'error', 'message': f'Ошибка при отправке файла {filename}: {response.status_code}'})
                     
                 except Exception as e:
+                    print(f"DEBUG: Ошибка при обработке файла {filename}: {str(e)}")
                     log_message({'type': 'error', 'message': f'Ошибка при обработке файла {filename}: {str(e)}'})
             
             # Генерация завершена
+            print("DEBUG: Цикл генерации завершен")
             log_message({'type': 'generation_complete'})
             
             # Ожидание следующего цикла
-            log_message({'type': 'waiting', 'seconds': int(auto_generation_interval * 60)})
-            time.sleep(auto_generation_interval * 60)
+            wait_seconds = int(auto_generation_interval * 60)
+            print(f"DEBUG: Ожидание {wait_seconds} секунд до следующего цикла")
+            log_message({'type': 'waiting', 'seconds': wait_seconds})
+            
+            # Проверяем, не истекло ли время во время ожидания
+            end_time = time.time() + wait_seconds
+            while time.time() < end_time and auto_generation_running:
+                if time.time() >= auto_generation_end_time:
+                    auto_generation_running = False
+                    break
+                time.sleep(1)
             
         except Exception as e:
+            print(f"DEBUG: Ошибка в цикле генерации: {str(e)}")
             log_message({'type': 'error', 'message': f'Ошибка в цикле генерации: {str(e)}'})
-            time.sleep(auto_generation_interval * 60)
+            time.sleep(1)
 
 if __name__ == '__main__':
     app.run(debug=True) 
