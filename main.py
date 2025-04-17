@@ -119,6 +119,7 @@ def send_files(region_name):
 
 
 def main():
+    config.date_zero = datetime.datetime.now() + td(hours=7)
     clear_dir()
     if config.send_files:
         pass
@@ -164,7 +165,6 @@ def main():
                 globals().update(constants_dict)
 
                 generate_region_files(region_name=constants_dict["region_name/constant name"])
-
 
 
 if __name__ == '__main__':
