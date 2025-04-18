@@ -1,7 +1,8 @@
-import datetime
 import os
-from constants import *
+
 from dotenv import load_dotenv
+
+from constants import *
 
 load_dotenv()  # will be used with .env file
 # if you want to take vars from global environment, start program in terminal

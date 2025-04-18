@@ -1,6 +1,6 @@
-import random
-from copy import deepcopy
 import datetime
+from copy import deepcopy
+
 from config import load_config
 from constants import *
 from generators import check_event_probability
