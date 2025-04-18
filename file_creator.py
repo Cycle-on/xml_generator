@@ -72,7 +72,7 @@ def __generate_xml_from_pydantic(root: ET.Element, model: dict, name='Ukio'):
                     el.text = str(value)
 
                 else:
-                    print(feature_name, value)
+                    # print(feature_name, value)
                     __generate_xml_from_pydantic(sub_root, value, name=feature_name)
             continue
 
@@ -80,7 +80,7 @@ def __generate_xml_from_pydantic(root: ET.Element, model: dict, name='Ukio'):
             feature_value = feature_value.isoformat()
         if feature_name in ('p_min', 'p_max', 'class'):
             continue
-        print(feature_name, feature_value)
+        # print(feature_name, feature_value)
         el = ET.SubElement(sub_root, f"s112:{feature_name}")
         el.text = str(feature_value)
         if 'dt' in feature_name:
