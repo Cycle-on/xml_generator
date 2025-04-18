@@ -25,7 +25,7 @@ config = load_config()
 def generate_region_files(date_zero=config.date_zero, region_name: str = 'region1'):
     create_dirs()
     create_arms_and_operators()
-
+    date_zero = datetime.datetime.now() + td(hours=7)
     dt_start = datetime.datetime.now()
     # models_create_time = None
     # fill with the Google sheets
@@ -119,7 +119,6 @@ def send_files(region_name):
 
 
 def main():
-    config.date_zero = datetime.datetime.now() + td(hours=7)
     clear_dir()
     if config.send_files:
         pass
