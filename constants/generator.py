@@ -1,6 +1,6 @@
 import random
 
-TAKE_CONSTANTS_FROM_FILE = True
+TAKE_CONSTANTS_FROM_FILE = False
 
 GENERATE_UKIO = True
 GENERATE_MISSED_CALLS = True
@@ -67,14 +67,14 @@ PSYCHO_IN_HOUSE_PROBABILITY = 100  # в процентах от 0 до 100
 
 CARD_CREATE_WORK_TYPE = 'normal'
 CARD_CREATE_LOW = 1
-CARD_CREATE_HIGH = 1
+CARD_CREATE_HIGH = 5
 CARD_CREATE_LAMBDA = 1
 AVG_CARD_CREATE_TIME = 75  # секунды, среднее время вызова/составления карточки/dtConnect - dtEndCall
 CARD_CREATE_SCALE = 10
 
 EOS_CARD_CREATE_WORK_TYPE = 'normal'
 EOS_CARD_CREATE_LOW = 1
-EOS_CARD_CREATE_HIGH = 1
+EOS_CARD_CREATE_HIGH = 5
 EOS_CARD_CREATE_LAMBDA = 1
 AVG_EOS_CARD_CREATE_TIME = 300  # секунды, среднее время составления карточки со стороны службы/dtCreate
 EOS_CARD_CREATE_SCALE = 8
