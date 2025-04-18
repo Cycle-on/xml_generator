@@ -1,8 +1,6 @@
-import random
 from datetime import timedelta as td
 
-import config
-from config import DATE_ZERO, load_config
+from config import load_config
 from constants import *
 from generators import get_distribution_var_by_work_type, check_event_probability, genders, \
     get_random_birth_date_by_year

@@ -1,14 +1,12 @@
-import random
+import argparse
+from datetime import timedelta as td
 
 from pydantic import BaseModel
 from pydantic.functional_validators import AfterValidator
 from typing_extensions import Annotated
-from config.config_data import *
-from datetime import timedelta as td
-import argparse
 
 from config import config_data
-from constants import generator
+from config.config_data import *
 
 
 def parse_args():
@@ -19,7 +17,7 @@ def parse_args():
     #                     help='Количество документов в одном файле')
     parser.add_argument('--send', action='store_true', help='Режим генератора')
     parser.add_argument(
-        '--date', type=str, default=datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S'),
+        '--date', type=str, default=datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S-%f'),
         help='Дата в формате: YYYY-MM-DD_HH-MM-SS'
     )
 
@@ -34,7 +32,7 @@ def parse_args():
     #     globals()["files_count"] = int(generator.files_count)
     #     print("ff", globals()["files_count"])
     try:
-        config_data.DATE_ZERO = datetime.datetime.strptime(args.date, "%Y-%m-%d_%H-%M-%S") + td(hours=7)
+        config_data.DATE_ZERO = datetime.datetime.strptime(args.date, "%Y-%m-%d_%H-%M-%S-%f") - td(hours=3)
         return args.send, config_data.DATE_ZERO
     except ValueError:
         print("Дата не соответствует формату YYYY-MM-DD_HH-MM-SS\nРабота прервана")

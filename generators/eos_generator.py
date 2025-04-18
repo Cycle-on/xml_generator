@@ -1,15 +1,14 @@
-import random
 from pprint import pprint
 
 from generators import *
+from generators import check_event_probability
 from generators.eos_models_generator import *
-from .incident_type_generator.incident_type_generator import generate_card_incident_types_from_list
+from schemas.eos_for_ukio_models import *
 from schemas.string_eos import *
 from schemas.string_eos import Psycho, Consult
-from schemas.eos_for_ukio_models import *
-from generators import check_event_probability
 from schemas.string_schemas import EosResourceUnitNames
 from schemas.ukio_model import EosItem, DispatchService, EosResource
+from .incident_type_generator.incident_type_generator import generate_card_incident_types_from_list
 
 T = TypeVar(
     "T",

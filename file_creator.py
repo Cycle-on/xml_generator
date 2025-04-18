@@ -1,10 +1,8 @@
 import csv
 import datetime
 import os
-import shutil
 import traceback
 import xml.etree.ElementTree as ET
-from fileinput import filename
 
 from pydantic import BaseModel
 
@@ -40,30 +38,41 @@ def __generate_xml_from_pydantic(root: ET.Element, model: dict, name='Ukio'):
     :param name:name in the xml file
     :return:
     """
+    if not name.startswith('s112:'):
+        name = "s112:" + name
     sub_root = ET.SubElement(root, name)
     for feature_name, feature_value in model.items():
+
         if feature_name == 'PhoneCallId':
             feature_name = __down_first_letter(feature_name)
         if feature_name in up_first_verb_schemas:
+
             feature_name = __up_first_letter(feature_name)
         if feature_value is None:
             continue
         elif isinstance(feature_value, dict):  # if we have pydantic model
-            __generate_xml_from_pydantic(sub_root, feature_value, name=feature_name)
+            __generate_xml_from_pydantic(sub_root, feature_value, name=f"s112:{feature_name}")
             continue
 
         elif feature_name == 'Ukios':
+            sub_root.attrib["xmlns:s112"] = "s112"
+            ukio_upper_name = __up_first_letter(feature_name)[:-1]
             for phone_call in feature_value:
-                __generate_xml_from_pydantic(sub_root, phone_call, name=__up_first_letter(feature_name)[:-1])
+                __generate_xml_from_pydantic(sub_root, phone_call, name=f"s112:{ukio_upper_name}")
             continue
 
         elif isinstance(feature_value, list):
+            # print(feature_name)
+
             for value in feature_value:
+
                 if isinstance(value, str) or isinstance(value, int):
+                    # feature_name = f"s112:{feature_name}"
                     el = ET.SubElement(sub_root, feature_name)
                     el.text = str(value)
 
                 else:
+                    print(feature_name, value)
                     __generate_xml_from_pydantic(sub_root, value, name=feature_name)
             continue
 
@@ -71,9 +80,11 @@ def __generate_xml_from_pydantic(root: ET.Element, model: dict, name='Ukio'):
             feature_value = feature_value.isoformat()
         if feature_name in ('p_min', 'p_max', 'class'):
             continue
-
-        el = ET.SubElement(sub_root, feature_name)
+        print(feature_name, feature_value)
+        el = ET.SubElement(sub_root, f"s112:{feature_name}")
         el.text = str(feature_value)
+        if 'dt' in feature_name:
+            el.text += 'Z'
     return sub_root
 
 
@@ -93,8 +104,10 @@ def create_file_from_model(model: BaseModel,
     """
     try:
         root_ = ET.Element(basename)
-        sub_root = __generate_xml_from_pydantic(root_, model.dict(), basename)
+
+        sub_root = __generate_xml_from_pydantic(root_, model.model_dump(), f"s112:{basename}")
         tree = ET.ElementTree(sub_root)
+        # print(tree.getroot())
         if to_send:
             dir_path = os.path.join(config.output_directory_name, region_name, 'prepared_to_send_files')
         else:
