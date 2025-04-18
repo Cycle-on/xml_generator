@@ -182,7 +182,7 @@ class Ukio(BaseModelWithId):
     nCasualties: int = None
     bHumanThreat: int = False
     bChs: int = False
-    strCallSource: CallSource = None
+    strCallSource: str = None
     bWrong: bool
     bChildPlay: bool
     phoneCall: list[PhoneCall] = None

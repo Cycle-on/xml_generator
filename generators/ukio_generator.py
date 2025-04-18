@@ -1,3 +1,4 @@
+import datetime
 import random
 from datetime import timedelta as td
 
@@ -117,7 +118,7 @@ def generate_ukio_phone_call_data(call_date: datetime.datetime) -> Ukio | Missed
     # create non-logic fields
     card_state = random.choice(list(CardStates))
     incident_type = random.choice(list(IncidentTypes))
-    call_source = CallSource.mobile_phone
+    call_source = "Номер 112"
     # create fields with some logica
 
     operator_info = get_operator(call_date)
