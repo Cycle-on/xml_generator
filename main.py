@@ -15,6 +15,7 @@ from schemas.phonecall import MissedCall, MissedCalls
 from schemas.string_eos import OperatorWorks, ArmWorks, IncidentTypes
 from schemas.ukio_model import Ukios, Ukio
 from send_files import modify_xml_file_to_send, __send_file
+from wsdl_parser.wsdl_tester import check_fields_by_file_path
 
 config = load_config()
 
@@ -58,8 +59,8 @@ def generate_region_files(date_zero=config.date_zero, region_name: str = 'region
                                                     region_name=region_name)
             modify_xml_file_to_send(ukio_file_path, get_file_prefix(UKIO_SOAP_PREFIX),
                                     get_file_postfix(UKIO_SOAP_POSTFIX))
-            # print('start check ukio with wsdl fields')
-            # check_fields_by_file_path(ukio_file_path, 'wsdl_4_3.wsdl')
+            print('start check ukio with wsdl fields')
+            check_fields_by_file_path(ukio_file_path, 'wsdl_4_3.wsdl')
         if GENERATE_MISSED_CALLS:
             missed_calls_file_path = create_file_from_model(missed, filename=f'missed_{i}', basename='MissedCalls',
                                                             region_name=region_name)
