@@ -29,8 +29,8 @@ def generate_region_files(date_zero=config.date_zero, region_name: str = 'region
     # models_create_time = None
     # fill with the Google sheets
     # for incident_types_list in .values():
-        # print(incident_types_list)
-        # ALL_PROJ_CONSTANTS[incident_types_list.__name__] = incident_types_list
+    # print(incident_types_list)
+    # ALL_PROJ_CONSTANTS[incident_types_list.__name__] = incident_types_list
     # print('bb', ALL_PROJ_CONSTANTS["INCIDENT_TYPES_FOR_CARD01"])
     # quit(118)
     fill_addresses(region_name)
@@ -146,9 +146,10 @@ def main():
                 for constants_dict in get_next_constants():
                     ukios_info.clear()
                     missed_info.clear()
-                    # GLOBALS_DICT = (ALL_PROJ_CONSTANTS)
-                    # GLOBALS_DICT.update(constants_dict)
                     ALL_PROJ_CONSTANTS.update(constants_dict)
+                    for k, v in ALL_PROJ_CONSTANTS.items():
+                        if isinstance(v, str) and '[' in v:
+                            ALL_PROJ_CONSTANTS[k] = eval(v)
 
                     generate_region_files(region_name=constants_dict["region_name/constant name"])
                     if config.send_files:
@@ -158,15 +159,20 @@ def main():
 
         if TAKE_CONSTANTS_FROM_FILE:
             generate_region_files(region_name='region1')
+
             if config.send_files:
                 send_files('region1')
         else:
             for constants_dict in get_next_constants():
                 ukios_info.clear()
                 missed_info.clear()
-                # GLOBALS_DICT = (ALL_PROJ_CONSTANTS)
-                # GLOBALS_DICT.update(constants_dict)
+
                 ALL_PROJ_CONSTANTS.update(constants_dict)
+                # make lists from strings
+                for k, v in ALL_PROJ_CONSTANTS.items():
+                    if isinstance(v, str) and '[' in v:
+                        ALL_PROJ_CONSTANTS[k] = eval(v)
+                # quit(228)
                 # print(constants_dict)
                 generate_region_files(region_name=constants_dict["region_name/constant name"])
 

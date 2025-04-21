@@ -21,7 +21,8 @@ def generate_patients_list() -> list[Patient]:
     :return:
     """
     patients = []
-    patients_count = int(get_distribution_var_by_work_type(ALL_PROJ_CONSTANTS['PATIENTS_COUNT_WORK_TYPE'], 'PATIENTS_COUNT'))
+    patients_count = int(
+        get_distribution_var_by_work_type(ALL_PROJ_CONSTANTS['PATIENTS_COUNT_WORK_TYPE'], 'PATIENTS_COUNT'))
     for _ in range(patients_count):
         gender = genders[check_event_probability(ALL_PROJ_CONSTANTS['AMBULANCE_MALE_PROBABILITY'])]
         surname, name, middle_name = get_random_name(gender)

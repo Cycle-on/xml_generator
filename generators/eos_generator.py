@@ -139,6 +139,7 @@ def generate_card_from_eos_model(eos_value_dict: dict, date_from: datetime.datet
                     strAppeal=random.choice(ALL_PROJ_CONSTANTS['CS_APPEALS']),
                 )
             case "cardat":
+                print(type(ALL_PROJ_CONSTANTS['AT_INJURIES']), ALL_PROJ_CONSTANTS['AT_INJURIES'])
                 return CardAT(
                     dtCreate=dt_create,
                     strIncidentType=generate_card_incident_types_from_list([eos_value_dict]),
