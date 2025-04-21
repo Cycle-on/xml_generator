@@ -139,7 +139,7 @@ def main():
                 ALL_PROJ_CONSTANTS["files_count"] = 1
 
             if TAKE_CONSTANTS_FROM_FILE:
-                generate_region_files()
+                generate_region_files('region1')
                 if config.send_files:
                     send_files('region1')
             else:
