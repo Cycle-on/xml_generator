@@ -1,6 +1,4 @@
-import random
-
-TAKE_CONSTANTS_FROM_FILE = True
+TAKE_CONSTANTS_FROM_FILE = False
 
 GENERATE_UKIO = True
 GENERATE_MISSED_CALLS = True
@@ -21,7 +19,7 @@ MAX_OPERATORS_COUNT = 5
 
 files_prefix = 'TEST'  # префикс перед global_id в ukio и call
 
-xml_count_per_file = random.choice([1 ,2 ,3 ,4 ,5 ,6 ,7, 8, 9, 10])  # Количество записей в одном файле
+xml_count_per_file = 1  # Количество записей в одном файле
 files_count = 1  # Количество файлов
 
 MAX_RECALL_ATTEMPTS = 3  # максимальное количество попыток перезвона при сброшенном вызове
@@ -73,8 +71,8 @@ AVG_CARD_CREATE_TIME = 75  # секунды, среднее время вызо�
 CARD_CREATE_SCALE = 10
 
 EOS_CARD_CREATE_WORK_TYPE = 'normal'
-EOS_CARD_CREATE_LOW = 1
-EOS_CARD_CREATE_HIGH = 1
+EOS_CARD_CREATE_LOW = 100
+EOS_CARD_CREATE_HIGH = 100
 EOS_CARD_CREATE_LAMBDA = 1
 AVG_EOS_CARD_CREATE_TIME = 300  # секунды, среднее время составления карточки со стороны службы/dtCreate
 EOS_CARD_CREATE_SCALE = 8
@@ -115,12 +113,12 @@ MISSED_CALL_WAIT_ANSWER_TIME_LAMBDA = 1
 AVG_MISSED_CALL_WAIT_ANSWER_TIME = 30  # секунды
 MISSED_CALL_WAIT_ANSWER_TIME_SCALE = 4
 
-CHILD_PLAY_UKIO_PROBABILITY = 50  # вероятность детской шалости
-WRONG_CALLS_PROBABILITY = 50  # вероятность ложного вызова
+CHILD_PLAY_UKIO_PROBABILITY = 0  # вероятность детской шалости
+WRONG_CALLS_PROBABILITY = 0  # вероятность ложного вызова
 
 DROP_CALL_PROBABILITY = 0  # Вероятность того что вызов будет сброшен
 # Eos Type info
-EOS_ITEM_CANCEL_PROBABILITY = 10  # проценты
+EOS_ITEM_CANCEL_PROBABILITY = 0  # проценты
 
 DT_DEPART_WORK_TYPE = 'normal'
 DT_DEPART_LOW = 1
@@ -162,12 +160,12 @@ MEMBERSHIP = ["mem1", "mem2", "mem3"]
 
 # in %
 
-EOS_SHARE_MIN = 55  # две вероятности выпадения службы
-EOS_SHARE_MAX = 65  # будет выбираться рандомное значение из этих двух
+EOS_SHARE_MIN = 100  # две вероятности выпадения службы
+EOS_SHARE_MAX = 100  # будет выбираться рандомное значение из этих двух
 
 # main eos in %
-FIRE_SHARE_MIN = 2
-FIRE_SHARE_MAX = 10
+FIRE_SHARE_MIN = 100
+FIRE_SHARE_MAX = 100
 
 INCIDENT_TYPES_FOR_CARD01 = []
 OBJECT_FOR_CARD01 = ["01obj1", "01obj2"]

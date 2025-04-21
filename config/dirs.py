@@ -1,7 +1,7 @@
 import shutil
 from pathlib import Path, PosixPath
 import os
-from config import load_config, base_directory_name
+from config import load_config
 
 config = load_config()
 
@@ -11,7 +11,7 @@ def create_dirs() -> list[PosixPath]:
     creating output directories on start-up
     :return: the list with directories' paths
     """
-    file_dir = Path(base_directory_name)
+    file_dir = Path(config.base_directory_name)
     files_dir = Path(os.path.join(config.output_directory_name))
     logs_dir = Path(config.logs_directory_name)
     logs_xml_dir = Path(os.path.join(config.logs_directory_name, 'xml_generator'))
@@ -23,6 +23,3 @@ def clear_dir(dir_path: str = './files/'):
     if os.path.exists(dir_path):
         shutil.rmtree(dir_path)
         os.makedirs(dir_path)
-
-
-

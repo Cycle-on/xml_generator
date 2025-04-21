@@ -2,7 +2,7 @@ import os
 
 from dotenv import load_dotenv
 
-from constants import *
+from constants import ALL_PROJ_CONSTANTS
 
 load_dotenv()  # will be used with .env file
 # if you want to take vars from global environment, start program in terminal
@@ -10,7 +10,7 @@ base_directory_name = 'files'
 
 output_directory_name: str = os.path.join(
     base_directory_name,
-    files_prefix,
+    ALL_PROJ_CONSTANTS['files_prefix'],
 )
 logs_directory_name = 'errors'
 

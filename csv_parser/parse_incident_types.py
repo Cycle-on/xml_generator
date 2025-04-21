@@ -3,17 +3,21 @@ from pprint import pprint
 import numpy as np
 import pandas as pd
 
+from constants import ALL_PROJ_CONSTANTS
 from csv_reader import get_csv_from_url
-from constants import *
 from schemas.string_eos import IncidentType, StringEosType
 
+list_names = [
+    'INCIDENT_TYPES_FOR_CARD01', 'INCIDENT_TYPES_FOR_CARD02', 'INCIDENT_TYPES_FOR_CARD03',
+    'INCIDENT_TYPES_FOR_CARD04', 'AT_INCIDENT_TYPES', 'CS_INCIDENT_TYPES'
+]
 CARDS_INDEXES_INCIDENT_TYPES = {
-    1: INCIDENT_TYPES_FOR_CARD01,
-    2: INCIDENT_TYPES_FOR_CARD02,
-    3: INCIDENT_TYPES_FOR_CARD03,
-    4: INCIDENT_TYPES_FOR_CARD04,
-    5: AT_INCIDENT_TYPES,
-    6: CS_INCIDENT_TYPES,
+    1: ALL_PROJ_CONSTANTS['INCIDENT_TYPES_FOR_CARD01'],
+    2: ALL_PROJ_CONSTANTS['INCIDENT_TYPES_FOR_CARD02'],
+    3: ALL_PROJ_CONSTANTS['INCIDENT_TYPES_FOR_CARD03'],
+    4: ALL_PROJ_CONSTANTS['INCIDENT_TYPES_FOR_CARD04'],
+    5: ALL_PROJ_CONSTANTS['AT_INCIDENT_TYPES'],
+    6: ALL_PROJ_CONSTANTS['CS_INCIDENT_TYPES'],
 }
 
 
@@ -33,7 +37,7 @@ def __delete_duplicates_from_list():
         CARDS_INDEXES_INCIDENT_TYPES[k] = doubles
 
 
-INCIDENT_TYPES_LIST: list[IncidentType] = []
+ALL_PROJ_CONSTANTS['INCIDENT_TYPES_LIST']: list[IncidentType] = []
 
 
 def get_string_eos_type_id_by_eos_name(eos_name: str):
@@ -46,8 +50,9 @@ def get_string_eos_type_id_by_eos_name(eos_name: str):
 def fill_incident_type_lists(region_name: str = ''):
     global CARDS_INDEXES_INCIDENT_TYPES
     __clear_incident_types()
-    resp: pd.Series = get_csv_from_url(INCIDENT_TYPES_URL)
+    resp: pd.Series = get_csv_from_url(ALL_PROJ_CONSTANTS['INCIDENT_TYPES_URL'])
     for el in resp:
+
         if el['region_name'] != region_name:
             continue
         incident_type_info_dict = {}
@@ -103,9 +108,10 @@ def fill_incident_type_lists(region_name: str = ''):
                     incident_type_names.append(incident_type_name)
 
                 F.append(i)
-        INCIDENT_TYPES_LIST.append(IncidentType(**incident_type_info_dict))
+        ALL_PROJ_CONSTANTS['INCIDENT_TYPES_LIST'].append(IncidentType(**incident_type_info_dict))
     __delete_duplicates_from_list()
-    return CARDS_INDEXES_INCIDENT_TYPES
+    for i, el in enumerate(list_names):
+        ALL_PROJ_CONSTANTS[el] = CARDS_INDEXES_INCIDENT_TYPES[i + 1]
 
 
 def main():

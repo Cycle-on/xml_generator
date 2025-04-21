@@ -4,7 +4,6 @@ from .union_constants import *
 
 ALL_PROJ_CONSTANTS = globals()
 
-
 def get_file_prefix(prefix_var_name: str):
     if prefix_var_name:
         return prefix_var_name

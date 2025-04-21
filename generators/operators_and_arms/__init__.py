@@ -1,27 +1,28 @@
 import datetime
+import random
 from copy import deepcopy
 
 from config import load_config
-from constants import *
+from constants import ALL_PROJ_CONSTANTS
 from generators import check_event_probability
 from generators.random_generators import get_random_name, get_random_telephone_number
 from schemas.string_eos import Operator, Arm, OperatorWork, ArmWork
 
 config = load_config()
 
-OPERATORS_COUNT = random.randint(MIN_OPERATORS_COUNT, MAX_OPERATORS_COUNT)
+OPERATORS_COUNT = random.randint(ALL_PROJ_CONSTANTS['MIN_OPERATORS_COUNT'], ALL_PROJ_CONSTANTS['MAX_OPERATORS_COUNT'])
 
 
 def create_operator() -> Operator:
-    operator_gender = 'M' if check_event_probability(OPERATOR_MALE_PROBABILITY) else 'F'
+    operator_gender = 'M' if check_event_probability(ALL_PROJ_CONSTANTS['OPERATOR_MALE_PROBABILITY']) else 'F'
     surname, name, last_name = get_random_name(operator_gender)
     return Operator(
         strOperatorLastName=last_name,
         strOperatorName=name,
         strOperatorSurname=surname,
-        strOperatorPost=random.choice(OPERATORS_POSTS),
-        isPsychologist=check_event_probability(OPERATOR_PSYCHOLOGIST_PROBABILITY),
-        bOperatorTranslator=check_event_probability(OPERATOR_TRANSLATOR_PROBABILITY),
+        strOperatorPost=random.choice(ALL_PROJ_CONSTANTS['OPERATORS_POSTS']),
+        isPsychologist=check_event_probability(ALL_PROJ_CONSTANTS['OPERATOR_PSYCHOLOGIST_PROBABILITY']),
+        bOperatorTranslator=check_event_probability(ALL_PROJ_CONSTANTS['OPERATOR_TRANSLATOR_PROBABILITY']),
         strLanguage=['Русский', 'Английский']
     )
 
@@ -31,23 +32,26 @@ OPERATOR_SHIFT = {
     "busy_operators": [],
     "shift": 0
 }
-
-OPERATORS: list[OPERATOR_SHIFT] = [deepcopy(OPERATOR_SHIFT) for _ in range(4)]
-if OPERATORS_COUNT_PER_WORKING_SHIFT > ARMS_COUNT:
+ALL_PROJ_CONSTANTS['OPERATOR_SHIFT'] = OPERATOR_SHIFT
+OPERATORS: list[OPERATOR_SHIFT] = [deepcopy(ALL_PROJ_CONSTANTS['OPERATOR_SHIFT']) for _ in range(4)]
+ALL_PROJ_CONSTANTS['OPERATORS'] = OPERATORS
+if ALL_PROJ_CONSTANTS['OPERATORS_COUNT_PER_WORKING_SHIFT'] > ALL_PROJ_CONSTANTS['ARMS_COUNT']:
     print("Число операторов больше чем число армов")
     quit()
 
 ALL_OPERATORS = []
+ALL_PROJ_CONSTANTS['ALL_OPERATORS'] = ALL_OPERATORS
 
 
 def create_operators():
     for shift in range(1, 4):
-        OPERATORS[shift]['shift'] = shift
-        OPERATORS[shift]['start_shift'] = config.date_zero + datetime.timedelta(seconds=SHIFT_TIME * shift)
-        for _ in range(OPERATORS_COUNT_PER_WORKING_SHIFT):
+        ALL_PROJ_CONSTANTS['OPERATORS'][shift]['shift'] = shift
+        ALL_PROJ_CONSTANTS['OPERATORS'][shift]['start_shift'] = config.date_zero + datetime.timedelta(
+            seconds=ALL_PROJ_CONSTANTS['SHIFT_TIME'] * shift)
+        for _ in range(ALL_PROJ_CONSTANTS['OPERATORS_COUNT_PER_WORKING_SHIFT']):
             op = create_operator()
-            ALL_OPERATORS.append(op)
-            OPERATORS[shift]['free_operators'].append(
+            ALL_PROJ_CONSTANTS['ALL_OPERATORS'].append(op)
+            ALL_PROJ_CONSTANTS['OPERATORS'][shift]['free_operators'].append(
                 {
                     'operator': op,
                     'start_time': config.low_date,
@@ -68,7 +72,7 @@ def create_arm() -> Arm:
 
 
 def create_arms():
-    for _ in range(ARMS_COUNT):
+    for _ in range(ALL_PROJ_CONSTANTS['ARMS_COUNT']):
         ARMS.append(create_arm())
 
 

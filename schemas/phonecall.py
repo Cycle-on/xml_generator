@@ -1,10 +1,8 @@
 import datetime
-import uuid
 from decimal import Decimal
 
 from pydantic import Field, BaseModel
 
-from constants import files_prefix
 from schemas import BaseModelWithId
 from schemas.string_eos import Operator
 

@@ -1,6 +1,6 @@
 import datetime
-from datetime import timedelta as td
 import random
+from datetime import timedelta as td
 from typing import TypeVar
 
 import numpy as np

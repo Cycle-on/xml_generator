@@ -7,7 +7,8 @@ from pydantic.functional_validators import AfterValidator
 from typing_extensions import Annotated
 
 from config import config_data
-from config.config_data import *
+from config.config_data import logs_directory_name, output_directory_name, base_directory_name
+from constants import ALL_PROJ_CONSTANTS
 
 
 def parse_args():
@@ -25,13 +26,13 @@ def parse_args():
     # Парсим аргументы
     args = parser.parse_args()
 
-    # globals()["files_count"] = args.files_count
-    # globals()['xml_count_per_file'] = args.xmls
+    # ALL_PROJ_CONSTANTS["files_count"] = args.files_count
+    # ALL_PROJ_CONSTANTS['xml_count_per_file'] = args.xmls
     # if args.send:
     #     print(args.files_count)
-    #     globals()["files_count"] *= random.randint(sender.COEF_MIN, sender.COEF_MAX) / 100
-    #     globals()["files_count"] = int(generator.files_count)
-    #     print("ff", globals()["files_count"])
+    #     ALL_PROJ_CONSTANTS["files_count"] *= random.randint(sender.COEF_MIN, sender.COEF_MAX) / 100
+    #     ALL_PROJ_CONSTANTS["files_count"] = int(generator.files_count)
+    #     print("ff", ALL_PROJ_CONSTANTS["files_count"])
     try:
         config_data.DATE_ZERO = datetime.datetime.strptime(args.date, "%Y-%m-%d_%H-%M-%S-%f") - td(hours=3)
         return args.send, config_data.DATE_ZERO
@@ -67,6 +68,7 @@ class Config(BaseModel):
     date_zero: datetime.datetime
     low_date: datetime.datetime
     send_files: bool
+    base_directory_name: str
 
 
 _config = None
@@ -76,13 +78,14 @@ def load_config() -> Config:
     global _config
     if _config is None:
         _config = Config(
-            dropped_call_probability=DROP_CALL_PROBABILITY,
-            files_count=files_count,
+            dropped_call_probability=ALL_PROJ_CONSTANTS['DROP_CALL_PROBABILITY'],
+            files_count=ALL_PROJ_CONSTANTS['files_count'],
             logs_directory_name=logs_directory_name,
             output_directory_name=output_directory_name,
             date_zero=GLOBAL_DATE,
             low_date=datetime.datetime(1, 1, 1, hour=1, minute=0, second=0),
             send_files=__send_files,
+            base_directory_name=base_directory_name,
         )
 
     return _config
