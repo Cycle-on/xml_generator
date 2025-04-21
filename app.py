@@ -11,11 +11,15 @@ from threading import Thread
 import time
 from datetime import datetime
 import json
-import constants.generator as generator
+from constants import *
 import random
+from dotenv import load_dotenv
+
+# Загружаем переменные окружения
+load_dotenv()
 
 # Константы для генерации
-TAKE_CONSTANTS_FROM_FILE = True  # Если True - берем константы из файла, если False - из get_next_constants()
+# TAKE_CONSTANTS_FROM_FILE = True  # Если True - берем константы из файла, если False - из get_next_constants()
 
 app = Flask(__name__, template_folder='web_service/templates')
 
@@ -30,7 +34,43 @@ auto_generation_end_time = None
 auto_generation_interval = None
 total_files_sent = 0
 log_callbacks = []
-is_generating = False  # Добавляем новую глобальную переменную
+is_generating = False
+
+# Получаем список логинов и паролей из .env
+def get_credentials():
+    credentials = []
+    # Читаем .env файл напрямую, так как os.environ не поддерживает множественные значения
+    try:
+        with open('.env', 'r', encoding='utf-8') as f:
+            for line in f:
+                line = line.strip()
+                if line.startswith('LOGIN_PASSWORD='):
+                    login_password = line.split('=', 1)[1].strip()
+                    if ':' in login_password:
+                        login, password = login_password.split(':', 1)
+                        credentials.append({
+                            'login': login,
+                            'password': password
+                        })
+                        print(f"Добавлена пара логин-пароль: {login}")
+    except Exception as e:
+        print(f"Ошибка при чтении .env файла: {str(e)}")
+    
+    print(f"Всего найдено пар логин-пароль: {len(credentials)}")
+    return credentials
+
+# Получаем список доступных регионов (логинов)
+def get_available_regions():
+    credentials = get_credentials()
+    return [cred['login'] for cred in credentials]
+
+# Получаем пароль для конкретного логина
+def get_password_for_login(login):
+    credentials = get_credentials()
+    for cred in credentials:
+        if cred['login'] == login:
+            return cred['password']
+    return None
 
 # Color formatting utilities
 class Colors:
@@ -141,25 +181,56 @@ def generate():
         
         try:
             # Очищаем директорию перед генерацией
+            print("[DEBUG] Начало функции generate()")
             clear_dir()
+            print("[DEBUG] Директория очищена")
             
             # Пересоздаем константы генератора
+            print("[DEBUG] Вызов reset_generator_constants()")
             reset_generator_constants()
+            print("[DEBUG] reset_generator_constants() завершен")
             
             # Выводим сообщение о начале генерации
             yield f"data: Начинаю генерацию...\n\n"
             
-            # Запускаем генерацию
-            generate_region_files()
+            # Запускаем генерацию в зависимости от значения TAKE_CONSTANTS_FROM_FILE
+            if TAKE_CONSTANTS_FROM_FILE:
+                print("[DEBUG] TAKE_CONSTANTS_FROM_FILE = True, вызываем generate_region_files()")
+                generate_region_files()
+                print("[DEBUG] generate_region_files() завершен")
+            else:
+                print("[DEBUG] TAKE_CONSTANTS_FROM_FILE = False, получаем константы из get_next_constants()")
+                try:
+                    print("[DEBUG] Вызов get_next_constants()")
+                    for constants_dict in get_next_constants():
+                        print(f"[DEBUG] Обработка констант для региона: {constants_dict.get('region_name/constant name', 'region1')}")
+                        globals().update(constants_dict)
+                        region_name = constants_dict.get("region_name/constant name", "region1")
+                        print(f"[DEBUG] Генерация файлов для региона: {region_name}")
+                        generate_region_files(region_name=region_name)
+                        print(f"[DEBUG] Генерация файлов для региона {region_name} завершена")
+                except Exception as e:
+                    print(f"[ERROR] Ошибка при получении констант: {str(e)}")
+                    print(f"[ERROR] Тип ошибки: {type(e).__name__}")
+                    import traceback
+                    print(f"[ERROR] Трассировка: {traceback.format_exc()}")
+                    yield f"data: Ошибка при получении констант: {str(e)}. Используем значение по умолчанию.\n\n"
+                    generate_region_files()
             
             # Подсчитываем количество сгенерированных файлов
+            print("[DEBUG] Подсчет сгенерированных файлов")
             ukios_files = get_ukios_files()
             file_count = len(ukios_files)
+            print(f"[DEBUG] Сгенерировано файлов: {file_count}")
             
             # Выводим сообщение о завершении
             yield f"data: Генерация завершена успешно, сгенерировано файлов: {file_count}\n\n"
             
         except Exception as e:
+            print(f"[ERROR] Ошибка в генерации: {str(e)}")
+            print(f"[ERROR] Тип ошибки: {type(e).__name__}")
+            import traceback
+            print(f"[ERROR] Трассировка: {traceback.format_exc()}")
             yield f"data: Ошибка в генерации: {str(e)}\n\n"
         finally:
             sys.stdout = capture.stdout
@@ -204,20 +275,33 @@ def test_server():
 </soap:Envelope>'''
     return success_response, 200, {'Content-Type': 'text/xml;charset=UTF-8'}
 
+@app.route('/api/regions')
+def get_regions():
+    regions = get_available_regions()
+    print(f"API /api/regions: возвращаю регионы: {regions}")
+    return jsonify(regions)
+
 @app.route('/api/send', methods=['POST'])
 def send_file():
     try:
         data = request.get_json()
         url = data.get('url')
-        username = data.get('username')
-        password = data.get('password')
+        region = data.get('region')  # Теперь получаем регион вместо логина/пароля
         filename = data.get('file')
 
-        if not all([url, username, password, filename]):
+        if not all([url, region, filename]):
             return jsonify({
                 'success': False,
                 'message': 'Ошибка: не все параметры предоставлены'
             }), 400
+
+        # Получаем пароль для выбранного региона
+        password = get_password_for_login(region)
+        if not password:
+            return jsonify({
+                'success': False,
+                'message': f'Ошибка: не найден пароль для региона {region}'
+            }), 404
 
         # Читаем содержимое файла
         file_path = os.path.join('files', 'TEST', filename)
@@ -235,7 +319,7 @@ def send_file():
         # Отправляем запрос
         headers = {
             'Content-Type': 'text/xml;charset=UTF-8',
-            'Authorization': f'Basic {base64.b64encode(f"{username}:{password}".encode()).decode()}'
+            'Authorization': f'Basic {base64.b64encode(f"{region}:{password}".encode()).decode()}'
         }
         
         try:
@@ -247,56 +331,32 @@ def send_file():
                 data=content,
                 headers=headers,
                 timeout=30,
-                verify=False  # Отключаем проверку сертификата
+                verify=False
             )
             
             print_response_details(response)
             
-            # Проверяем ответ
             if response.status_code == 200:
-                try:
-                    # Пробуем распарсить как XML
-                    root = ET.fromstring(response.text)
-                    # Ищем статус в новом формате ответа
-                    status = root.find('.//ns2:status', {'ns2': 's112'})
-                    
-                    if status is not None and status.text.lower() == 'true':
-                        print_colored("\nРезультат: Успешно", Colors.GREEN)
-                        return jsonify({
-                            'success': True,
-                            'message': 'Файл успешно отправлен'
-                        })
-                    else:
-                        print_colored("\nРезультат: Ошибка в ответе сервера", Colors.RED)
-                        return jsonify({
-                            'success': False,
-                            'message': 'Ошибка при отправке файла'
-                        })
-                except ET.ParseError as e:
-                    print_colored(f"\nОшибка парсинга XML: {str(e)}", Colors.RED)
-                    return jsonify({
-                        'success': False,
-                        'message': 'Ошибка при отправке файла'
-                    })
+                return jsonify({
+                    'success': True,
+                    'message': 'Файл успешно отправлен'
+                })
             else:
-                print_colored(f"\nРезультат: Ошибка HTTP {response.status_code}", Colors.RED)
                 return jsonify({
                     'success': False,
-                    'message': 'Ошибка при отправке файла'
-                })
-
+                    'message': f'Ошибка при отправке файла: {response.status_code}'
+                }), response.status_code
+                
         except requests.exceptions.RequestException as e:
-            print_colored(f"\nОшибка при отправке запроса: {str(e)}", Colors.RED)
             return jsonify({
                 'success': False,
-                'message': 'Ошибка при отправке файла'
-            })
-
+                'message': f'Ошибка при отправке запроса: {str(e)}'
+            }), 500
+            
     except Exception as e:
-        print_colored(f"\nНепредвиденная ошибка: {str(e)}", Colors.RED)
         return jsonify({
             'success': False,
-            'message': 'Ошибка при отправке файла'
+            'message': f'Ошибка: {str(e)}'
         }), 500
 
 def capture_main_output():
@@ -343,15 +403,7 @@ def start_auto_generation():
     data = request.json
     interval = float(data.get('interval', 1))
     duration = float(data.get('duration', 10))
-    url = data.get('url')
-    username = data.get('username')
-    password = data.get('password')
-    
-    if not all([url, username, password]):
-        return jsonify({
-            'success': False,
-            'message': 'Ошибка: не все параметры предоставлены'
-        })
+    url = data.get('url')  # URL теперь опциональный
     
     if auto_generation_running:
         return jsonify({
@@ -365,7 +417,7 @@ def start_auto_generation():
     auto_generation_interval = interval
     total_files_sent = 0
     
-    auto_generation_thread = Thread(target=auto_generation_worker, args=(url, username, password))
+    auto_generation_thread = Thread(target=auto_generation_worker, args=(url,))
     auto_generation_thread.start()
     
     return jsonify({
@@ -457,12 +509,21 @@ def auto_generate_logs():
     
     return response
 
-def auto_generation_worker(url, username, password):
+def auto_generation_worker(url=None):
     global auto_generation_running, total_files_sent
     total_files_sent = 0
     
-    print(f"DEBUG: Запущен worker с параметрами - url: {url}, username: {username}")
+    print(f"DEBUG: Запущен worker")
     print(f"DEBUG: Время работы - start: {auto_generation_start_time}, end: {auto_generation_end_time}, interval: {auto_generation_interval}")
+    
+    # Используем URL из запроса или из конфигурации
+    if not url:
+        url = os.getenv('TEST_SERVER_URL', 'http://localhost:5000/test-server')
+    print(f"DEBUG: Используется URL: {url}")
+    
+    # Получаем список всех доступных регионов
+    available_regions = get_available_regions()
+    print(f"DEBUG: Доступные регионы: {available_regions}")
     
     while auto_generation_running:
         try:
@@ -500,65 +561,111 @@ def auto_generation_worker(url, username, password):
             
             try:
                 # Очищаем директорию перед генерацией
+                print("DEBUG: Очистка директории")
                 clear_dir()
+                print("DEBUG: Директория очищена")
                 
                 # Пересоздаем константы генератора
+                print("DEBUG: Вызов reset_generator_constants()")
                 reset_generator_constants()
+                print("DEBUG: reset_generator_constants() завершен")
                 
-                # Генерируем файлы
+                # Генерируем файлы в зависимости от значения TAKE_CONSTANTS_FROM_FILE
                 if TAKE_CONSTANTS_FROM_FILE:
+                    print("DEBUG: TAKE_CONSTANTS_FROM_FILE = True, вызываем generate_region_files()")
                     generate_region_files()
+                    print("DEBUG: generate_region_files() завершен")
                 else:
-                    for constants_dict in get_next_constants():
-                        region_name = constants_dict["region_name/constant name"]
-                        globals().update(constants_dict)
-                        generate_region_files(region_name=region_name)
+                    print("DEBUG: TAKE_CONSTANTS_FROM_FILE = False, получаем константы из get_next_constants()")
+                    try:
+                        print("DEBUG: Вызов get_next_constants()")
+                        for constants_dict in get_next_constants():
+                            print(f"DEBUG: Обработка констант для региона: {constants_dict.get('region_name/constant name', 'region1')}")
+                            globals().update(constants_dict)
+                            region_name = constants_dict.get("region_name/constant name", "region1")
+                            print(f"DEBUG: Генерация файлов для региона: {region_name}")
+                            generate_region_files(region_name=region_name)
+                            print(f"DEBUG: Генерация файлов для региона {region_name} завершена")
+                    except Exception as e:
+                        print(f"DEBUG: Ошибка при получении констант: {str(e)}")
+                        print(f"DEBUG: Тип ошибки: {type(e).__name__}")
+                        import traceback
+                        print(f"DEBUG: Трассировка: {traceback.format_exc()}")
+                        log_message({'type': 'console_output', 'text': f'Ошибка при получении констант: {str(e)}. Используем значение по умолчанию.'})
+                        generate_region_files()
                 
             finally:
                 sys.stdout = capture.stdout
                 sys.stderr = capture.stderr
                 capture.remove_callback(output_callback)
             
-            # Получаем список файлов
-            files = get_ukios_files()
-            total_files = len(files)
-            print(f"DEBUG: Найдено файлов: {total_files}")
-            log_message({'type': 'files_found', 'count': total_files})
-            
-            # Отправляем файлы
-            for i, filename in enumerate(files, 1):
-                print(f"DEBUG: Отправка файла {i}/{total_files}: {filename}")
-                log_message({'type': 'sending_file', 'current': i, 'total': total_files})
+            # Для каждого региона отправляем его файлы
+            for current_region in available_regions:
+                if not auto_generation_running:
+                    break
+                    
+                print(f"DEBUG: Обработка региона: {current_region}")
+                log_message({'type': 'console_output', 'text': f'Обработка региона: {current_region}'})
                 
-                try:
-                    # Отправляем файл через /api/send
-                    response = requests.post(
-                        'http://localhost:5000/api/send',
-                        json={
-                            'url': url,
-                            'username': username,
-                            'password': password,
-                            'file': filename
-                        },
-                        headers={'Content-Type': 'application/json'}
-                    )
+                # Получаем пароль для текущего региона
+                password = get_password_for_login(current_region)
+                if not password:
+                    print(f"DEBUG: Не найден пароль для региона {current_region}")
+                    log_message({'type': 'console_output', 'text': f'Не найден пароль для региона {current_region}'})
+                    continue
+                
+                # Получаем список файлов для текущего региона
+                files = get_ukios_files()
+                region_files = [f for f in files if f.startswith(f"{current_region}/Ukios/")]
+                
+                if not region_files:
+                    print(f"DEBUG: Нет файлов для региона {current_region}")
+                    log_message({'type': 'console_output', 'text': f'Нет файлов для региона {current_region}'})
+                    continue
+                
+                print(f"DEBUG: Найдено файлов для региона {current_region}: {len(region_files)}")
+                log_message({'type': 'files_found', 'count': len(region_files)})
+                
+                # Отправляем каждый файл региона
+                for i, filename in enumerate(region_files, 1):
+                    if not auto_generation_running:
+                        break
+                        
+                    print(f"DEBUG: Отправка файла {i}/{len(region_files)}: {filename}")
+                    log_message({'type': 'sending_file', 'current': i, 'total': len(region_files)})
                     
-                    if response.status_code == 200:
-                        result = response.json()
-                        if result.get('success'):
-                            total_files_sent += 1
-                            print(f"DEBUG: Файл {filename} успешно отправлен")
-                            log_message({'type': 'file_sent', 'current': i, 'total': total_files})
+                    try:
+                        # Отправляем файл через /api/send
+                        print(f"DEBUG: Отправка запроса на /api/send")
+                        response = requests.post(
+                            'http://localhost:5000/api/send',
+                            json={
+                                'url': url,
+                                'region': current_region,
+                                'file': filename
+                            },
+                            headers={'Content-Type': 'application/json'}
+                        )
+                        
+                        if response.status_code == 200:
+                            result = response.json()
+                            if result.get('success'):
+                                total_files_sent += 1
+                                print(f"DEBUG: Файл {filename} успешно отправлен")
+                                log_message({'type': 'file_sent', 'current': i, 'total': len(region_files), 'filename': filename, 'status': response.status_code})
+                            else:
+                                print(f"DEBUG: Ошибка при отправке файла {filename}: {result.get('message')}")
+                                log_message({'type': 'error', 'message': f'Ошибка при отправке файла {filename}: {result.get("message")} [{response.status_code}]'})
                         else:
-                            print(f"DEBUG: Ошибка при отправке файла {filename}: {result.get('message')}")
-                            log_message({'type': 'error', 'message': f'Ошибка при отправке файла {filename}: {result.get("message")}'})
-                    else:
-                        print(f"DEBUG: Ошибка при отправке файла {filename}: {response.status_code}")
-                        log_message({'type': 'error', 'message': f'Ошибка при отправке файла {filename}: {response.status_code}'})
-                    
-                except Exception as e:
-                    print(f"DEBUG: Ошибка при обработке файла {filename}: {str(e)}")
-                    log_message({'type': 'error', 'message': f'Ошибка при обработке файла {filename}: {str(e)}'})
+                            print(f"DEBUG: Ошибка при отправке файла {filename}: {response.status_code}")
+                            log_message({'type': 'error', 'message': f'Ошибка при отправке файла {filename}: {response.status_code}'})
+                        
+                    except Exception as e:
+                        print(f"DEBUG: Ошибка при обработке файла {filename}: {str(e)}")
+                        print(f"DEBUG: Тип ошибки: {type(e).__name__}")
+                        import traceback
+                        print(f"DEBUG: Трассировка: {traceback.format_exc()}")
+                        log_message({'type': 'error', 'message': f'Ошибка при обработке файла {filename}: {str(e)}'})
             
             # Генерация завершена
             print("DEBUG: Цикл генерации завершен")
@@ -586,6 +693,9 @@ def auto_generation_worker(url, username, password):
             
         except Exception as e:
             print(f"DEBUG: Ошибка в цикле генерации: {str(e)}")
+            print(f"DEBUG: Тип ошибки: {type(e).__name__}")
+            import traceback
+            print(f"DEBUG: Трассировка: {traceback.format_exc()}")
             log_message({'type': 'error', 'message': f'Ошибка в цикле генерации: {str(e)}'})
             time.sleep(1)
 
@@ -593,10 +703,22 @@ def reset_generator_constants():
     """Пересоздает случайные константы генератора"""
     import main
     import sys
-    value = random.choice([1, 10])
-    globals()["xml_count_per_file"] = value
-    sys.modules['main'].xml_count_per_file = value
-    print(f"\n[DEBUG] Текущее значение xml_count_per_file: {value}\n")
+    try:
+        print("\n[DEBUG] Начало функции reset_generator_constants()")
+        value = random.choice([1, 10])
+        print(f"[DEBUG] Выбрано значение: {value}")
+        globals()["xml_count_per_file"] = value
+        sys.modules['main'].xml_count_per_file = value
+        print(f"\n[DEBUG] Текущее значение xml_count_per_file: {value}\n")
+    except Exception as e:
+        print(f"\n[ERROR] Ошибка при сбросе констант: {str(e)}\n")
+        print(f"[ERROR] Тип ошибки: {type(e).__name__}")
+        import traceback
+        print(f"[ERROR] Трассировка: {traceback.format_exc()}")
+        # Устанавливаем значение по умолчанию
+        globals()["xml_count_per_file"] = 5
+        sys.modules['main'].xml_count_per_file = 5
+        print("[DEBUG] Установлено значение по умолчанию: 5")
 
 if __name__ == '__main__':
     app.run(debug=True) 

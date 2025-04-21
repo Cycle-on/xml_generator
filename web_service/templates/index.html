@@ -178,29 +178,21 @@
             <label for="url">URL:</label>
             <input type="text" id="url" placeholder="Введите URL">
         </div>
-        <div class="form-group">
-            <label for="username">Логин:</label>
-            <input type="text" id="username" placeholder="Введите логин">
-        </div>
-        <div class="form-group">
-            <label for="password">Пароль:</label>
-            <input type="password" id="password" placeholder="Введите пароль">
-        </div>
     </div>
 
     <div class="test-block">
         <h1>Тестовая генерация</h1>
         
+        <div class="form-group">
+            <label for="region">Регион:</label>
+            <select id="region" onchange="updateFileList()">
+                <option value="">Выберите регион...</option>
+            </select>
+        </div>
+        
         <div class="button-group">
             <button id="generateButton" onclick="generate()">Сгенерировать</button>
             <button id="sendButton" onclick="sendFiles()">Отправить</button>
-        </div>
-        
-        <div class="file-selector">
-            <h3>Выберите файл для отправки:</h3>
-            <select id="fileSelect" onchange="loadFile()">
-                <option value="">Выберите файл...</option>
-            </select>
         </div>
     </div>
 
@@ -327,14 +319,12 @@
         // Функция для сохранения параметров
         function saveParams() {
             const url = document.getElementById('url').value;
-            const username = document.getElementById('username').value;
-            const password = document.getElementById('password').value;
+            const region = document.getElementById('region').value;
             const interval = document.getElementById('interval').value;
             const duration = document.getElementById('duration').value;
             
             localStorage.setItem('xmlGenerator_url', url);
-            localStorage.setItem('xmlGenerator_username', username);
-            localStorage.setItem('xmlGenerator_password', password);
+            localStorage.setItem('xmlGenerator_region', region);
             localStorage.setItem('xmlGenerator_interval', interval);
             localStorage.setItem('xmlGenerator_duration', duration);
         }
@@ -342,25 +332,25 @@
         // Функция для загрузки параметров
         function loadParams() {
             const url = localStorage.getItem('xmlGenerator_url') || '';
-            const username = localStorage.getItem('xmlGenerator_username') || '';
-            const password = localStorage.getItem('xmlGenerator_password') || '';
+            const region = localStorage.getItem('xmlGenerator_region') || '';
             const interval = localStorage.getItem('xmlGenerator_interval') || '0.5';
             const duration = localStorage.getItem('xmlGenerator_duration') || '2';
             
             document.getElementById('url').value = url;
-            document.getElementById('username').value = username;
-            document.getElementById('password').value = password;
+            document.getElementById('region').value = region;
             document.getElementById('interval').value = interval;
             document.getElementById('duration').value = duration;
         }
 
         // Загружаем параметры при загрузке страницы
-        document.addEventListener('DOMContentLoaded', loadParams);
+        document.addEventListener('DOMContentLoaded', function() {
+            loadParams();
+            loadRegions();
+        });
 
         // Сохраняем параметры при изменении
         document.getElementById('url').addEventListener('change', saveParams);
-        document.getElementById('username').addEventListener('change', saveParams);
-        document.getElementById('password').addEventListener('change', saveParams);
+        document.getElementById('region').addEventListener('change', saveParams);
         document.getElementById('interval').addEventListener('change', saveParams);
         document.getElementById('duration').addEventListener('change', saveParams);
 
@@ -452,85 +442,110 @@
             };
         }
 
+        function updateSendButton() {
+            const sendButton = document.getElementById('sendButton');
+            if (isSending) {
+                sendButton.disabled = true;
+                sendButton.textContent = 'Отправка...';
+            } else {
+                sendButton.disabled = false;
+                sendButton.textContent = 'Отправить';
+            }
+        }
+
         function sendFiles() {
-            if (isSending) return;
+            if (isSending) {
+                return;
+            }
             
             const url = document.getElementById('url').value;
-            const username = document.getElementById('username').value;
-            const password = document.getElementById('password').value;
-            const fileSelect = document.getElementById('fileSelect');
-            const status = document.getElementById('status');
-            const button = document.getElementById('sendButton');
+            const region = document.getElementById('region').value;
             
-            if (!url || !username || !password || !fileSelect.value) {
-                status.textContent = 'Пожалуйста, заполните все поля и выберите файл';
-                status.className = 'status error';
+            if (!url || !region) {
+                showStatus('Пожалуйста, заполните все поля', false);
                 return;
             }
             
             isSending = true;
-            button.disabled = true;
-            button.innerHTML = 'Отправка... <span class="spinner"></span>';
-            const logLine = log('Отправляю файл...', true);
-            status.className = 'status';
+            updateSendButton();
             
-            fetch('/api/send', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    url: url,
-                    username: username,
-                    password: password,
-                    file: fileSelect.value
+            // Получаем список файлов для выбранного региона
+            fetch('/files')
+                .then(response => response.json())
+                .then(files => {
+                    // Фильтруем файлы только для выбранного региона
+                    const regionFiles = files.filter(file => file.startsWith(region + '/Ukios/'));
+                    
+                    if (regionFiles.length === 0) {
+                        showStatus('Нет файлов для отправки', false);
+                        isSending = false;
+                        updateSendButton();
+                        return;
+                    }
+                    
+                    // Отправляем каждый файл
+                    let successCount = 0;
+                    let errorCount = 0;
+                    
+                    const sendNextFile = (index) => {
+                        if (index >= regionFiles.length) {
+                            // Все файлы отправлены
+                            isSending = false;
+                            updateSendButton();
+                            showStatus(`Отправка завершена. Успешно: ${successCount}, Ошибок: ${errorCount}`, successCount > 0);
+                            return;
+                        }
+                        
+                        const file = regionFiles[index];
+                        log(`Отправка файла: ${file}`);
+                        
+                        fetch('/api/send', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                url: url,
+                                region: region,
+                                file: file
+                            })
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                successCount++;
+                                log(`Файл ${file} успешно отправлен`, 'success');
+                            } else {
+                                errorCount++;
+                                log(`Ошибка при отправке файла ${file}: ${data.message}`, 'error');
+                            }
+                            // Отправляем следующий файл
+                            sendNextFile(index + 1);
+                        })
+                        .catch(error => {
+                            errorCount++;
+                            log(`Ошибка при отправке файла ${file}: ${error.message}`, 'error');
+                            // Отправляем следующий файл
+                            sendNextFile(index + 1);
+                        });
+                    };
+                    
+                    // Начинаем отправку первого файла
+                    sendNextFile(0);
                 })
-            })
-            .then(response => response.json())
-            .then(data => {
-                // Удаляем спиннер из предыдущей строки
-                const spinner = logLine.querySelector('.console-spinner');
-                if (spinner) spinner.remove();
-                
-                log(`Ответ сервера: ${data.message}`, data.success ? 'success' : 'error');
-                
-                if (data.success) {
-                    status.textContent = 'Файл успешно отправлен';
-                    status.className = 'status success';
-                } else {
-                    status.textContent = data.message || 'Ошибка при отправке';
-                    status.className = 'status error';
-                }
-            })
-            .catch(error => {
-                // Удаляем спиннер из предыдущей строки
-                const spinner = logLine.querySelector('.console-spinner');
-                if (spinner) spinner.remove();
-                
-                log(`Ошибка: ${error.message}`, 'error');
-                status.textContent = `Ошибка: ${error.message}`;
-                status.className = 'status error';
-            })
-            .finally(() => {
-                isSending = false;
-                button.disabled = false;
-                button.textContent = 'Отправить';
-            });
+                .catch(error => {
+                    console.error('Ошибка при получении списка файлов:', error);
+                    showStatus('Ошибка при получении списка файлов', false);
+                    isSending = false;
+                    updateSendButton();
+                });
         }
 
         function updateFileList() {
-            fetch('/files')
-                .then(response => response.json())
-                .then(data => {
-                    const select = document.getElementById('fileSelect');
-                    select.innerHTML = '<option value="">Выберите файл...</option>';
-                    data.forEach(file => {
-                        const option = document.createElement('option');
-                        option.value = file;
-                        option.textContent = file;
-                        select.appendChild(option);
-                    });
-                });
+            const region = document.getElementById('region').value;
+            if (!region) {
+                return;
+            }
         }
 
         function loadFile() {
@@ -631,12 +646,12 @@
                     statsSuccess++;
                     statsTotal++;
                     stopSpinner();
-                    log(`Файл успешно отправлен`, 'success');
+                    log(`Файл ${data.filename} успешно отправлен [${data.status}]`, 'success');
                 } else if (data.type === 'error') {
                     statsError++;
                     statsTotal++;
                     stopSpinner();
-                    log(`Ошибка при отправке файла`, 'error');
+                    log(data.message, 'error');
                 }
             } catch (error) {
                 stopSpinner();
@@ -660,13 +675,6 @@
             const interval = parseFloat(document.getElementById('interval').value);
             const duration = parseFloat(document.getElementById('duration').value);
             const url = document.getElementById('url').value;
-            const username = document.getElementById('username').value;
-            const password = document.getElementById('password').value;
-            
-            if (!url || !username || !password) {
-                showStatus('Пожалуйста, заполните все параметры запроса', 'error');
-                return;
-            }
             
             if (interval <= 0 || duration <= 0) {
                 showStatus('Интервал и продолжительность должны быть больше 0', 'error');
@@ -702,9 +710,7 @@
                 body: JSON.stringify({
                     interval: interval,
                     duration: duration,
-                    url: url,
-                    username: username,
-                    password: password
+                    url: url || null
                 })
             })
             .then(response => response.json())
@@ -761,6 +767,44 @@
                 showStatus('Ошибка подключения к серверу', 'error');
                 log(`Ошибка при остановке генерации: ${error.message}`, 'error');
             });
+        }
+
+        // Загрузка списка регионов при загрузке страницы
+        window.onload = function() {
+            console.log('Страница загружена, загружаю регионы...');
+            loadRegions();
+        };
+
+        // Загрузка списка регионов
+        function loadRegions() {
+            fetch('/api/regions')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(regions => {
+                    const regionSelect = document.getElementById('region');
+                    
+                    if (!regionSelect) {
+                        return;
+                    }
+                    
+                    regionSelect.innerHTML = '<option value="">Выберите регион...</option>';
+                    
+                    if (regions && regions.length > 0) {
+                        regions.forEach(region => {
+                            const option = document.createElement('option');
+                            option.value = region;
+                            option.textContent = region;
+                            regionSelect.appendChild(option);
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error('Ошибка при загрузке регионов:', error);
+                });
         }
     </script>
 </body>
