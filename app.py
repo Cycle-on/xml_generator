@@ -652,7 +652,7 @@ def auto_generation_worker(url=None):
                             if result.get('success'):
                                 total_files_sent += 1
                                 print(f"DEBUG: Файл {filename} успешно отправлен")
-                                log_message({'type': 'file_sent', 'current': i, 'total': len(region_files), 'filename': filename, 'status': response.status_code})
+                                log_message({'type': 'console_output', 'text': f'Файл {filename} успешно отправлен'})
                             else:
                                 print(f"DEBUG: Ошибка при отправке файла {filename}: {result.get('message')}")
                                 log_message({'type': 'error', 'message': f'Ошибка при отправке файла {filename}: {result.get("message")} [{response.status_code}]'})

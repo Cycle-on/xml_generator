@@ -623,8 +623,6 @@
                     // Выводим все сообщения о процессе
                     if (data.text.includes('Генерация файла') || 
                         data.text.includes('Отправка файла') ||
-                        data.text.includes('успешно отправлен') ||
-                        data.text.includes('Ошибка при отправке') ||
                         data.text.includes('Ожидание') ||
                         data.text.includes('Подготовка')) {
                         stopSpinner();
@@ -646,6 +644,7 @@
                     statsSuccess++;
                     statsTotal++;
                     stopSpinner();
+                    console.log('DEBUG: Получены данные о файле:', data);  // Отладочный вывод
                     log(`Файл ${data.filename} успешно отправлен [${data.status}]`, 'success');
                 } else if (data.type === 'error') {
                     statsError++;
