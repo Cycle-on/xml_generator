@@ -2,7 +2,11 @@ import datetime
 import random
 import time
 from datetime import timedelta as td
-from constants import *
+from constants import fill_constants
+
+fill_constants()
+from constants import ALL_PROJ_CONSTANTS, get_file_prefix, get_file_postfix
+
 from config import ukios_info, missed_info, load_config
 from config.dirs import create_dirs, clear_dir
 from constants.constants_remaker import get_next_constants
@@ -59,43 +63,44 @@ def generate_region_files(date_zero=config.date_zero, region_name: str = 'region
 
         # models_create_time = datetime.datetime.now() - dt_start
         # print("models done", models_create_time)
-        if GENERATE_UKIO:
+        if ALL_PROJ_CONSTANTS['GENERATE_UKIO']:
             ukio_file_path = create_file_from_model(ukios, filename=f'ukios_{i}', basename="Ukios",
                                                     region_name=region_name)
-            modify_xml_file_to_send(ukio_file_path, get_file_prefix(UKIO_SOAP_PREFIX),
-                                    get_file_postfix(UKIO_SOAP_POSTFIX))
+            modify_xml_file_to_send(ukio_file_path, get_file_prefix(ALL_PROJ_CONSTANTS['UKIO_SOAP_PREFIX']),
+                                    get_file_postfix(ALL_PROJ_CONSTANTS['UKIO_SOAP_POSTFIX']))
             print('start check ukio with wsdl fields')
             check_fields_by_file_path(ukio_file_path, 'wsdl_4_3.wsdl')
-        if GENERATE_MISSED_CALLS:
+        if ALL_PROJ_CONSTANTS['GENERATE_MISSED_CALLS']:
             missed_calls_file_path = create_file_from_model(missed, filename=f'missed_{i}', basename='MissedCalls',
                                                             region_name=region_name)
-            modify_xml_file_to_send(missed_calls_file_path, get_file_prefix(MISSED_SOAP_PREFIX),
-                                    get_file_postfix(MISSED_SOAP_POSTFIX))
-        if GENERATE_ARM_WORK:
+            modify_xml_file_to_send(missed_calls_file_path, get_file_prefix(ALL_PROJ_CONSTANTS['MISSED_SOAP_PREFIX']),
+                                    get_file_postfix(ALL_PROJ_CONSTANTS['MISSED_SOAP_POSTFIX']))
+        if ALL_PROJ_CONSTANTS['GENERATE_ARM_WORK']:
             arm_works = ArmWorks(
                 armWork=ARM_WORK
             )
 
             arm_works_file_path = create_file_from_model(arm_works, f"ArmWork_{i}", basename="ArmWorks",
                                                          region_name=region_name)
-            modify_xml_file_to_send(arm_works_file_path, get_file_prefix(ARMWORK_SOAP_PREFIX),
-                                    get_file_postfix(ARMWORK_SOAP_POSTFIX))
-        if GENERATE_OPERATOR_WORKS:
+            modify_xml_file_to_send(arm_works_file_path, get_file_prefix(ALL_PROJ_CONSTANTS['ARMWORK_SOAP_PREFIX']),
+                                    get_file_postfix(ALL_PROJ_CONSTANTS['ARMWORK_SOAP_POSTFIX']))
+        if ALL_PROJ_CONSTANTS['GENERATE_OPERATOR_WORKS']:
             operator_works = OperatorWorks(
                 operatorWork=OPERATOR_WORK
             )
             operator_works_file_path = create_file_from_model(operator_works, f"OperatorWork_{i}",
                                                               basename="OperatorWorks", region_name=region_name)
-            modify_xml_file_to_send(operator_works_file_path, get_file_prefix(OPERATOR_WORK_SOAP_PREFIX),
-                                    OPERATOR_WORK_SOAP_POSTFIX)
+            modify_xml_file_to_send(operator_works_file_path,
+                                    get_file_prefix(ALL_PROJ_CONSTANTS['OPERATOR_WORK_SOAP_PREFIX']),
+                                    ALL_PROJ_CONSTANTS['OPERATOR_WORK_SOAP_POSTFIX'])
 
-        if GENERATE_INCIDENT_TYPES:
+        if ALL_PROJ_CONSTANTS['GENERATE_INCIDENT_TYPES']:
             incident_types = IncidentTypes(incidentType=ALL_PROJ_CONSTANTS['INCIDENT_TYPES_LIST'])
             incident_types_file_path = create_file_from_model(incident_types, f'incident_types_{i}',
                                                               'IncidentTypes', region_name=region_name)
             modify_xml_file_to_send(incident_types_file_path,
-                                    get_file_prefix(INCIDENT_SOAP_PREFIX),
-                                    get_file_postfix(INCIDENT_SOAP_POSTFIX))
+                                    get_file_prefix(ALL_PROJ_CONSTANTS['INCIDENT_SOAP_PREFIX']),
+                                    get_file_postfix(ALL_PROJ_CONSTANTS['INCIDENT_SOAP_POSTFIX']))
 
     print("finish time", datetime.datetime.now() - dt_start)
 
@@ -126,7 +131,7 @@ def main():
     clear_dir()
     if config.send_files:
 
-        for _ in range(ALL_TIME // SENDER_DELAY):
+        for _ in range(ALL_PROJ_CONSTANTS['ALL_TIME'] // ALL_PROJ_CONSTANTS['SENDER_DELAY']):
             ukios_info.clear()
             missed_info.clear()
 
@@ -138,7 +143,7 @@ def main():
                 # print("ff", ALL_PROJ_CONSTANTS["xml_count_per_file"])
                 ALL_PROJ_CONSTANTS["files_count"] = 1
 
-            if TAKE_CONSTANTS_FROM_FILE:
+            if ALL_PROJ_CONSTANTS['TAKE_CONSTANTS_FROM_FILE']:
                 generate_region_files('region1')
                 if config.send_files:
                     send_files('region1')
@@ -154,10 +159,10 @@ def main():
                     generate_region_files(region_name=constants_dict["region_name/constant name"])
                     if config.send_files:
                         send_files(constants_dict["region_name/constant name"])
-            time.sleep(SENDER_DELAY)
+            time.sleep(ALL_PROJ_CONSTANTS['SENDER_DELAY'])
     else:
 
-        if TAKE_CONSTANTS_FROM_FILE:
+        if ALL_PROJ_CONSTANTS['TAKE_CONSTANTS_FROM_FILE']:
             generate_region_files(region_name='region1')
 
             if config.send_files:

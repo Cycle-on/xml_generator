@@ -80,12 +80,11 @@ def generate_card_from_eos_model(eos_value_dict: dict, date_from: datetime.datet
                     dtPsychoEnd=start_psycho + td(minutes=int(psycho_time), seconds=psycho_time * 60 % 60)
                 )
             case "card01":
-                # print(ALL_PROJ_CONSTANTS)
                 return Card01(
                     dtCreate=dt_create,
                     strIncidentType=generate_card_incident_types_from_list([eos_value_dict]),
                     strObject=random.choice(ALL_PROJ_CONSTANTS['OBJECT_FOR_CARD01']),
-                    strStoreys=random.choice(ALL_PROJ_CONSTANTS['INCIDENT_TYPES_FOR_CARD01'])['name'],
+                    strStoreys=ALL_PROJ_CONSTANTS['INCIDENT_TYPES_FOR_CARD01'].index(random.choice(ALL_PROJ_CONSTANTS['INCIDENT_TYPES_FOR_CARD01'])),
                     bObjectGasified=check_event_probability(ALL_PROJ_CONSTANTS['OBJECT_GASIFIED_PROBABILITY']),
                     strEstimation=str(int(np.random.normal(ALL_PROJ_CONSTANTS['ESTIMATION'],
                                                            ALL_PROJ_CONSTANTS['ESTIMATION_SCALE']))),

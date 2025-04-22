@@ -7,6 +7,10 @@ from config.config_data import ALL_PROJ_CONSTANTS
 from schemas import BaseModelWithId
 
 
+def get_string_eos():
+    return
+
+
 class StringEosType(dict, Enum):
     s112 = {
         'name': 'Система 112',
