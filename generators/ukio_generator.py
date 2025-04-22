@@ -17,7 +17,7 @@ from generators.operators_and_arms import get_operator
 from generators.phonecall_generator import generate_phone_data, generate_phone_date, generate_missed_call
 from generators.random_generators import get_address_by_code, get_random_name, get_random_telephone_number
 from schemas.phonecall import PhoneCall, redirectCall, MissedCall
-from schemas.string_eos import StringEosType, Consult, Psycho, Operator
+from schemas.string_eos import StringEosType, Consult, Psycho, Operator, get_string_eos_type
 from schemas.string_schemas import CardStates
 from schemas.ukio_model import Ukio, TransferItem, CallContent
 
@@ -182,9 +182,9 @@ def generate_ukio_phone_call_data(call_date: datetime.datetime) -> Ukio | Missed
         if not isinstance(ukio_eos_card, Psycho) and not isinstance(ukio_eos_card, Consult):
             # creating redirect call
             eos_id = ''
-            for eos_card in StringEosType:
+            for eos_card in get_string_eos_type().model_dump()['values']:
                 # linear search for stringEosType to find eos class type index
-                if eos_card.get('class').lower() == eos_string_class_name.lower():
+                if eos_card.get('class_').lower() == eos_string_class_name.lower():
                     eos_id = str(eos_card['id'])
                     break
 

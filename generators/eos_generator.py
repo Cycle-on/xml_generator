@@ -48,8 +48,8 @@ def generate_card_from_eos_model(eos_value_dict: dict, date_from: datetime.datet
     :param date_from
     :return:
     """
-    if eos_value_dict.get('class'):
-        eos_class = eos_value_dict['class']
+    if eos_value_dict.get('class_'):
+        eos_class = eos_value_dict['class_']
         dt_create = date_from + td(
             seconds=get_distribution_var_by_work_type(
                 work_type=ALL_PROJ_CONSTANTS['EOS_CARD_CREATE_WORK_TYPE'],
@@ -167,8 +167,8 @@ def generate_random_eos_list() -> list[StringEosType]:
     :return:
     """
     eos_list = []
-    for eos_obj in StringEosType:
-        if eos_obj.value.get('p_min') is not None and eos_obj.value.get('class'):
+    for eos_obj in get_string_eos_type().model_dump()['values']:
+        if eos_obj['p_min'] is not None and eos_obj['class_']:
             # takes string_eos and check eos probability by p_min and p_max
             if check_event_probability(ALL_PROJ_CONSTANTS['EOS_SHARE_MIN'], ALL_PROJ_CONSTANTS['EOS_SHARE_MAX']):
                 if check_event_probability(eos_obj['p_min'], eos_obj['p_max']):

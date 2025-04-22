@@ -5,7 +5,7 @@ import pandas as pd
 
 from constants import ALL_PROJ_CONSTANTS
 from csv_reader import get_csv_from_url
-from schemas.string_eos import IncidentType, StringEosType
+from schemas.string_eos import IncidentType, StringEosType, get_string_eos_type
 
 list_names = [
     'INCIDENT_TYPES_FOR_CARD01', 'INCIDENT_TYPES_FOR_CARD02', 'INCIDENT_TYPES_FOR_CARD03',
@@ -41,7 +41,7 @@ ALL_PROJ_CONSTANTS['INCIDENT_TYPES_LIST']: list[IncidentType] = []
 
 
 def get_string_eos_type_id_by_eos_name(eos_name: str):
-    for el in StringEosType:
+    for el in get_string_eos_type().model_dump()['values']:
         if el['name'] == eos_name:
             return el.get("id", 0)
     return None

@@ -2,6 +2,8 @@ import datetime
 import random
 import time
 from datetime import timedelta as td
+from pprint import pprint
+
 from constants import fill_constants
 
 fill_constants()
@@ -32,11 +34,6 @@ def generate_region_files(date_zero=config.date_zero, region_name: str = 'region
     fill_incident_type_lists(region_name)
     # models_create_time = None
     # fill with the Google sheets
-    # for incident_types_list in .values():
-    # print(incident_types_list)
-    # ALL_PROJ_CONSTANTS[incident_types_list.__name__] = incident_types_list
-    # print('bb', ALL_PROJ_CONSTANTS["INCIDENT_TYPES_FOR_CARD01"])
-    # quit(118)
     fill_addresses(region_name)
     # generate dicts with info
     for i in range(ALL_PROJ_CONSTANTS.get("files_count")):
@@ -177,8 +174,7 @@ def main():
                 for k, v in ALL_PROJ_CONSTANTS.items():
                     if isinstance(v, str) and '[' in v:
                         ALL_PROJ_CONSTANTS[k] = eval(v)
-                # quit(228)
-                # print(constants_dict)
+
                 generate_region_files(region_name=constants_dict["region_name/constant name"])
 
 
