@@ -3,21 +3,23 @@ import random
 from datetime import timedelta as td
 
 from config import load_config, ukios_info, missed_info
-from config.config_data import *
-from generators.eos_generator import generate_card_from_eos_model, generate_random_eos_list, T, \
+from constants import ALL_PROJ_CONSTANTS
+from csv_parser.parse_addresses import ADDRESSES
+from csv_parser.parse_incident_types import CARDS_INDEXES_INCIDENT_TYPES
+from generators import check_event_probability, genders
+from generators.eos_generator import (
+    generate_card_from_eos_model,
+    generate_random_eos_list,
+    T,
     generate_eos_item_from_eos_list
+)
 from generators.operators_and_arms import get_operator
 from generators.phonecall_generator import generate_phone_data, generate_phone_date, generate_missed_call
-from generators import check_event_probability, genders
 from generators.random_generators import get_address_by_code, get_random_name, get_random_telephone_number
-
-from csv_parser.parse_addresses import get_random_address, ADDRESSES
-from csv_parser.parse_incident_types import CARDS_INDEXES_INCIDENT_TYPES
-
-from schemas.string_eos import StringEosType, Consult, Psycho, Operator
-from schemas.ukio_model import Ukio, TransferItem, Address, CallContent
 from schemas.phonecall import PhoneCall, redirectCall, MissedCall
-from schemas.string_schemas import IncidentTypes, CardStates, CallSource
+from schemas.string_eos import StringEosType, Consult, Psycho, Operator, get_string_eos_type
+from schemas.string_schemas import CardStates
+from schemas.ukio_model import Ukio, TransferItem, CallContent
 
 config = load_config()
 
@@ -47,7 +49,7 @@ def __generate_call_content() -> CallContent:
     """
     applicant_number = get_random_telephone_number()
     applicant_surname, applicant_name, applicant_middle_name, = get_random_name(
-        genders[check_event_probability(CALL_CONTENT_APPLICANT_MALE_PROBABILITY)])
+        genders[check_event_probability(ALL_PROJ_CONSTANTS['CALL_CONTENT_APPLICANT_MALE_PROBABILITY'])])
 
     return CallContent(
         strLastName=applicant_surname,
@@ -55,10 +57,10 @@ def __generate_call_content() -> CallContent:
         strName=applicant_name,
         strCallerContactPhone=applicant_number,
         strCgPN=applicant_number if check_event_probability(
-            CALL_NUMBER_APPLICANT_NUMBER_EQUALITY_PROBABILITY) else get_random_telephone_number(),
+            ALL_PROJ_CONSTANTS['CALL_NUMBER_APPLICANT_NUMBER_EQUALITY_PROBABILITY']) else get_random_telephone_number(),
         appResAddress=get_address_by_code()[0],
         strLanguage="ru",
-        strIncidentDescription=random.choice(INCIDENT_DESCRIPTIONS),
+        strIncidentDescription=random.choice(ALL_PROJ_CONSTANTS['INCIDENT_DESCRIPTIONS']),
         appLocAddress=get_address_by_code()[0],
     )
 
@@ -117,7 +119,7 @@ def generate_ukio_phone_call_data(call_date: datetime.datetime) -> Ukio | Missed
     ukio_dict = {}
     # create non-logic fields
     card_state = random.choice(list(CardStates))
-    incident_type = random.choice(list(IncidentTypes))
+    # incident_type = random.choice(list(IncidentTypes))
     call_source = "Номер 112"
     # create fields with some logica
 
@@ -132,16 +134,16 @@ def generate_ukio_phone_call_data(call_date: datetime.datetime) -> Ukio | Missed
     ukio_eos_cards: dict[str, T] = _check_ukio_cards(eos_type_list, phone_calls[-1].dtSend, operator)
     # start checks random events
     # missed call without ukio
-    if check_event_probability(MISSED_CALL_PROBABILITY):
+    if check_event_probability(ALL_PROJ_CONSTANTS['MISSED_CALL_PROBABILITY']):
         missed_info.append({'filename': '', 'dt_send': phone_calls[0].dtSend})
         return generate_missed_call(phone_calls[0])
     # child play ukio card
-    elif check_event_probability(CHILD_PLAY_UKIO_PROBABILITY):
+    elif check_event_probability(ALL_PROJ_CONSTANTS['CHILD_PLAY_UKIO_PROBABILITY']):
         ukio_dict['cardState'] = "child play"
         ukio_dict['bWrong'] = True
         ukio_dict['bChildPlay'] = True
     # wrong ukio card
-    elif check_event_probability(WRONG_CALLS_PROBABILITY):
+    elif check_event_probability(ALL_PROJ_CONSTANTS['WRONG_CALLS_PROBABILITY']):
         ukio_dict['cardState'] = "wrong"
         ukio_dict['bWrong'] = True
         ukio_dict['bChildPlay'] = False
@@ -160,8 +162,8 @@ def generate_ukio_phone_call_data(call_date: datetime.datetime) -> Ukio | Missed
             pass
         ukio_dict['bWrong'] = False
         ukio_dict['bChildPlay'] = False
-        ukio_dict['bChs'] = check_event_probability(CHS_PROBABILITY)
-        ukio_dict['bHumanThreat'] = check_event_probability(HUMAN_TREAT_PROBABILITY)
+        ukio_dict['bChs'] = check_event_probability(ALL_PROJ_CONSTANTS['CHS_PROBABILITY'])
+        ukio_dict['bHumanThreat'] = check_event_probability(ALL_PROJ_CONSTANTS['HUMAN_TREAT_PROBABILITY'])
 
         # logic fields
         ukio_dict['address'] = random.choice(ADDRESSES)
@@ -180,9 +182,9 @@ def generate_ukio_phone_call_data(call_date: datetime.datetime) -> Ukio | Missed
         if not isinstance(ukio_eos_card, Psycho) and not isinstance(ukio_eos_card, Consult):
             # creating redirect call
             eos_id = ''
-            for eos_card in StringEosType:
+            for eos_card in get_string_eos_type().model_dump()['values']:
                 # linear search for stringEosType to find eos class type index
-                if eos_card.get('class').lower() == eos_string_class_name.lower():
+                if eos_card.get('class_').lower() == eos_string_class_name.lower():
                     eos_id = str(eos_card['id'])
                     break
 

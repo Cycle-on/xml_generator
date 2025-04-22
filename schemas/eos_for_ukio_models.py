@@ -1,6 +1,7 @@
 import datetime
 
 from pydantic import Field
+
 from schemas import BaseModelWithId
 
 
@@ -9,7 +10,7 @@ class Card01(BaseModelWithId):
     dtCreate: datetime.datetime = None
     strIncidentType: str = None
     strObject: str = None
-    strStoreys: str = None
+    strStoreys: str | int = None
     bObjectGasified: bool = None
     strEstimation: str = None
     strObservedConsequencesFire: str = None

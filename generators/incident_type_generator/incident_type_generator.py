@@ -1,4 +1,3 @@
-import random
 from schemas.string_eos import StringEosType
 
 

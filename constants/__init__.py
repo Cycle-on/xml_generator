@@ -2,7 +2,12 @@ from .generator import *
 from .sender import *
 from .union_constants import *
 
-ALL_PROJ_CONSTANTS = globals()
+ALL_PROJ_CONSTANTS = {}
+
+
+def fill_constants():
+    global ALL_PROJ_CONSTANTS
+    ALL_PROJ_CONSTANTS = globals()
 
 
 def get_file_prefix(prefix_var_name: str):

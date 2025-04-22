@@ -4,6 +4,7 @@ from config import load_config
 import requests
 import threading
 from config.config_data import *
+from constants import *
 from constants.sender import *
 
 config = load_config()
@@ -28,49 +29,33 @@ def __send_file(region_name:str, filename: str, prefix:str):
 
     file_data = open(os.path.join(config.output_directory_name,region_name,prefix, filename), 'r', encoding='utf-8').read()
     # print("send file_data", filename)
-    session = requests.Session()
-    session.auth = (SERVER_LOGIN, SERVER_PASSWORD)
-    req = session.post(url=SERVER_ADDRESS, data=file_data, headers=headers)
-    print(req.status_code)
-    print(req.text)
-
+    response = requests.post(
+        url=config.url,
+        headers=headers,
+        data=file_data,
+        verify=False
+    )
+    if response.status_code != 200:
+        print(f"Error sending file {filename}: {response.status_code}")
+        print(response.text)
+    time.sleep(globals()['SENDER_DELAY'])
 
 
 def send_by_csv(csv_filename: str):
-    file_path = csv_filename
-
-    with open(file_path, mode='r', encoding='utf-8') as file:
-        reader = csv.DictReader(file)  # Используем DictReader для чтения в виде словарей
+    with open(csv_filename, 'r', encoding='utf-8') as f:
+        reader = csv.reader(f)
         for row in reader:
-            filename = row['filename']
-            if SENDER_WORK_TYPE == 'by_delay':
-                while 1:
-                    __send_file(filename)
-                    time.sleep(SENDER_DELAY)
-                    break
-            elif SENDER_WORK_TYPE == 'by_date':
-                date_send: datetime.datetime = datetime.datetime.strptime(row['dt_send'], '%Y-%m-%d %H:%M:%S.%f')
-                while 1:
-                    now = datetime.datetime.now()
-                    if now >= date_send:
-                        __send_file(filename)
-                        break
-                    time.sleep(0.5)
+            __send_file(row[0], row[1], row[2])
 
 
 def send_along(region_name: str):
-    csv_files_dir_path = os.path.join('files', files_prefix, region_name)
-    thread1 = threading.Thread(target=lambda: send_by_csv(os.path.join(csv_files_dir_path, 'missed_calls_to_send.csv')))
-    thread1.start()
-    thread1.join()
-
-    thread2 = threading.Thread(target=lambda: send_by_csv(os.path.join(csv_files_dir_path, 'ukios_to_send.csv')))
-    thread2.start()
-    thread2.join()
+    for prefix in [globals()['UKIO_SOAP_PREFIX'], globals()['MISSED_SOAP_PREFIX'], globals()['ARMWORK_SOAP_PREFIX'], globals()['OPERATOR_WORK_SOAP_PREFIX'], globals()['INCIDENT_SOAP_PREFIX']]:
+        for filename in os.listdir(os.path.join(config.output_directory_name,region_name,prefix)):
+            __send_file(region_name, filename, prefix)
 
 
 def main():
-    send_along()
+    pass
 
 
 if __name__ == '__main__':

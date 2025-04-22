@@ -2,8 +2,8 @@ import random
 
 import pandas as pd
 
+from constants import ALL_PROJ_CONSTANTS
 from csv_reader import get_csv_from_url
-from constants import *
 from schemas.ukio_model import Address
 
 ADDRESSES = []
@@ -28,10 +28,13 @@ def fill_addresses(region_name: str = ''):
     :return:
     """
     global ADDRESSES
-    resp: pd.Series = get_csv_from_url(ADDRESSES_URL)
-    ADDRESSES.clear()
+    resp: pd.Series = get_csv_from_url(ALL_PROJ_CONSTANTS['ADDRESSES_URL'])
+
+    # print(resp)
+    # ADDRESSES.clear()
     for el in resp:
         el = el.dropna().astype(str).to_dict()
+        # print(el)
         if el['region_name'] == region_name and region_name != '':
             ADDRESSES.append(Address(**el))
         elif region_name == '':

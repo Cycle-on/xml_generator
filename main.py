@@ -1,13 +1,19 @@
 import datetime
+import random
 import time
 from datetime import timedelta as td
+from pprint import pprint
+
+from constants import fill_constants
+
+fill_constants()
+from constants import ALL_PROJ_CONSTANTS, get_file_prefix, get_file_postfix
 
 from config import ukios_info, missed_info, load_config
 from config.dirs import create_dirs, clear_dir
-from constants import *
 from constants.constants_remaker import get_next_constants
 from csv_parser.parse_addresses import fill_addresses
-from csv_parser.parse_incident_types import fill_incident_type_lists, INCIDENT_TYPES_LIST
+from csv_parser.parse_incident_types import fill_incident_type_lists
 from file_creator import create_file_from_model
 from generators.operators_and_arms import ARM_WORK, OPERATOR_WORK, create_arms_and_operators
 from generators.ukio_generator import generate_ukio_phone_call_data
@@ -25,18 +31,18 @@ def generate_region_files(date_zero=config.date_zero, region_name: str = 'region
     create_arms_and_operators()
     date_zero = datetime.datetime.now() - td(hours=3)
     dt_start = datetime.datetime.now()
+    fill_incident_type_lists(region_name)
     # models_create_time = None
     # fill with the Google sheets
-    fill_incident_type_lists(region_name)
     fill_addresses(region_name)
     # generate dicts with info
-    for i in range(globals().get("files_count")):
+    for i in range(ALL_PROJ_CONSTANTS.get("files_count")):
         ukios_list = []
         missed_list = []
-        for j in range(globals().get("xml_count_per_file")):
+        for j in range(ALL_PROJ_CONSTANTS.get("xml_count_per_file")):
 
             u = generate_ukio_phone_call_data(date_zero)
-            date_zero += td(seconds=AVG_DELAY_BETWEEN_CALLS_TIME)
+            date_zero += td(seconds=ALL_PROJ_CONSTANTS['AVG_DELAY_BETWEEN_CALLS_TIME'])
             if u is not None:
                 if isinstance(u, Ukio):
                     ukios_list.append(u)
@@ -54,43 +60,44 @@ def generate_region_files(date_zero=config.date_zero, region_name: str = 'region
 
         # models_create_time = datetime.datetime.now() - dt_start
         # print("models done", models_create_time)
-        if GENERATE_UKIO:
+        if ALL_PROJ_CONSTANTS['GENERATE_UKIO']:
             ukio_file_path = create_file_from_model(ukios, filename=f'ukios_{i}', basename="Ukios",
                                                     region_name=region_name)
-            modify_xml_file_to_send(ukio_file_path, get_file_prefix(UKIO_SOAP_PREFIX),
-                                    get_file_postfix(UKIO_SOAP_POSTFIX))
+            modify_xml_file_to_send(ukio_file_path, get_file_prefix(ALL_PROJ_CONSTANTS['UKIO_SOAP_PREFIX']),
+                                    get_file_postfix(ALL_PROJ_CONSTANTS['UKIO_SOAP_POSTFIX']))
             print('start check ukio with wsdl fields')
             check_fields_by_file_path(ukio_file_path, 'wsdl_4_3.wsdl')
-        if GENERATE_MISSED_CALLS:
+        if ALL_PROJ_CONSTANTS['GENERATE_MISSED_CALLS']:
             missed_calls_file_path = create_file_from_model(missed, filename=f'missed_{i}', basename='MissedCalls',
                                                             region_name=region_name)
-            modify_xml_file_to_send(missed_calls_file_path, get_file_prefix(MISSED_SOAP_PREFIX),
-                                    get_file_postfix(MISSED_SOAP_POSTFIX))
-        if GENERATE_ARM_WORK:
+            modify_xml_file_to_send(missed_calls_file_path, get_file_prefix(ALL_PROJ_CONSTANTS['MISSED_SOAP_PREFIX']),
+                                    get_file_postfix(ALL_PROJ_CONSTANTS['MISSED_SOAP_POSTFIX']))
+        if ALL_PROJ_CONSTANTS['GENERATE_ARM_WORK']:
             arm_works = ArmWorks(
                 armWork=ARM_WORK
             )
 
             arm_works_file_path = create_file_from_model(arm_works, f"ArmWork_{i}", basename="ArmWorks",
                                                          region_name=region_name)
-            modify_xml_file_to_send(arm_works_file_path, get_file_prefix(ARMWORK_SOAP_PREFIX),
-                                    get_file_postfix(ARMWORK_SOAP_POSTFIX))
-        if GENERATE_OPERATOR_WORKS:
+            modify_xml_file_to_send(arm_works_file_path, get_file_prefix(ALL_PROJ_CONSTANTS['ARMWORK_SOAP_PREFIX']),
+                                    get_file_postfix(ALL_PROJ_CONSTANTS['ARMWORK_SOAP_POSTFIX']))
+        if ALL_PROJ_CONSTANTS['GENERATE_OPERATOR_WORKS']:
             operator_works = OperatorWorks(
                 operatorWork=OPERATOR_WORK
             )
             operator_works_file_path = create_file_from_model(operator_works, f"OperatorWork_{i}",
                                                               basename="OperatorWorks", region_name=region_name)
-            modify_xml_file_to_send(operator_works_file_path, get_file_prefix(OPERATOR_WORK_SOAP_PREFIX),
-                                    OPERATOR_WORK_SOAP_POSTFIX)
+            modify_xml_file_to_send(operator_works_file_path,
+                                    get_file_prefix(ALL_PROJ_CONSTANTS['OPERATOR_WORK_SOAP_PREFIX']),
+                                    ALL_PROJ_CONSTANTS['OPERATOR_WORK_SOAP_POSTFIX'])
 
-        if GENERATE_INCIDENT_TYPES:
-            incident_types = IncidentTypes(incidentType=INCIDENT_TYPES_LIST)
+        if ALL_PROJ_CONSTANTS['GENERATE_INCIDENT_TYPES']:
+            incident_types = IncidentTypes(incidentType=ALL_PROJ_CONSTANTS['INCIDENT_TYPES_LIST'])
             incident_types_file_path = create_file_from_model(incident_types, f'incident_types_{i}',
                                                               'IncidentTypes', region_name=region_name)
             modify_xml_file_to_send(incident_types_file_path,
-                                    get_file_prefix(INCIDENT_SOAP_PREFIX),
-                                    get_file_postfix(INCIDENT_SOAP_POSTFIX))
+                                    get_file_prefix(ALL_PROJ_CONSTANTS['INCIDENT_SOAP_PREFIX']),
+                                    get_file_postfix(ALL_PROJ_CONSTANTS['INCIDENT_SOAP_POSTFIX']))
 
     print("finish time", datetime.datetime.now() - dt_start)
 
@@ -120,47 +127,53 @@ def main():
     config.date_zero = datetime.datetime.now() - td(hours=3)
     clear_dir()
     if config.send_files:
-        pass
-        for _ in range(ALL_TIME // SENDER_DELAY):
+
+        for _ in range(ALL_PROJ_CONSTANTS['ALL_TIME'] // ALL_PROJ_CONSTANTS['SENDER_DELAY']):
             ukios_info.clear()
             missed_info.clear()
 
             if config.send_files:
                 # print(random.randint(sender.COEF_MIN, sender.COEF_MAX))
-                globals()["xml_count_per_file"] *= random.randint(sender.COEF_MIN, sender.COEF_MAX) / 100
-                globals()["xml_count_per_file"] = int(globals()["xml_count_per_file"])
-                # print("ff", globals()["xml_count_per_file"])
-                globals()["files_count"] = 1
+                ALL_PROJ_CONSTANTS["xml_count_per_file"] *= random.randint(ALL_PROJ_CONSTANTS['COEF_MIN'],
+                                                                           ALL_PROJ_CONSTANTS['COEF_MAX']) / 100
+                ALL_PROJ_CONSTANTS["xml_count_per_file"] = int(ALL_PROJ_CONSTANTS["xml_count_per_file"])
+                # print("ff", ALL_PROJ_CONSTANTS["xml_count_per_file"])
+                ALL_PROJ_CONSTANTS["files_count"] = 1
 
-            if TAKE_CONSTANTS_FROM_FILE:
-                generate_region_files()
+            if ALL_PROJ_CONSTANTS['TAKE_CONSTANTS_FROM_FILE']:
+                generate_region_files('region1')
                 if config.send_files:
                     send_files('region1')
             else:
                 for constants_dict in get_next_constants():
                     ukios_info.clear()
                     missed_info.clear()
-                    # GLOBALS_DICT = (globals())
-                    # GLOBALS_DICT.update(constants_dict)
-                    globals().update(constants_dict)
+                    ALL_PROJ_CONSTANTS.update(constants_dict)
+                    for k, v in ALL_PROJ_CONSTANTS.items():
+                        if isinstance(v, str) and '[' in v:
+                            ALL_PROJ_CONSTANTS[k] = eval(v)
 
                     generate_region_files(region_name=constants_dict["region_name/constant name"])
                     if config.send_files:
                         send_files(constants_dict["region_name/constant name"])
-            time.sleep(SENDER_DELAY)
+            time.sleep(ALL_PROJ_CONSTANTS['SENDER_DELAY'])
     else:
 
-        if TAKE_CONSTANTS_FROM_FILE:
-            generate_region_files()
+        if ALL_PROJ_CONSTANTS['TAKE_CONSTANTS_FROM_FILE']:
+            generate_region_files(region_name='region1')
+
             if config.send_files:
                 send_files('region1')
         else:
             for constants_dict in get_next_constants():
                 ukios_info.clear()
                 missed_info.clear()
-                # GLOBALS_DICT = (globals())
-                # GLOBALS_DICT.update(constants_dict)
-                globals().update(constants_dict)
+
+                ALL_PROJ_CONSTANTS.update(constants_dict)
+                # make lists from strings
+                for k, v in ALL_PROJ_CONSTANTS.items():
+                    if isinstance(v, str) and '[' in v:
+                        ALL_PROJ_CONSTANTS[k] = eval(v)
 
                 generate_region_files(region_name=constants_dict["region_name/constant name"])
 

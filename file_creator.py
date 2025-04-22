@@ -38,6 +38,7 @@ def __generate_xml_from_pydantic(root: ET.Element, model: dict, name='Ukio'):
     :param name:name in the xml file
     :return:
     """
+    # print(root, name, model)
     if not name.startswith('s112:'):
         name = "s112:" + name
     sub_root = ET.SubElement(root, name)
@@ -46,7 +47,6 @@ def __generate_xml_from_pydantic(root: ET.Element, model: dict, name='Ukio'):
         if feature_name == 'PhoneCallId':
             feature_name = __down_first_letter(feature_name)
         if feature_name in up_first_verb_schemas:
-
             feature_name = __up_first_letter(feature_name)
         if feature_value is None:
             continue
@@ -62,12 +62,11 @@ def __generate_xml_from_pydantic(root: ET.Element, model: dict, name='Ukio'):
             continue
 
         elif isinstance(feature_value, list):
-            # print(feature_name)
-
             for value in feature_value:
-
                 if isinstance(value, str) or isinstance(value, int):
                     # feature_name = f"s112:{feature_name}"
+                    if not feature_name.startswith('s112:'):
+                        feature_name = "s112:" + feature_name
                     el = ET.SubElement(sub_root, feature_name)
                     el.text = str(value)
 

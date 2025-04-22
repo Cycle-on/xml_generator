@@ -1,13 +1,21 @@
-from constants import files_prefix
-from schemas.string_eos import StringEosType, Operator, Consult, Psycho
-
-from schemas.eos_for_ukio_models import *
-from schemas.string_schemas import CallSource, IncidentTypes, CardStates, EosResourceUnitNames
-from schemas.phonecall import PhoneCall
-
-from pydantic import Field, BaseModel
-from schemas import BaseModelWithId
+import datetime
 from decimal import Decimal
+
+from pydantic import BaseModel, Field
+
+from constants import ALL_PROJ_CONSTANTS
+from schemas import BaseModelWithId
+from schemas.eos_for_ukio_models import (
+    Card02,
+    Card01,
+    Card03,
+    Card04,
+    CardAT,
+    CardCommServ
+)
+from schemas.phonecall import PhoneCall
+from schemas.string_eos import StringEosType, Operator, Consult, Psycho
+from schemas.string_schemas import CardStates
 
 
 class TransferItem(BaseModelWithId):
@@ -169,7 +177,8 @@ class Address(BaseModelWithId):
 
 
 class Ukio(BaseModelWithId):
-    globalId: str = Field(default_factory=lambda: f"{files_prefix}_{Ukio._BaseModelWithId__get_next_id()}")
+    globalId: str = Field(
+        default_factory=lambda: f"{ALL_PROJ_CONSTANTS['files_prefix']}_{Ukio._BaseModelWithId__get_next_id()}")
     parentGlobalId: str = None
     strCardState: CardStates = None
     strIncidentType: str = None
