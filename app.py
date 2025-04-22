@@ -5,6 +5,13 @@ import os
 import base64
 import requests
 import xml.etree.ElementTree as ET
+
+from constants import fill_constants
+
+fill_constants()
+from constants import ALL_PROJ_CONSTANTS, get_file_prefix, get_file_postfix
+
+from config import ukios_info, missed_info, load_config
 from main import main, generate_region_files, clear_dir
 from constants.constants_remaker import get_next_constants
 from threading import Thread
@@ -185,11 +192,10 @@ def generate():
             clear_dir()
             print("[DEBUG] Директория очищена")
             
-            # Пересоздаем константы генератора
+            """ # Пересоздаем константы генератора
             print("[DEBUG] Вызов reset_generator_constants()")
             reset_generator_constants()
-            print("[DEBUG] reset_generator_constants() завершен")
-            
+            print("[DEBUG] reset_generator_constants() завершен")"""
             # Выводим сообщение о начале генерации
             yield f"data: Начинаю генерацию...\n\n"
             
@@ -204,7 +210,23 @@ def generate():
                     print("[DEBUG] Вызов get_next_constants()")
                     for constants_dict in get_next_constants():
                         print(f"[DEBUG] Обработка констант для региона: {constants_dict.get('region_name/constant name', 'region1')}")
-                        globals().update(constants_dict)
+                        
+                        # Обновляем константы перед очисткой словарей
+                        ALL_PROJ_CONSTANTS.update(constants_dict)
+                        # make lists from strings
+                        for k, v in ALL_PROJ_CONSTANTS.items():
+                            if isinstance(v, str) and '[' in v:
+                                ALL_PROJ_CONSTANTS[k] = eval(v)
+                        
+                        # Проверяем, что важные константы определены и не пустые
+                        if 'INCIDENT_TYPES_FOR_CARD01' not in ALL_PROJ_CONSTANTS or not ALL_PROJ_CONSTANTS['INCIDENT_TYPES_FOR_CARD01']:
+                            print("[WARNING] INCIDENT_TYPES_FOR_CARD01 не определена или пуста, устанавливаем значение по умолчанию")
+                            ALL_PROJ_CONSTANTS['INCIDENT_TYPES_FOR_CARD01'] = ['Пожар', 'Взрыв', 'Обрушение']  # Примерное значение по умолчанию
+                        
+                        # Теперь очищаем словари
+                        ukios_info.clear()
+                        missed_info.clear()
+                        
                         region_name = constants_dict.get("region_name/constant name", "region1")
                         print(f"[DEBUG] Генерация файлов для региона: {region_name}")
                         generate_region_files(region_name=region_name)
@@ -565,10 +587,11 @@ def auto_generation_worker(url=None):
                 clear_dir()
                 print("DEBUG: Директория очищена")
                 
-                # Пересоздаем константы генератора
+               
+                ''' # Пересоздаем константы генератора
                 print("DEBUG: Вызов reset_generator_constants()")
                 reset_generator_constants()
-                print("DEBUG: reset_generator_constants() завершен")
+                print("DEBUG: reset_generator_constants() завершен")'''
                 
                 # Генерируем файлы в зависимости от значения TAKE_CONSTANTS_FROM_FILE
                 if TAKE_CONSTANTS_FROM_FILE:
@@ -581,7 +604,23 @@ def auto_generation_worker(url=None):
                         print("DEBUG: Вызов get_next_constants()")
                         for constants_dict in get_next_constants():
                             print(f"DEBUG: Обработка констант для региона: {constants_dict.get('region_name/constant name', 'region1')}")
-                            globals().update(constants_dict)
+                            
+                            # Обновляем константы перед очисткой словарей
+                            ALL_PROJ_CONSTANTS.update(constants_dict)
+                            # make lists from strings
+                            for k, v in ALL_PROJ_CONSTANTS.items():
+                                if isinstance(v, str) and '[' in v:
+                                    ALL_PROJ_CONSTANTS[k] = eval(v)
+                            
+                            # Проверяем, что важные константы определены и не пустые
+                            if 'INCIDENT_TYPES_FOR_CARD01' not in ALL_PROJ_CONSTANTS or not ALL_PROJ_CONSTANTS['INCIDENT_TYPES_FOR_CARD01']:
+                                print("WARNING: INCIDENT_TYPES_FOR_CARD01 не определена или пуста, устанавливаем значение по умолчанию")
+                                ALL_PROJ_CONSTANTS['INCIDENT_TYPES_FOR_CARD01'] = ['Пожар', 'Взрыв', 'Обрушение']  # Примерное значение по умолчанию
+                            
+                            # Теперь очищаем словари
+                            ukios_info.clear()
+                            missed_info.clear()
+                            
                             region_name = constants_dict.get("region_name/constant name", "region1")
                             print(f"DEBUG: Генерация файлов для региона: {region_name}")
                             generate_region_files(region_name=region_name)
@@ -698,7 +737,7 @@ def auto_generation_worker(url=None):
             print(f"DEBUG: Трассировка: {traceback.format_exc()}")
             log_message({'type': 'error', 'message': f'Ошибка в цикле генерации: {str(e)}'})
             time.sleep(1)
-
+'''
 def reset_generator_constants():
     """Пересоздает случайные константы генератора"""
     import main
@@ -719,6 +758,6 @@ def reset_generator_constants():
         globals()["xml_count_per_file"] = 5
         sys.modules['main'].xml_count_per_file = 5
         print("[DEBUG] Установлено значение по умолчанию: 5")
-
+'''
 if __name__ == '__main__':
     app.run(debug=True) 
