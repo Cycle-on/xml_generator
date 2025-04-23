@@ -59,7 +59,7 @@ def get_credentials():
                             'login': login,
                             'password': password
                         })
-                        print(f"Добавлена пара логин-пароль: {login}")
+                        #print(f"Добавлена пара логин-пароль: {login}")
     except Exception as e:
         print(f"Ошибка при чтении .env файла: {str(e)}")
     
@@ -97,7 +97,7 @@ def print_colored(text, color):
 def print_request_details(url, headers, data):
     print_colored("\n=== Request Details ===", Colors.HEADER)
     print_colored(f"URL: {url}", Colors.BLUE)
-    print_colored("\nHeaders:", Colors.CYAN)
+    #print_colored("\nHeaders:", Colors.CYAN)
     for key, value in headers.items():
         if key.lower() == 'authorization':
             # Mask the password in the Authorization header
@@ -113,17 +113,17 @@ def print_request_details(url, headers, data):
                 print_colored(f"{key}: {value}", Colors.CYAN)
         else:
             print_colored(f"{key}: {value}", Colors.CYAN)
-    print_colored("\nRequest Body:", Colors.GREEN)
-    print_colored(data, Colors.GREEN)
+    #print_colored("\nRequest Body:", Colors.GREEN)
+    #print_colored(data, Colors.GREEN)
 
 def print_response_details(response):
     print_colored("\n=== Response Details ===", Colors.HEADER)
     print_colored(f"Status Code: {response.status_code}", Colors.YELLOW)
-    print_colored("\nResponse Headers:", Colors.CYAN)
+    #print_colored("\nResponse Headers:", Colors.CYAN)
     for key, value in response.headers.items():
         print_colored(f"{key}: {value}", Colors.CYAN)
-    print_colored("\nResponse Body:", Colors.GREEN)
-    print_colored(response.text, Colors.GREEN)
+    #print_colored("\nResponse Body:", Colors.GREEN)
+    #print_colored(response.text, Colors.GREEN)
 
 class OutputCapture:
     def __init__(self):
