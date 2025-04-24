@@ -112,7 +112,7 @@ def print_colored(text, color):
 def print_request_details(url, headers, data):
     print_colored("\n=== Request Details ===", Colors.HEADER)
     print_colored(f"URL: {url}", Colors.BLUE)
-    #print_colored("\nHeaders:", Colors.CYAN)
+    print_colored("\nHeaders:", Colors.CYAN)
     for key, value in headers.items():
         if key.lower() == 'authorization':
             # Mask the password in the Authorization header
@@ -128,8 +128,8 @@ def print_request_details(url, headers, data):
                 print_colored(f"{key}: {value}", Colors.CYAN)
         else:
             print_colored(f"{key}: {value}", Colors.CYAN)
-    #print_colored("\nRequest Body:", Colors.GREEN)
-    #print_colored(data, Colors.GREEN)
+    print_colored("\nRequest Body:", Colors.GREEN)
+    print_colored(data, Colors.GREEN)
 
 def print_response_details(response):
     print_colored("\n=== Response Details ===", Colors.HEADER)
@@ -388,7 +388,7 @@ def send_file():
         
         try:
             print_colored(f"\n[Отправка файла: {filename}]", Colors.BOLD)
-            print_request_details(url, headers, content)
+            #print_request_details(url, headers, content)
             
             response = requests.post(
                 url,
@@ -398,12 +398,12 @@ def send_file():
                 verify=False
             )
             
-            print_response_details(response)
+            #print_response_details(response)
             
             if response.status_code == 200:
                 return jsonify({
                     'success': True,
-                    'message': 'Файл успешно отправлен'
+                    'message': f'Файл успешно отправлен ({response.status_code})'
                 })
             else:
                 return jsonify({
@@ -639,17 +639,17 @@ def auto_generation_worker(url=None):
             
             try:
                 # Очищаем директорию перед генерацией
-                print("DEBUG: Очистка директории")
+               
                 clear_dir()
-                print("DEBUG: Директория очищена")
+                
                 
                 # Генерируем файлы
                 if TAKE_CONSTANTS_FROM_FILE:
-                    print("DEBUG: TAKE_CONSTANTS_FROM_FILE = True, вызываем generate_region_files()")
+                    #print("DEBUG: TAKE_CONSTANTS_FROM_FILE = True, вызываем generate_region_files()")
                     generate_region_files()
-                    print("DEBUG: generate_region_files() завершен")
+                    #print("DEBUG: generate_region_files() завершен")
                 else:
-                    print("DEBUG: TAKE_CONSTANTS_FROM_FILE = False, получаем константы из get_next_constants()")
+                   # print("DEBUG: TAKE_CONSTANTS_FROM_FILE = False, получаем константы из get_next_constants()")
                     try:
                         for constants_dict in get_next_constants():
                             region_name = constants_dict.get("region_name/constant name", "region1")
@@ -722,7 +722,7 @@ def auto_generation_worker(url=None):
                         }
                         
                         print_colored(f"\n[Отправка файла: {filename}]", Colors.BOLD)
-                        print_request_details(url, headers, content)
+                        #print_request_details(url, headers, content)
                         
                         response = requests.post(
                             url,
@@ -732,7 +732,7 @@ def auto_generation_worker(url=None):
                             verify=False
                         )
                         
-                        print_response_details(response)
+                        #print_response_details(response)
                         
                         if response.status_code == 200:
                             total_files_sent += 1
