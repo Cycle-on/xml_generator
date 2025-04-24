@@ -1,10 +1,11 @@
-from flask import Flask, render_template, Response, jsonify, stream_with_context, request
+from flask import Flask, render_template, Response, jsonify, stream_with_context, request, redirect, url_for, flash
 import io
 import sys
 import os
 import base64
 import requests
 import xml.etree.ElementTree as ET
+from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 
 from constants import fill_constants
 
@@ -29,6 +30,20 @@ load_dotenv()
 # TAKE_CONSTANTS_FROM_FILE = True  # Если True - берем константы из файла, если False - из get_next_constants()
 
 app = Flask(__name__, template_folder='web_service/templates')
+app.secret_key = os.getenv('SECRET_KEY', 'your-secret-key-here')
+
+# Настройка Flask-Login
+login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.login_view = 'login'
+
+class User(UserMixin):
+    def __init__(self, id):
+        self.id = id
+
+@login_manager.user_loader
+def load_user(user_id):
+    return User(user_id)
 
 # Путь к директории с файлами
 FILES_DIR = os.path.join('files', 'TEST')
@@ -170,11 +185,33 @@ def get_ukios_files():
     
     return sorted(files)
 
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        username = request.form.get('username')
+        password = request.form.get('password')
+        
+        if username == os.getenv('ADMIN_USERNAME', 'xml-sender') and password == os.getenv('ADMIN_PASSWORD', 'o7_5nDUJkp'):
+            user = User(username)
+            login_user(user)
+            return redirect(url_for('index'))
+        else:
+            flash('Неверное имя пользователя или пароль')
+    return render_template('login.html')
+
+@app.route('/logout')
+@login_required
+def logout():
+    logout_user()
+    return redirect(url_for('login'))
+
 @app.route('/')
+@login_required
 def index():
     return render_template('index.html')
 
 @app.route('/generate')
+@login_required
 def generate():
     def generate_output():
         capture = OutputCapture()
@@ -269,10 +306,12 @@ def generate():
                    })
 
 @app.route('/files')
+@login_required
 def list_files():
     return jsonify(get_ukios_files())
 
 @app.route('/file/<path:filename>')
+@login_required
 def get_file(filename):
     try:
         file_path = os.path.join('files', 'TEST', filename)
@@ -286,6 +325,7 @@ def get_file(filename):
         return f"Ошибка при чтении файла: {str(e)}", 500
 
 @app.route('/test-server', methods=['POST'])
+@login_required
 def test_server():
     success_response = '''<?xml version="1.0" encoding="utf-8"?>
 <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ens="http://system112.ru/112/integration.wsdl" xmlns:ins="http://system112.ru/112/integration" xmlns:jxb="http://java.sun.com/xml/ns/jaxb">
@@ -298,12 +338,14 @@ def test_server():
     return success_response, 200, {'Content-Type': 'text/xml;charset=UTF-8'}
 
 @app.route('/api/regions')
+@login_required
 def get_regions():
     regions = get_available_regions()
     print(f"API /api/regions: возвращаю регионы: {regions}")
     return jsonify(regions)
 
 @app.route('/api/send', methods=['POST'])
+@login_required
 def send_file():
     try:
         data = request.get_json()
@@ -419,6 +461,7 @@ def log_message(message):
         callback(message)
 
 @app.route('/api/auto-generate', methods=['POST'])
+@login_required
 def start_auto_generation():
     global auto_generation_thread, auto_generation_running, auto_generation_start_time, auto_generation_end_time, auto_generation_interval, total_files_sent
     
@@ -450,6 +493,7 @@ def start_auto_generation():
     })
 
 @app.route('/api/auto-generate/stop', methods=['POST'])
+@login_required
 def stop_auto_generation():
     global auto_generation_running
     
@@ -466,6 +510,7 @@ def stop_auto_generation():
     })
 
 @app.route('/api/auto-generate/status', methods=['GET'])
+@login_required
 def get_auto_generation_status():
     if not auto_generation_running:
         return jsonify({
@@ -484,6 +529,7 @@ def get_auto_generation_status():
     })
 
 @app.route('/api/auto-generate/logs')
+@login_required
 def auto_generate_logs():
     def generate_logs():
         try:
@@ -531,6 +577,21 @@ def auto_generate_logs():
     
     return response
 
+def get_generated_regions():
+    """Получает список фактически сгенерированных регионов из директории"""
+    regions = []
+    base_path = os.path.join('files', 'TEST')
+    
+    if not os.path.exists(base_path):
+        return regions
+        
+    for region in os.listdir(base_path):
+        region_path = os.path.join(base_path, region, 'Ukios')
+        if os.path.exists(region_path) and os.listdir(region_path):
+            regions.append(region)
+    
+    return sorted(regions)
+
 def auto_generation_worker(url=None):
     global auto_generation_running, total_files_sent
     total_files_sent = 0
@@ -542,10 +603,6 @@ def auto_generation_worker(url=None):
     if not url:
         url = os.getenv('TEST_SERVER_URL', 'http://localhost:5000/test-server')
     print(f"DEBUG: Используется URL: {url}")
-    
-    # Получаем список всех доступных регионов
-    available_regions = get_available_regions()
-    print(f"DEBUG: Доступные регионы: {available_regions}")
     
     while auto_generation_running:
         try:
@@ -575,7 +632,6 @@ def auto_generation_worker(url=None):
             sys.stderr = capture
             
             def output_callback(text):
-                # Пропускаем отладочные сообщения, чтобы избежать рекурсии
                 if not text.startswith("DEBUG:"):
                     log_message({'type': 'console_output', 'text': text})
             
@@ -587,13 +643,7 @@ def auto_generation_worker(url=None):
                 clear_dir()
                 print("DEBUG: Директория очищена")
                 
-               
-                ''' # Пересоздаем константы генератора
-                print("DEBUG: Вызов reset_generator_constants()")
-                reset_generator_constants()
-                print("DEBUG: reset_generator_constants() завершен")'''
-                
-                # Генерируем файлы в зависимости от значения TAKE_CONSTANTS_FROM_FILE
+                # Генерируем файлы
                 if TAKE_CONSTANTS_FROM_FILE:
                     print("DEBUG: TAKE_CONSTANTS_FROM_FILE = True, вызываем generate_region_files()")
                     generate_region_files()
@@ -601,36 +651,12 @@ def auto_generation_worker(url=None):
                 else:
                     print("DEBUG: TAKE_CONSTANTS_FROM_FILE = False, получаем константы из get_next_constants()")
                     try:
-                        print("DEBUG: Вызов get_next_constants()")
                         for constants_dict in get_next_constants():
-                            print(f"DEBUG: Обработка констант для региона: {constants_dict.get('region_name/constant name', 'region1')}")
-                            
-                            # Обновляем константы перед очисткой словарей
-                            ALL_PROJ_CONSTANTS.update(constants_dict)
-                            # make lists from strings
-                            for k, v in ALL_PROJ_CONSTANTS.items():
-                                if isinstance(v, str) and '[' in v:
-                                    ALL_PROJ_CONSTANTS[k] = eval(v)
-                            
-                            # Проверяем, что важные константы определены и не пустые
-                            if 'INCIDENT_TYPES_FOR_CARD01' not in ALL_PROJ_CONSTANTS or not ALL_PROJ_CONSTANTS['INCIDENT_TYPES_FOR_CARD01']:
-                                print("WARNING: INCIDENT_TYPES_FOR_CARD01 не определена или пуста, устанавливаем значение по умолчанию")
-                                ALL_PROJ_CONSTANTS['INCIDENT_TYPES_FOR_CARD01'] = ['Пожар', 'Взрыв', 'Обрушение']  # Примерное значение по умолчанию
-                            
-                            # Теперь очищаем словари
-                            ukios_info.clear()
-                            missed_info.clear()
-                            
                             region_name = constants_dict.get("region_name/constant name", "region1")
                             print(f"DEBUG: Генерация файлов для региона: {region_name}")
                             generate_region_files(region_name=region_name)
-                            print(f"DEBUG: Генерация файлов для региона {region_name} завершена")
                     except Exception as e:
                         print(f"DEBUG: Ошибка при получении констант: {str(e)}")
-                        print(f"DEBUG: Тип ошибки: {type(e).__name__}")
-                        import traceback
-                        print(f"DEBUG: Трассировка: {traceback.format_exc()}")
-                        log_message({'type': 'console_output', 'text': f'Ошибка при получении констант: {str(e)}. Используем значение по умолчанию.'})
                         generate_region_files()
                 
             finally:
@@ -638,31 +664,35 @@ def auto_generation_worker(url=None):
                 sys.stderr = capture.stderr
                 capture.remove_callback(output_callback)
             
-            # Для каждого региона отправляем его файлы
-            for current_region in available_regions:
+            # Получаем список фактически сгенерированных регионов
+            generated_regions = get_generated_regions()
+            print(f"DEBUG: Сгенерированные регионы: {generated_regions}")
+            
+            # Для каждого сгенерированного региона ищем соответствующий логин/пароль и отправляем файлы
+            for region in generated_regions:
                 if not auto_generation_running:
                     break
                     
-                print(f"DEBUG: Обработка региона: {current_region}")
-                log_message({'type': 'console_output', 'text': f'Обработка региона: {current_region}'})
+                print(f"DEBUG: Обработка региона: {region}")
+                log_message({'type': 'console_output', 'text': f'Обработка региона: {region}'})
                 
                 # Получаем пароль для текущего региона
-                password = get_password_for_login(current_region)
+                password = get_password_for_login(region)
                 if not password:
-                    print(f"DEBUG: Не найден пароль для региона {current_region}")
-                    log_message({'type': 'console_output', 'text': f'Не найден пароль для региона {current_region}'})
+                    print(f"DEBUG: Не найден пароль для региона {region}")
+                    log_message({'type': 'console_output', 'text': f'Не найден пароль для региона {region}'})
                     continue
                 
                 # Получаем список файлов для текущего региона
                 files = get_ukios_files()
-                region_files = [f for f in files if f.startswith(f"{current_region}/Ukios/")]
+                region_files = [f for f in files if f.startswith(f"{region}/Ukios/")]
                 
                 if not region_files:
-                    print(f"DEBUG: Нет файлов для региона {current_region}")
-                    log_message({'type': 'console_output', 'text': f'Нет файлов для региона {current_region}'})
+                    print(f"DEBUG: Нет файлов для региона {region}")
+                    log_message({'type': 'console_output', 'text': f'Нет файлов для региона {region}'})
                     continue
                 
-                print(f"DEBUG: Найдено файлов для региона {current_region}: {len(region_files)}")
+                print(f"DEBUG: Найдено файлов для региона {region}: {len(region_files)}")
                 log_message({'type': 'files_found', 'count': len(region_files)})
                 
                 # Отправляем каждый файл региона
@@ -674,36 +704,46 @@ def auto_generation_worker(url=None):
                     log_message({'type': 'sending_file', 'current': i, 'total': len(region_files)})
                     
                     try:
-                        # Отправляем файл через /api/send
-                        print(f"DEBUG: Отправка запроса на /api/send")
+                        # Читаем содержимое файла
+                        file_path = os.path.join('files', 'TEST', filename)
+                        if not os.path.exists(file_path):
+                            print(f"DEBUG: Файл {filename} не найден")
+                            continue
+                            
+                        with open(file_path, 'r', encoding='utf-8') as f:
+                            content = f.read()
+                            # Исправляем префикс XML
+                            content = content.replace('<?сбитый префикс для ukio', '<?xml')
+                        
+                        # Отправляем запрос напрямую на тестовый сервер
+                        headers = {
+                            'Content-Type': 'text/xml;charset=UTF-8',
+                            'Authorization': f'Basic {base64.b64encode(f"{region}:{password}".encode()).decode()}'
+                        }
+                        
+                        print_colored(f"\n[Отправка файла: {filename}]", Colors.BOLD)
+                        print_request_details(url, headers, content)
+                        
                         response = requests.post(
-                            'http://localhost:5000/api/send',
-                            json={
-                                'url': url,
-                                'region': current_region,
-                                'file': filename
-                            },
-                            headers={'Content-Type': 'application/json'}
+                            url,
+                            data=content,
+                            headers=headers,
+                            timeout=30,
+                            verify=False
                         )
                         
+                        print_response_details(response)
+                        
                         if response.status_code == 200:
-                            result = response.json()
-                            if result.get('success'):
-                                total_files_sent += 1
-                                print(f"DEBUG: Файл {filename} успешно отправлен")
-                                log_message({'type': 'console_output', 'text': f'Файл {filename} успешно отправлен'})
-                            else:
-                                print(f"DEBUG: Ошибка при отправке файла {filename}: {result.get('message')}")
-                                log_message({'type': 'error', 'message': f'Ошибка при отправке файла {filename}: {result.get("message")} [{response.status_code}]'})
+                            total_files_sent += 1
+                            print(f"DEBUG: Файл {filename} успешно отправлен")
+                            log_message({'type': 'console_output', 'text': f'Файл {filename} успешно отправлен'})
                         else:
                             print(f"DEBUG: Ошибка при отправке файла {filename}: {response.status_code}")
                             log_message({'type': 'error', 'message': f'Ошибка при отправке файла {filename}: {response.status_code}'})
                         
                     except Exception as e:
                         print(f"DEBUG: Ошибка при обработке файла {filename}: {str(e)}")
-                        print(f"DEBUG: Тип ошибки: {type(e).__name__}")
-                        import traceback
-                        print(f"DEBUG: Трассировка: {traceback.format_exc()}")
                         log_message({'type': 'error', 'message': f'Ошибка при обработке файла {filename}: {str(e)}'})
             
             # Генерация завершена
@@ -732,32 +772,8 @@ def auto_generation_worker(url=None):
             
         except Exception as e:
             print(f"DEBUG: Ошибка в цикле генерации: {str(e)}")
-            print(f"DEBUG: Тип ошибки: {type(e).__name__}")
-            import traceback
-            print(f"DEBUG: Трассировка: {traceback.format_exc()}")
             log_message({'type': 'error', 'message': f'Ошибка в цикле генерации: {str(e)}'})
             time.sleep(1)
-'''
-def reset_generator_constants():
-    """Пересоздает случайные константы генератора"""
-    import main
-    import sys
-    try:
-        print("\n[DEBUG] Начало функции reset_generator_constants()")
-        value = random.choice([1, 10])
-        print(f"[DEBUG] Выбрано значение: {value}")
-        globals()["xml_count_per_file"] = value
-        sys.modules['main'].xml_count_per_file = value
-        print(f"\n[DEBUG] Текущее значение xml_count_per_file: {value}\n")
-    except Exception as e:
-        print(f"\n[ERROR] Ошибка при сбросе констант: {str(e)}\n")
-        print(f"[ERROR] Тип ошибки: {type(e).__name__}")
-        import traceback
-        print(f"[ERROR] Трассировка: {traceback.format_exc()}")
-        # Устанавливаем значение по умолчанию
-        globals()["xml_count_per_file"] = 5
-        sys.modules['main'].xml_count_per_file = 5
-        print("[DEBUG] Установлено значение по умолчанию: 5")
-'''
+
 if __name__ == '__main__':
-    app.run(debug=True) 
+    app.run(host='0.0.0.0', debug=True)

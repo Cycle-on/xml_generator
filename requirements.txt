@@ -16,3 +16,5 @@ typing-extensions==4.12.2
 tzdata==2024.2
 urllib3==2.2.3
 flask==3.0.2
+flask-login==0.6.3
+werkzeug==3.0.2
