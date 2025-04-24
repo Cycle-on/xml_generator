@@ -65,8 +65,8 @@ def generate_region_files(date_zero=config.date_zero, region_name: str = 'region
                                                     region_name=region_name)
             modify_xml_file_to_send(ukio_file_path, get_file_prefix(ALL_PROJ_CONSTANTS['UKIO_SOAP_PREFIX']),
                                     get_file_postfix(ALL_PROJ_CONSTANTS['UKIO_SOAP_POSTFIX']))
-            print('start check ukio with wsdl fields')
-            check_fields_by_file_path(ukio_file_path, 'wsdl_4_3.wsdl')
+            #print('start check ukio with wsdl fields')
+            #check_fields_by_file_path(ukio_file_path, 'wsdl_4_3.wsdl')
         if ALL_PROJ_CONSTANTS['GENERATE_MISSED_CALLS']:
             missed_calls_file_path = create_file_from_model(missed, filename=f'missed_{i}', basename='MissedCalls',
                                                             region_name=region_name)
@@ -98,6 +98,10 @@ def generate_region_files(date_zero=config.date_zero, region_name: str = 'region
             modify_xml_file_to_send(incident_types_file_path,
                                     get_file_prefix(ALL_PROJ_CONSTANTS['INCIDENT_SOAP_PREFIX']),
                                     get_file_postfix(ALL_PROJ_CONSTANTS['INCIDENT_SOAP_POSTFIX']))
+
+    ukios_info.clear()
+    missed_info.clear()
+
 
     print("finish time", datetime.datetime.now() - dt_start)
 
