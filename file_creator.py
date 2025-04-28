@@ -108,9 +108,9 @@ def create_file_from_model(model: BaseModel,
         tree = ET.ElementTree(sub_root)
         # print(tree.getroot())
         if to_send:
-            dir_path = os.path.join(config.output_directory_name, region_name, 'prepared_to_send_files')
+            dir_path = os.path.join(config.output_directory_name, str(region_name), 'prepared_to_send_files')
         else:
-            dir_path = os.path.join(config.output_directory_name, region_name, basename)
+            dir_path = os.path.join(config.output_directory_name, str(region_name), basename)
 
         file_path = os.path.join(dir_path, f"{filename}.xml")
 

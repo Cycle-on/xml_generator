@@ -28,17 +28,18 @@ def fill_addresses(region_name: str = ''):
     :return:
     """
     global ADDRESSES
-    resp: pd.Series = get_csv_from_url(ALL_PROJ_CONSTANTS['ADDRESSES_URL'])
+    resp = list(get_csv_from_url(ALL_PROJ_CONSTANTS['ADDRESSES_URL']))
 
-    # print(resp)
-    # ADDRESSES.clear()
     for el in resp:
         el = el.dropna().astype(str).to_dict()
-        # print(el)
-        if el['region_name'] == region_name and region_name != '':
+        el_region = str(el['region_name'])
+        param_region = str(region_name)
+
+        if el_region == param_region and region_name != '':
             ADDRESSES.append(Address(**el))
         elif region_name == '':
             ADDRESSES.append(Address(**el))
+
 
 
 def get_random_address() -> tuple[str, str, str, str, str, str, str]:
