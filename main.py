@@ -4,6 +4,7 @@ import time
 from datetime import timedelta as td
 from pprint import pprint
 
+import tracemalloc
 from constants import fill_constants
 
 fill_constants()
@@ -27,6 +28,14 @@ config = load_config()
 
 
 def generate_region_files(date_zero=config.date_zero, region_name: str = 'region1'):
+    
+    ARM_WORK.clear()
+    OPERATOR_WORK.clear()   
+    # Проверка размеров ARM_WORK и OPERATOR_WORK (если это списки или словари)
+    print(f"DEBUG: Размер ARM_WORK: {len(ARM_WORK)}")
+    print(f"DEBUG: Размер OPERATOR_WORK: {len(OPERATOR_WORK)}")
+
+        
     create_dirs()
     create_arms_and_operators()
     date_zero = datetime.datetime.now() - td(hours=3)
@@ -98,9 +107,6 @@ def generate_region_files(date_zero=config.date_zero, region_name: str = 'region
             modify_xml_file_to_send(incident_types_file_path,
                                     get_file_prefix(ALL_PROJ_CONSTANTS['INCIDENT_SOAP_PREFIX']),
                                     get_file_postfix(ALL_PROJ_CONSTANTS['INCIDENT_SOAP_POSTFIX']))
-
-    ukios_info.clear()
-    missed_info.clear()
 
 
     print("finish time", datetime.datetime.now() - dt_start)
