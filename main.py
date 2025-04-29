@@ -31,9 +31,14 @@ def generate_region_files(date_zero=config.date_zero, region_name: str = 'region
     
     ARM_WORK.clear()
     OPERATOR_WORK.clear()   
-    # Проверка размеров ARM_WORK и OPERATOR_WORK (если это списки или словари)
-    print(f"DEBUG: Размер ARM_WORK: {len(ARM_WORK)}")
-    print(f"DEBUG: Размер OPERATOR_WORK: {len(OPERATOR_WORK)}")
+        # Добавляем вывод интересующих нас переменных
+    print("\nЗначения переменных для создания карточек:")
+    print(f"CARD_CREATE_LOW: {ALL_PROJ_CONSTANTS['CARD_CREATE_LOW']}")
+    print(f"CARD_CREATE_HIGH: {ALL_PROJ_CONSTANTS['CARD_CREATE_HIGH']}")
+    print(f"EOS_CARD_CREATE_LOW: {ALL_PROJ_CONSTANTS['EOS_CARD_CREATE_LOW']}")
+    print(f"EOS_CARD_CREATE_HIGH: {ALL_PROJ_CONSTANTS['EOS_CARD_CREATE_HIGH']}")
+    print(f"AVG_EOS_CARD_CREATE_TIME: {ALL_PROJ_CONSTANTS['AVG_EOS_CARD_CREATE_TIME']}")
+    print("----------------------------------------\n")
 
         
     create_dirs()

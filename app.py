@@ -644,20 +644,39 @@ def auto_generation_worker(url=None):
                 
                 
                 # Генерируем файлы
+                # Генерируем файлы
                 if TAKE_CONSTANTS_FROM_FILE:
                     #print("DEBUG: TAKE_CONSTANTS_FROM_FILE = True, вызываем generate_region_files()")
                     generate_region_files()
                     #print("DEBUG: generate_region_files() завершен")
                 else:
-                   # print("DEBUG: TAKE_CONSTANTS_FROM_FILE = False, получаем константы из get_next_constants()")
+                # print("DEBUG: TAKE_CONSTANTS_FROM_FILE = False, получаем константы из get_next_constants()")
                     try:
+                        constants_loaded = False
                         for constants_dict in get_next_constants():
+                            constants_loaded = True
                             region_name = constants_dict.get("region_name/constant name", "region1")
                             print(f"DEBUG: Генерация файлов для региона: {region_name}")
+                            # Обновляем все константы из словаря
+                            ALL_PROJ_CONSTANTS.update(constants_dict)
+                            # Преобразуем строковые представления списков в списки
+                            for k, v in ALL_PROJ_CONSTANTS.items():
+                                if isinstance(v, str) and '[' in v:
+                                    ALL_PROJ_CONSTANTS[k] = eval(v)
                             generate_region_files(region_name=region_name)
+                            
+                        if not constants_loaded:
+                            print("DEBUG: Не удалось загрузить константы - нет данных")
+                            log_message({'type': 'error', 'message': 'Не удалось загрузить константы из Google таблицы'})
                     except Exception as e:
-                        print(f"DEBUG: Ошибка при получении констант: {str(e)}")
-                        generate_region_files()
+                        error_msg = f"DEBUG: Ошибка при получении констант: {str(e)}"
+                        print(error_msg)
+                        log_message({'type': 'error', 'message': error_msg})
+                        import traceback
+                        traceback_msg = traceback.format_exc()
+                        print(f"DEBUG: Traceback: {traceback_msg}")
+                        log_message({'type': 'error', 'message': 'Подробная ошибка: ' + traceback_msg})
+                        # Не выполняем generate_region_files() при ошибке
                 
             finally:
                 sys.stdout = capture.stdout
