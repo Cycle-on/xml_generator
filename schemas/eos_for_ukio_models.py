@@ -6,7 +6,9 @@ from schemas import BaseModelWithId
 
 
 class Card01(BaseModelWithId):
-    card01Id: str = Field(default_factory=lambda: Card01._BaseModelWithId__get_next_id())
+    card01Id: str = Field(
+        default_factory=lambda: Card01._BaseModelWithId__get_next_id()
+    )
     dtCreate: datetime.datetime = None
     strIncidentType: str = None
     strObject: str = None
@@ -22,7 +24,9 @@ class Card01(BaseModelWithId):
 
 
 class WantedPerson(BaseModelWithId):
-    wantedId: str = Field(default_factory=lambda: WantedPerson._BaseModelWithId__get_next_id())
+    wantedId: str = Field(
+        default_factory=lambda: WantedPerson._BaseModelWithId__get_next_id()
+    )
     strGender: str = None
     iAge: int = None
     strHeightType: str = None
@@ -36,7 +40,9 @@ class WantedPerson(BaseModelWithId):
 
 
 class Suspect(BaseModelWithId):
-    suspectId: str = Field(default_factory=lambda: Suspect._BaseModelWithId__get_next_id())
+    suspectId: str = Field(
+        default_factory=lambda: Suspect._BaseModelWithId__get_next_id()
+    )
     strGender: str = None
     iAge: int = None
     strHeightType: str = None
@@ -46,7 +52,9 @@ class Suspect(BaseModelWithId):
 
 
 class Vehicle(BaseModelWithId):
-    vehicleId: str = Field(default_factory=lambda: Vehicle._BaseModelWithId__get_next_id())
+    vehicleId: str = Field(
+        default_factory=lambda: Vehicle._BaseModelWithId__get_next_id()
+    )
     strVehicleType: str = None
     strColorVehicleType: str = None
     strRegistrationNumber: str = None
@@ -55,7 +63,9 @@ class Vehicle(BaseModelWithId):
 
 
 class Card02(BaseModelWithId):
-    card02Id: str = Field(default_factory=lambda: Card02._BaseModelWithId__get_next_id())
+    card02Id: str = Field(
+        default_factory=lambda: Card02._BaseModelWithId__get_next_id()
+    )
     dtCreate: datetime.datetime = None
     strIncidentType: str = None
     iNumberOffenders: int = None
@@ -66,7 +76,9 @@ class Card02(BaseModelWithId):
 
 
 class Patient(BaseModelWithId):
-    patientId: str = Field(default_factory=lambda: Patient._BaseModelWithId__get_next_id())
+    patientId: str = Field(
+        default_factory=lambda: Patient._BaseModelWithId__get_next_id()
+    )
     strLastName: str = None
     strName: str = None
     strMiddleName: str = None
@@ -78,7 +90,9 @@ class Patient(BaseModelWithId):
 
 
 class Card03(BaseModelWithId):
-    card03Id: str = Field(default_factory=lambda: Card03._BaseModelWithId__get_next_id())
+    card03Id: str = Field(
+        default_factory=lambda: Card03._BaseModelWithId__get_next_id()
+    )
     dtCreate: datetime.datetime = None
     strIncidentType: str = None
     strWhoCalled: str = None
@@ -87,7 +101,9 @@ class Card03(BaseModelWithId):
 
 
 class Card04(BaseModelWithId):
-    card04Id: str = Field(default_factory=lambda: Card04._BaseModelWithId__get_next_id())
+    card04Id: str = Field(
+        default_factory=lambda: Card04._BaseModelWithId__get_next_id()
+    )
     dtCreate: datetime.datetime = None
     strIncidentType: str = None
     strInstructions: str = None
@@ -95,7 +111,9 @@ class Card04(BaseModelWithId):
 
 
 class CardCommServ(BaseModelWithId):
-    cardCommServId: str = Field(default_factory=lambda: CardCommServ._BaseModelWithId__get_next_id())
+    cardCommServId: str = Field(
+        default_factory=lambda: CardCommServ._BaseModelWithId__get_next_id()
+    )
     dtCreate: datetime.datetime = None
     strIncidentType: str = None
     strCommServ: str = None
@@ -106,7 +124,9 @@ class CardCommServ(BaseModelWithId):
 
 
 class CardAT(BaseModelWithId):
-    cardATId: str = Field(default_factory=lambda: CardAT._BaseModelWithId__get_next_id())
+    cardATId: str = Field(
+        default_factory=lambda: CardAT._BaseModelWithId__get_next_id()
+    )
     dtCreate: datetime.datetime = None
     strIncidentType: str = None
     iPerishedPeople: int = None

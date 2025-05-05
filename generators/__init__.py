@@ -39,25 +39,29 @@ def get_distribution_var_by_work_type(work_type: S, var_name: str) -> int | floa
     match work_type:
         case "poisson":
             try:
-                return abs(np.random.poisson(
-                    ALL_PROJ_CONSTANTS.get(f"{var_name}_LAMBDA")
-                ))
+                return abs(
+                    np.random.poisson(ALL_PROJ_CONSTANTS.get(f"{var_name}_LAMBDA"))
+                )
             except Exception:
-                raise AttributeError(f"Не задано значение лямбды для переменной {var_name}")
+                raise AttributeError(
+                    f"Не задано значение лямбды для переменной {var_name}"
+                )
         case "normal":
             try:
-                return abs(np.random.normal(
-                    ALL_PROJ_CONSTANTS.get(f"AVG_{var_name}"),
-                    ALL_PROJ_CONSTANTS.get(f"{var_name}_SCALE")
-
-                ))
+                return abs(
+                    np.random.normal(
+                        ALL_PROJ_CONSTANTS.get(f"AVG_{var_name}"),
+                        ALL_PROJ_CONSTANTS.get(f"{var_name}_SCALE"),
+                    )
+                )
             except Exception:
                 try:
-                    return abs(np.random.normal(
-                        ALL_PROJ_CONSTANTS.get(f"AVG_{var_name}_TIME"),
-                        ALL_PROJ_CONSTANTS.get(f"{var_name}_SCALE")
-
-                    ))
+                    return abs(
+                        np.random.normal(
+                            ALL_PROJ_CONSTANTS.get(f"AVG_{var_name}_TIME"),
+                            ALL_PROJ_CONSTANTS.get(f"{var_name}_SCALE"),
+                        )
+                    )
                 except Exception:
                     raise AttributeError(
                         f"Не заданы значения для нормального распределения у переменной {var_name}"
@@ -65,10 +69,12 @@ def get_distribution_var_by_work_type(work_type: S, var_name: str) -> int | floa
 
         case "uniform":
             try:
-                return abs(np.random.uniform(
-                    ALL_PROJ_CONSTANTS.get(f"{var_name}_LOW"),
-                    ALL_PROJ_CONSTANTS.get(f"{var_name}_HIGH"),
-                ))
+                return abs(
+                    np.random.uniform(
+                        ALL_PROJ_CONSTANTS.get(f"{var_name}_LOW"),
+                        ALL_PROJ_CONSTANTS.get(f"{var_name}_HIGH"),
+                    )
+                )
             except Exception:
                 raise AttributeError(
                     f"Не заданы значения для равномерного распределения у переменной {var_name}"

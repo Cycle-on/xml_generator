@@ -6,34 +6,40 @@ from pydantic import BaseModel, Field
 from constants import ALL_PROJ_CONSTANTS
 from schemas import BaseModelWithId
 from schemas.eos_for_ukio_models import (
-    Card02,
     Card01,
+    Card02,
     Card03,
     Card04,
     CardAT,
-    CardCommServ
+    CardCommServ,
 )
 from schemas.phonecall import PhoneCall
-from schemas.string_eos import StringEosType, Operator, Consult, Psycho
+from schemas.string_eos import Consult, Operator, Psycho, StringEosType
 from schemas.string_schemas import CardStates
 
 
 class TransferItem(BaseModelWithId):
-    transferItemId: str = Field(default_factory=lambda: TransferItem._BaseModelWithId__get_next_id())
+    transferItemId: str = Field(
+        default_factory=lambda: TransferItem._BaseModelWithId__get_next_id()
+    )
     eosClassTypeId: str
     dtTransfer: datetime.datetime
     bSuccess: bool
 
 
 class ReceptionItem(BaseModelWithId):
-    receptionItemId: str = Field(default_factory=lambda: ReceptionItem._BaseModelWithId__get_next_id())
+    receptionItemId: str = Field(
+        default_factory=lambda: ReceptionItem._BaseModelWithId__get_next_id()
+    )
     eosClassTypeId: StringEosType
     dtConfirmMessage: datetime.datetime
     bSuccess: bool
 
 
 class SensorMessage(BaseModelWithId):
-    sensorMessageId: str = Field(default_factory=lambda: SensorMessage._BaseModelWithId__get_next_id())
+    sensorMessageId: str = Field(
+        default_factory=lambda: SensorMessage._BaseModelWithId__get_next_id()
+    )
     operator: Operator = None
     operatorId: str = None
     strSensorMessage: str = None
@@ -52,7 +58,9 @@ class Sms(BaseModelWithId):
 
 
 class OtherMessage(BaseModelWithId):
-    otherMessageId: str = Field(default_factory=lambda: OtherMessage._BaseModelWithId__get_next_id())
+    otherMessageId: str = Field(
+        default_factory=lambda: OtherMessage._BaseModelWithId__get_next_id()
+    )
     strMessageType: str = None
     Operator: Operator = None
     dtOtherMessage: datetime.datetime
@@ -97,13 +105,17 @@ class Era(BaseModelWithId):
 
 
 class DispatchService(BaseModelWithId):
-    dispatchServiceId: str = Field(default_factory=lambda: DispatchService._BaseModelWithId__get_next_id())
+    dispatchServiceId: str = Field(
+        default_factory=lambda: DispatchService._BaseModelWithId__get_next_id()
+    )
     eosClassTypeId: int = None
     strDispatchServiceName: str = None
 
 
 class CallContent(BaseModelWithId):
-    callContentId: str = Field(default_factory=lambda: CallContent._BaseModelWithId__get_next_id())
+    callContentId: str = Field(
+        default_factory=lambda: CallContent._BaseModelWithId__get_next_id()
+    )
     strLastName: str = None
     strName: str = None
     strMiddleName: str = None
@@ -122,14 +134,18 @@ class CallContent(BaseModelWithId):
 
 
 class EosResource(BaseModelWithId):
-    eosResourceId: str = Field(default_factory=lambda: EosResource._BaseModelWithId__get_next_id())
+    eosResourceId: str = Field(
+        default_factory=lambda: EosResource._BaseModelWithId__get_next_id()
+    )
     eosClassTypeId: int = None
     strResourceUnitName: str = None
     strMembership: str = None
 
 
 class EosItem(BaseModelWithId):
-    assignId: str = Field(default_factory=lambda: EosItem._BaseModelWithId__get_next_id())
+    assignId: str = Field(
+        default_factory=lambda: EosItem._BaseModelWithId__get_next_id()
+    )
     operator: Operator = None
     operatorId: str = None
     dtDepart: datetime.datetime = None
@@ -142,7 +158,9 @@ class EosItem(BaseModelWithId):
 
 
 class Address(BaseModelWithId):
-    addressId: str = Field(default_factory=lambda: Address._BaseModelWithId__get_next_id())
+    addressId: str = Field(
+        default_factory=lambda: Address._BaseModelWithId__get_next_id()
+    )
     strAddress: str
     geoLatitude: Decimal = None
     geoLongitude: Decimal = None
@@ -178,7 +196,8 @@ class Address(BaseModelWithId):
 
 class Ukio(BaseModelWithId):
     globalId: str = Field(
-        default_factory=lambda: f"{ALL_PROJ_CONSTANTS['files_prefix']}_{Ukio._BaseModelWithId__get_next_id()}")
+        default_factory=lambda: f"{ALL_PROJ_CONSTANTS['files_prefix']}_{Ukio._BaseModelWithId__get_next_id()}"
+    )
     parentGlobalId: str = None
     strCardState: CardStates = None
     strIncidentType: str = None

@@ -1,14 +1,16 @@
 import datetime
 from decimal import Decimal
 
-from pydantic import Field, BaseModel
+from pydantic import BaseModel, Field
 
 from schemas import BaseModelWithId
 from schemas.string_eos import Operator
 
 
 class redirectCall(BaseModelWithId):
-    redirectCallId: str = Field(default_factory=lambda: redirectCall._BaseModelWithId__get_next_id())
+    redirectCallId: str = Field(
+        default_factory=lambda: redirectCall._BaseModelWithId__get_next_id()
+    )
     eosClassTypeId: str = None
     dtRedirectTime: datetime.datetime = datetime.datetime.now()
     dtRedirectConfirm: datetime.datetime
@@ -20,7 +22,9 @@ class redirectCall(BaseModelWithId):
 
 
 class PhoneCall(BaseModelWithId):
-    phoneCallId: str = Field(default_factory=lambda: PhoneCall._BaseModelWithId__get_next_id())
+    phoneCallId: str = Field(
+        default_factory=lambda: PhoneCall._BaseModelWithId__get_next_id()
+    )
     dtSend: datetime.datetime = None
     bOperatorIniciatied: bool
     dtCall: datetime.datetime = None
@@ -33,7 +37,9 @@ class PhoneCall(BaseModelWithId):
 
 
 class MissedCall(BaseModelWithId):
-    missedCallId: str = Field(default_factory=lambda: BaseModelWithId._BaseModelWithId__get_next_id())
+    missedCallId: str = Field(
+        default_factory=lambda: BaseModelWithId._BaseModelWithId__get_next_id()
+    )
     dtCall: datetime.datetime
     dtSend: datetime.datetime
     dtCallEnd: datetime.datetime = None

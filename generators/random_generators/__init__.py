@@ -11,26 +11,24 @@ def execute_district(address: str):
     for el in address:
         district = el.split()
 
-        if 'р-не' in el:
+        if "р-не" in el:
             continue
-        elif 'р-н.' in el:
-            district.remove('р-н.')
+        elif "р-н." in el:
+            district.remove("р-н.")
 
-        elif 'р-н' in el:
-            district.remove('р-н')
+        elif "р-н" in el:
+            district.remove("р-н")
 
-        elif 'районе' in el:
-            district.remove('районе')
+        elif "районе" in el:
+            district.remove("районе")
 
-        elif 'района' in el:
-            district.remove('района')
+        elif "района" in el:
+            district.remove("района")
 
-        elif 'микрорайон' in el:
+        elif "микрорайон" in el or "районного" in el:
             continue
-        elif 'районного' in el:
-            continue
-        elif 'район' in el:
-            district.remove('район')
+        elif "район" in el:
+            district.remove("район")
         else:
             continue
 
@@ -42,7 +40,12 @@ def execute_district(address: str):
 
 
 def get_address_by_code(region_code: str | int = "27") -> tuple[str, str, str]:
-    with open(os.path.join('generators', 'random_generators', 'addresses', f"{region_code}.txt"), encoding='utf-8') as f:
+    with open(
+        os.path.join(
+            "generators", "random_generators", "addresses", f"{region_code}.txt"
+        ),
+        encoding="utf-8",
+    ) as f:
         all_streets = f.readlines()
     # with open(f"{region_code}.txt") as f:
     #     all_streets = f.readlines()
@@ -53,7 +56,7 @@ def get_address_by_code(region_code: str | int = "27") -> tuple[str, str, str]:
     while street_district is None:
         random_address = random.choice(all_streets)
         random_address = random_address.strip()
-        street_district, city = execute_district(random_address.split(','))
+        street_district, city = execute_district(random_address.split(","))
     return random_address, street_district, city
 
 
@@ -63,12 +66,19 @@ def get_random_name(gender: str) -> list[str]:
     :param gender:
     :return:
     """
-    if gender == 'F':
-        with open(os.path.join('generators', 'random_generators', 'random_names', 'female.txt'), encoding='utf-8') as f:
+    if gender == "F":
+        with open(
+            os.path.join(
+                "generators", "random_generators", "random_names", "female.txt"
+            ),
+            encoding="utf-8",
+        ) as f:
             return random.choice(f.readlines())[:-1].split()
 
-    with open(os.path.join('generators', 'random_generators', 'random_names', "male.txt"), encoding='utf-8') as f:
-
+    with open(
+        os.path.join("generators", "random_generators", "random_names", "male.txt"),
+        encoding="utf-8",
+    ) as f:
         return random.choice(f.readlines())[:-1].split()
 
 

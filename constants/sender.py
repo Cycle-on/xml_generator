@@ -1,7 +1,7 @@
 COEF_MIN = 50  # коэффициент на который будет умножаться кол во файлов для отправки
 COEF_MAX = 150  # оба числа будут разделены на 100
 
-SENDER_WORK_TYPE = 'by_delay'  # can be: 'by_delay' or 'by_date'
+SENDER_WORK_TYPE = "by_delay"  # can be: 'by_delay' or 'by_date'
 # print('sender')
 SENDER_DELAY = 20  # seconds
 # print(SENDER_DELAY, 'sender')

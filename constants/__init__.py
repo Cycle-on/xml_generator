@@ -24,13 +24,13 @@ def get_file_postfix(postfix_var_name: str):
 
 def parse_constants_to_tab_format():
     for constant_name, constant_value in ALL_PROJ_CONSTANTS.items():
-        if '__' in constant_name:
+        if "__" in constant_name:
             continue
 
-        print(constant_name, end='\t')
+        print(constant_name, end="\t")
     print()
     for constant_name, constant_value in ALL_PROJ_CONSTANTS.items():
-        if '__' in constant_name:
+        if "__" in constant_name:
             continue
 
-        print(constant_value, end='\t')
+        print(constant_value, end="\t")

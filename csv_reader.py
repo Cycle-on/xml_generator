@@ -1,6 +1,7 @@
+import ssl
+
 import numpy as np
 import pandas as pd
-import ssl
 
 ssl._create_default_https_context = ssl._create_stdlib_context
 
@@ -16,5 +17,5 @@ def main():
         print(el.replace(np.nan, 0).to_dict())
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

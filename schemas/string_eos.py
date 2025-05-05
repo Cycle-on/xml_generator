@@ -14,7 +14,7 @@ class StringEos(BaseModel):
     p_min: Optional[int] = None
     p_max: Optional[int] = None
     id: int
-    class_: Optional[str] = ''
+    class_: Optional[str] = ""
 
 
 class StringEosType(BaseModel):
@@ -24,51 +24,50 @@ class StringEosType(BaseModel):
 def get_string_eos_type():
     class StringEosTypeStrings(dict, Enum):
         s112 = {
-            'name': 'Система 112',
-            'code': "112",
-            'p_min': ALL_PROJ_CONSTANTS['CONSULT_SHARE_MIN'],
-            'p_max': ALL_PROJ_CONSTANTS['CONSULT_SHARE_MAX'],
-            'class': "consult",
+            "name": "Система 112",
+            "code": "112",
+            "p_min": ALL_PROJ_CONSTANTS["CONSULT_SHARE_MIN"],
+            "p_max": ALL_PROJ_CONSTANTS["CONSULT_SHARE_MAX"],
+            "class": "consult",
             "id": 1,
-
         }
         fireDepartment = {
-            "name": 'Пожарная служба',
+            "name": "Пожарная служба",
             "code": "01",
-            "p_min": ALL_PROJ_CONSTANTS['FIRE_SHARE_MIN'],
-            'p_max': ALL_PROJ_CONSTANTS['FIRE_SHARE_MAX'],
+            "p_min": ALL_PROJ_CONSTANTS["FIRE_SHARE_MIN"],
+            "p_max": ALL_PROJ_CONSTANTS["FIRE_SHARE_MAX"],
             "class": "card01",
             "id": 2,
         }
         police = {
-            "name": 'Полиция',
+            "name": "Полиция",
             "code": "02",
-            "p_min": ALL_PROJ_CONSTANTS['POLICE_SHARE_MIN'],
-            'p_max': ALL_PROJ_CONSTANTS['POLICE_SHARE_MAX'],
+            "p_min": ALL_PROJ_CONSTANTS["POLICE_SHARE_MIN"],
+            "p_max": ALL_PROJ_CONSTANTS["POLICE_SHARE_MAX"],
             "class": "card02",
             "id": 3,
         }
         ambulance = {
-            "name": 'Скорая помощь',
+            "name": "Скорая помощь",
             "code": "03",
-            'p_min': ALL_PROJ_CONSTANTS['AMBULANCE_SHARE_MIN'],
-            'p_max': ALL_PROJ_CONSTANTS['AMBULANCE_SHARE_MAX'],
+            "p_min": ALL_PROJ_CONSTANTS["AMBULANCE_SHARE_MIN"],
+            "p_max": ALL_PROJ_CONSTANTS["AMBULANCE_SHARE_MAX"],
             "class": "card03",
             "id": 4,
         }
         gasDepartment = {
-            "name": 'Газовая служба',
+            "name": "Газовая служба",
             "code": "04",
-            "p_min": ALL_PROJ_CONSTANTS['GAS_SHARE_MIN'],
-            "p_max": ALL_PROJ_CONSTANTS['GAS_SHARE_MAX'],
+            "p_min": ALL_PROJ_CONSTANTS["GAS_SHARE_MIN"],
+            "p_max": ALL_PROJ_CONSTANTS["GAS_SHARE_MAX"],
             "class": "card04",
             "id": 5,
         }
         antiTerror = {
-            "name": 'Антитеррор',
+            "name": "Антитеррор",
             "code": "05",
-            "p_min": ALL_PROJ_CONSTANTS['CARD_AT_SHARE_MIN'],
-            "p_max": ALL_PROJ_CONSTANTS['CARD_AT_SHARE_MAX'],
+            "p_min": ALL_PROJ_CONSTANTS["CARD_AT_SHARE_MIN"],
+            "p_max": ALL_PROJ_CONSTANTS["CARD_AT_SHARE_MAX"],
             "class": "cardat",
             "id": 6,
         }
@@ -77,21 +76,21 @@ def get_string_eos_type():
             "code": "06",
             "class": "cardcommserv",
             "id": 7,
-            'p_min': ALL_PROJ_CONSTANTS['CARD_CS_SHARE_MIN'],
-            'p_max': ALL_PROJ_CONSTANTS['CARD_CS_SHARE_MAX'],
+            "p_min": ALL_PROJ_CONSTANTS["CARD_CS_SHARE_MIN"],
+            "p_max": ALL_PROJ_CONSTANTS["CARD_CS_SHARE_MAX"],
         }
         edds = {
             "name": "ЕДДС",
             "code": "07",
-            "p_min": ALL_PROJ_CONSTANTS['EDDS_SHARE_MIN'],
-            "p_max": ALL_PROJ_CONSTANTS['EDDS_SHARE_MAX'],
+            "p_min": ALL_PROJ_CONSTANTS["EDDS_SHARE_MIN"],
+            "p_max": ALL_PROJ_CONSTANTS["EDDS_SHARE_MAX"],
             "id": 8,
         }
         psycho = {
             "name": "Психологическая поддержка",
             "code": "08",
-            "p_min": ALL_PROJ_CONSTANTS['PSYCHO_SHARE_MIN'],
-            'p_max': ALL_PROJ_CONSTANTS['PSYCHO_SHARE_MAX'],
+            "p_min": ALL_PROJ_CONSTANTS["PSYCHO_SHARE_MIN"],
+            "p_max": ALL_PROJ_CONSTANTS["PSYCHO_SHARE_MAX"],
             "class": "psycho",
             "id": 9,
         }
@@ -103,36 +102,36 @@ def get_string_eos_type():
         mchs = {
             "name": "МЧС",
             "code": "10",
-            "p_min": ALL_PROJ_CONSTANTS['MCHS_SHARE_MIN'],
-            "p_max": ALL_PROJ_CONSTANTS['MCHS_SHARE_MAX'],
+            "p_min": ALL_PROJ_CONSTANTS["MCHS_SHARE_MIN"],
+            "p_max": ALL_PROJ_CONSTANTS["MCHS_SHARE_MAX"],
             "id": 11,
         }
         rosGuardian = {
             "name": "Росгвардия",
             "code": "11",
-            "p_min": ALL_PROJ_CONSTANTS['ROSGV_SHARE_MIN'],
-            "p_max": ALL_PROJ_CONSTANTS['ROSGV_SHARE_MAX'],
+            "p_min": ALL_PROJ_CONSTANTS["ROSGV_SHARE_MIN"],
+            "p_max": ALL_PROJ_CONSTANTS["ROSGV_SHARE_MAX"],
             "id": 12,
         }
         flyForestSecurity = {
             "name": 'ФБУ "Авиалесоохрана"',
             "code": "12",
-            "p_min": ALL_PROJ_CONSTANTS['AVIALES_SHARE_MIN'],
-            "p_max": ALL_PROJ_CONSTANTS['AVIALES_SHARE_MAX'],
+            "p_min": ALL_PROJ_CONSTANTS["AVIALES_SHARE_MIN"],
+            "p_max": ALL_PROJ_CONSTANTS["AVIALES_SHARE_MAX"],
             "id": 13,
         }
         rosAutoDor = {
             "name": "Росавтодор",
             "code": "13",
-            "p_min": ALL_PROJ_CONSTANTS['ROSAVTODOR_SHARE_MIN'],
-            "p_max": ALL_PROJ_CONSTANTS['ROSAVTODOR_SHARE_MAX'],
+            "p_min": ALL_PROJ_CONSTANTS["ROSAVTODOR_SHARE_MIN"],
+            "p_max": ALL_PROJ_CONSTANTS["ROSAVTODOR_SHARE_MAX"],
             "id": 14,
         }
         rosLesXoz = {
             "name": "Рослесхоз",
             "code": "14",
-            "p_min": ALL_PROJ_CONSTANTS['ROSLESHOZ_SHARE_MIN'],
-            "p_max": ALL_PROJ_CONSTANTS['ROSLESHOZ_SHARE_MAX'],
+            "p_min": ALL_PROJ_CONSTANTS["ROSLESHOZ_SHARE_MIN"],
+            "p_max": ALL_PROJ_CONSTANTS["ROSLESHOZ_SHARE_MAX"],
             "id": 15,
         }
 
@@ -140,17 +139,17 @@ def get_string_eos_type():
     for el in StringEosTypeStrings:
         d = {}
         for k, v in el.items():
-            if 'class' in k:
-                k = 'class_'
+            if "class" in k:
+                k = "class_"
             d[k] = v
         values.append(StringEos(**d))
-    return StringEosType(
-        values=values
-    )
+    return StringEosType(values=values)
 
 
 class Operator(BaseModelWithId):
-    operatorId: str = Field(default_factory=lambda: Operator._BaseModelWithId__get_next_id())
+    operatorId: str = Field(
+        default_factory=lambda: Operator._BaseModelWithId__get_next_id()
+    )
     strOperatorPost: str = None
     strOperatorSurname: str = None
     strOperatorName: str = None
@@ -171,7 +170,9 @@ class Arm(BaseModelWithId):
 
 
 class ArmWork(BaseModelWithId):
-    armStatusId: str = Field(default_factory=lambda: ArmWork._BaseModelWithId__get_next_id())
+    armStatusId: str = Field(
+        default_factory=lambda: ArmWork._BaseModelWithId__get_next_id()
+    )
     arm: Arm = None
     armId: str = None
     strArmStatus: str = None
@@ -180,7 +181,9 @@ class ArmWork(BaseModelWithId):
 
 
 class OperatorWork(BaseModelWithId):
-    operatorStatusId: str = Field(default_factory=lambda: OperatorWork._BaseModelWithId__get_next_id())
+    operatorStatusId: str = Field(
+        default_factory=lambda: OperatorWork._BaseModelWithId__get_next_id()
+    )
     strOperatorStatus: str = None
     dtAction: datetime.datetime = None
     operator: Operator = None
@@ -191,7 +194,9 @@ class OperatorWork(BaseModelWithId):
 
 
 class Consult(BaseModelWithId):
-    consultId: str = Field(default_factory=lambda: Consult._BaseModelWithId__get_next_id())
+    consultId: str = Field(
+        default_factory=lambda: Consult._BaseModelWithId__get_next_id()
+    )
     operator: Operator = None
     operatorId: str = None
     dtConsultStart: datetime.datetime
@@ -199,7 +204,9 @@ class Consult(BaseModelWithId):
 
 
 class Psycho(BaseModelWithId):
-    psychoId: str = Field(default_factory=lambda: Psycho._BaseModelWithId__get_next_id())
+    psychoId: str = Field(
+        default_factory=lambda: Psycho._BaseModelWithId__get_next_id()
+    )
     operator: Operator = None
     operatorId: str = None
     bPsychoInHouse: bool = None
