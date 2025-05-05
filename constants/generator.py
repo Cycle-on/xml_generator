@@ -19,7 +19,7 @@ MAX_OPERATORS_COUNT = 5
 
 files_prefix = 'TEST'  # префикс перед global_id в ukio и call
 
-xml_count_per_file = 1  # Количество записей в одном файле
+xml_count_per_file = 20  # Количество записей в одном файле
 files_count = 1  # Количество файлов
 
 MAX_RECALL_ATTEMPTS = 3  # максимальное количество попыток перезвона при сброшенном вызове
@@ -65,7 +65,7 @@ PSYCHO_IN_HOUSE_PROBABILITY = 100  # в процентах от 0 до 100
 
 CARD_CREATE_WORK_TYPE = 'normal'
 CARD_CREATE_LOW = 1
-CARD_CREATE_HIGH = 1
+CARD_CREATE_HIGH = 5
 CARD_CREATE_LAMBDA = 1
 AVG_CARD_CREATE_TIME = 75  # секунды, среднее время вызова/составления карточки/dtConnect - dtEndCall
 CARD_CREATE_SCALE = 10

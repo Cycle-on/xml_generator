@@ -113,7 +113,6 @@ def fill_incident_type_lists(region_name: str = ''):
     for i, el in enumerate(list_names):
         ALL_PROJ_CONSTANTS[el] = CARDS_INDEXES_INCIDENT_TYPES[i + 1]
 
-
 def main():
     pprint(CARDS_INDEXES_INCIDENT_TYPES)
 

@@ -3,6 +3,7 @@ import datetime
 import os
 import traceback
 import xml.etree.ElementTree as ET
+import gc
 
 from pydantic import BaseModel
 
@@ -12,6 +13,9 @@ from schemas.ukio_model import Ukios
 from wsdl_parser.wsdl_tester import get_types_from_wsdl
 
 config = load_config()
+
+# Cache for WSDL types to avoid repeated file reads
+_wsdl_types_cache = None
 
 
 def __up_first_letter(s: str) -> str:
@@ -26,7 +30,11 @@ def __down_first_letter(s: str) -> str:
     return s[0].lower() + s[1:]
 
 
-up_first_verb_schemas: list[str] = get_types_from_wsdl('wsdl_4_3.wsdl', get_capital_fields=True)
+def get_wsdl_types():
+    global _wsdl_types_cache
+    if _wsdl_types_cache is None:
+        _wsdl_types_cache = get_types_from_wsdl('wsdl_4_3.wsdl', get_capital_fields=True)
+    return _wsdl_types_cache
 
 
 def __generate_xml_from_pydantic(root: ET.Element, model: dict, name='Ukio'):
@@ -38,48 +46,40 @@ def __generate_xml_from_pydantic(root: ET.Element, model: dict, name='Ukio'):
     :param name:name in the xml file
     :return:
     """
-    # print(root, name, model)
     if not name.startswith('s112:'):
         name = "s112:" + name
     sub_root = ET.SubElement(root, name)
+    
     for feature_name, feature_value in model.items():
-
         if feature_name == 'PhoneCallId':
             feature_name = __down_first_letter(feature_name)
-        if feature_name in up_first_verb_schemas:
+        if feature_name in get_wsdl_types():
             feature_name = __up_first_letter(feature_name)
         if feature_value is None:
             continue
-        elif isinstance(feature_value, dict):  # if we have pydantic model
+        elif isinstance(feature_value, dict):
             __generate_xml_from_pydantic(sub_root, feature_value, name=f"s112:{feature_name}")
             continue
-
         elif feature_name == 'Ukios':
             sub_root.attrib["xmlns:s112"] = "s112"
             ukio_upper_name = __up_first_letter(feature_name)[:-1]
             for phone_call in feature_value:
                 __generate_xml_from_pydantic(sub_root, phone_call, name=f"s112:{ukio_upper_name}")
             continue
-
         elif isinstance(feature_value, list):
             for value in feature_value:
-                if isinstance(value, str) or isinstance(value, int):
-                    # feature_name = f"s112:{feature_name}"
+                if isinstance(value, (str, int)):
                     if not feature_name.startswith('s112:'):
                         feature_name = "s112:" + feature_name
                     el = ET.SubElement(sub_root, feature_name)
                     el.text = str(value)
-
                 else:
-                    # print(feature_name, value)
                     __generate_xml_from_pydantic(sub_root, value, name=feature_name)
             continue
-
         elif isinstance(feature_value, datetime.datetime):
             feature_value = feature_value.isoformat()
         if feature_name in ('p_min', 'p_max', 'class'):
             continue
-        # print(feature_name, feature_value)
         el = ET.SubElement(sub_root, f"s112:{feature_name}")
         el.text = str(feature_value)
         if 'dt' in feature_name:
@@ -101,58 +101,50 @@ def create_file_from_model(model: BaseModel,
     :return:  True -> file was saved successful
               False -> some exceptions
     """
+    root_ = None
+    sub_root = None
+    tree = None
+    log_file = None
+    
     try:
         root_ = ET.Element(basename)
-
         sub_root = __generate_xml_from_pydantic(root_, model.model_dump(), f"s112:{basename}")
         tree = ET.ElementTree(sub_root)
-        # print(tree.getroot())
+        
         if to_send:
-            dir_path = os.path.join(config.output_directory_name, region_name, 'prepared_to_send_files')
+            dir_path = os.path.join(config.output_directory_name, str(region_name), 'prepared_to_send_files')
         else:
-            dir_path = os.path.join(config.output_directory_name, region_name, basename)
+            dir_path = os.path.join(config.output_directory_name, str(region_name), basename)
 
         file_path = os.path.join(dir_path, f"{filename}.xml")
 
         if not os.path.exists(dir_path):
             os.makedirs(dir_path)
-        tree.write(file_path, encoding='utf-8')
+
+        with open(file_path, 'wb+') as tree_to_write:
+            tree.write(tree_to_write, encoding='utf-8')
+
         return file_path
     except Exception as ex:
         print(traceback.print_exc())
-        with open(
-                os.path.join(
-                    config.logs_directory_name,
-                    "xml_generator",
-                    datetime.datetime.now().isoformat()
-                ),
-                mode="w+") as f:
-            traceback.print_exc(file=f)
-        return False
-
-
-def create_send_info_csv_files(filename: str, config_send_info_list: list[dict], region_name: str = ''):
-    config_send_info_list.sort(key=lambda x: x['dt_send'])
-    filename = f'{filename}.csv'
-    csv_dir_path = os.path.join(config.output_directory_name, region_name)
-    csv_file_path = os.path.join(csv_dir_path, filename)
-    # Запись данных в CSV файл
-    with open(csv_file_path, mode='w', newline='', encoding='utf-8') as file:
+        log_path = os.path.join(
+            config.logs_directory_name,
+            "xml_generator",
+            datetime.datetime.now().isoformat()
+        )
         try:
-            writer = csv.DictWriter(file, fieldnames=config_send_info_list[0].keys())
-            writer.writeheader()  # Записываем заголовки
-            writer.writerows(config_send_info_list)  # Записываем строки данных
-        except IndexError:
-            return False
-
-
-def prepare_files_to_send(ukios: Ukios, missed: MissedCalls, region_name: str):
-    ukios = ukios.Ukios
-    missed = missed.missedCalls
-    print('start preparing ukios')
-    for i in range(len(ukios)):
-        create_file_from_model(ukios[i], filename=f'ukios_{i}', region_name=region_name, to_send=True)
-
-    print('start preparing missed')
-    for i in range(len(missed)):
-        create_file_from_model(missed[i], region_name=region_name, filename=f'missed_{i}', to_send=True)
+            log_file = open(log_path, mode="w+")
+            traceback.print_exc(file=log_file)
+        finally:
+            if log_file:
+                log_file.close()
+        return False
+    finally:
+        # Clean up all resources
+        if root_ is not None:
+            del root_
+        if sub_root is not None:
+            del sub_root
+        if tree is not None:
+            del tree
+        gc.collect()
