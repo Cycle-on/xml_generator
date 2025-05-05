@@ -26,6 +26,7 @@ def fill_addresses(region_name: str = ""):
     :return:
     """
     global ADDRESSES
+    ADDRESSES.clear()
     resp = list(get_csv_from_url(ALL_PROJ_CONSTANTS["ADDRESSES_URL"]))
 
     for el in resp:

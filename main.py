@@ -25,8 +25,9 @@ config = load_config()
 
 
 def generate_region_files(
-    date_zero=config.date_zero, region_name: str = "rsc-region-05"
+        date_zero=config.date_zero, region_name: str = "rsc-region-05"
 ):
+    global ALL_PROJ_CONSTANTS
     ARM_WORK.clear()
     OPERATOR_WORK.clear()
     ukios_info.clear()
@@ -119,6 +120,7 @@ def generate_region_files(
     # print('start cleaning')
     # time.sleep(10)
     del ukios
+    ALL_PROJ_CONSTANTS = {}
     ARM_WORK.clear()
     OPERATOR_WORK.clear()
     ukios_info.clear()
