@@ -182,14 +182,14 @@
 
     <div class="test-block">
         <h1>Тестовая генерация</h1>
-        
+
         <div class="form-group">
             <label for="region">Регион:</label>
             <select id="region" onchange="updateFileList()">
                 <option value="">Выберите регион...</option>
             </select>
         </div>
-        
+
         <div class="button-group">
             <button id="generateButton" onclick="generate()">Сгенерировать</button>
             <button id="sendButton" onclick="sendFiles()">Отправить</button>
@@ -253,7 +253,7 @@
             currentSpinnerLine = line;
             let spinnerChars = ['|', '/', '-', '\\'];
             let spinnerIndex = 0;
-            
+
             spinnerInterval = setInterval(() => {
                 if (currentSpinnerLine) {
                     const text = currentSpinnerLine.textContent.replace(/[|/\\-]$/, '');
@@ -301,18 +301,18 @@
             if (eventSource) {
                 eventSource.close();
             }
-            
+
             // Создаем новое соединение
             eventSource = new EventSource('/api/auto-generate/logs');
-            
+
             eventSource.onopen = function() {
                 // Убираем сообщение о соединении
             };
-            
+
             eventSource.onerror = function(error) {
                 log('Ошибка соединения с сервером событий', 'error');
             };
-            
+
             eventSource.onmessage = handleServerMessage;
         }
 
@@ -322,7 +322,7 @@
             const region = document.getElementById('region').value;
             const interval = document.getElementById('interval').value;
             const duration = document.getElementById('duration').value;
-            
+
             localStorage.setItem('xmlGenerator_url', url);
             localStorage.setItem('xmlGenerator_region', region);
             localStorage.setItem('xmlGenerator_interval', interval);
@@ -335,7 +335,7 @@
             const region = localStorage.getItem('xmlGenerator_region') || '';
             const interval = localStorage.getItem('xmlGenerator_interval') || '0.5';
             const duration = localStorage.getItem('xmlGenerator_duration') || '2';
-            
+
             document.getElementById('url').value = url;
             document.getElementById('region').value = region;
             document.getElementById('interval').value = interval;
@@ -388,56 +388,57 @@
 
         function generate() {
             const button = document.getElementById('generateButton');
-            const console = document.getElementById('console');
-            
+            const innerConsole = document.getElementById('console');
+
             // Очищаем консоль перед новой генерацией
-            console.innerHTML = '';
-            
+            innerConsole.innerHTML = '';
+
             // Блокируем кнопку и показываем спиннер
             button.disabled = true;
             button.innerHTML = 'Генерация... <span class="spinner"></span>';
-            
-            const eventSource = new EventSource('/generate');
-            
+            const region = document.getElementById('region').value
+            console.log(region)
+            const eventSource = new EventSource(`/generate/${region}`);
+
             eventSource.onmessage = function(e) {
                 if (e.data.trim() === '') {
                     // Завершение генерации
                     eventSource.close();
                     button.disabled = false;
                     button.textContent = 'Сгенерировать';
-                    
+
                     // Удаляем все спиннеры из консоли
-                    const spinners = console.querySelectorAll('.console-spinner');
+                    const spinners = innerConsole.querySelectorAll('.console-spinner');
                     spinners.forEach(spinner => spinner.remove());
-                    
+
                     updateFileList();
                     return;
                 }
-                
+
                 // Добавляем новую строку в консоль
                 const time = getTime();
                 const line = document.createElement('div');
                 line.className = 'console-line';
-                
+
                 // Если это первое сообщение, добавляем спиннер
-                if (console.children.length === 0) {
+                if (innerConsole.children.length === 0) {
                     line.innerHTML = `<span class="console-time">[${time}]</span> ${e.data} <span class="console-spinner"></span>`;
                 } else {
                     line.innerHTML = `<span class="console-time">[${time}]</span> ${e.data}`;
                 }
-                
-                console.appendChild(line);
-                console.scrollTop = console.scrollHeight;
+
+                innerConsole.appendChild(line);
+                innerConsole.scrollTop = console.scrollHeight;
             };
-            
+
             eventSource.onerror = function() {
                 // При любой ошибке просто закрываем соединение и разблокируем кнопку
                 eventSource.close();
                 button.disabled = false;
                 button.textContent = 'Сгенерировать';
-                
+
                 // Удаляем все спиннеры из консоли
-                const spinners = console.querySelectorAll('.console-spinner');
+                const spinners = innerConsole.querySelectorAll('.console-spinner');
                 spinners.forEach(spinner => spinner.remove());
             };
         }
@@ -457,36 +458,36 @@
             if (isSending) {
                 return;
             }
-            
+
             const url = document.getElementById('url').value;
             const region = document.getElementById('region').value;
-            
+
             if (!url || !region) {
                 showStatus('Пожалуйста, заполните все поля', false);
                 return;
             }
-            
+
             isSending = true;
             updateSendButton();
-            
+
             // Получаем список файлов для выбранного региона
             fetch('/files')
                 .then(response => response.json())
                 .then(files => {
                     // Фильтруем файлы только для выбранного региона
                     const regionFiles = files.filter(file => file.startsWith(region + '/Ukios/'));
-                    
+
                     if (regionFiles.length === 0) {
                         showStatus('Нет файлов для отправки', false);
                         isSending = false;
                         updateSendButton();
                         return;
                     }
-                    
+
                     // Отправляем каждый файл
                     let successCount = 0;
                     let errorCount = 0;
-                    
+
                     const sendNextFile = (index) => {
                         if (index >= regionFiles.length) {
                             // Все файлы отправлены
@@ -495,10 +496,10 @@
                             showStatus(`Отправка завершена. Успешно: ${successCount}, Ошибок: ${errorCount}`, successCount > 0);
                             return;
                         }
-                        
+
                         const file = regionFiles[index];
                         log(`Отправка файла: ${file}`);
-                        
+
                         fetch('/api/send', {
                             method: 'POST',
                             headers: {
@@ -529,7 +530,7 @@
                             sendNextFile(index + 1);
                         });
                     };
-                    
+
                     // Начинаем отправку первого файла
                     sendNextFile(0);
                 })
@@ -543,6 +544,7 @@
 
         function updateFileList() {
             const region = document.getElementById('region').value;
+            // console.log(region);
             if (!region) {
                 return;
             }
@@ -565,21 +567,21 @@
         // Функция для обновления прогресс-бара
         function updateProgress() {
             if (!isAutoGenerating) return;
-            
+
             const now = Date.now();
             const totalDuration = autoGenerationEndTime - autoGenerationStartTime;
             const elapsed = now - autoGenerationStartTime;
             const remaining = Math.max(0, autoGenerationEndTime - now);
-            
+
             // Обновляем прогресс-бар
             const progressPercent = Math.min(100, (elapsed / totalDuration) * 100);
             document.getElementById('progressBar').style.width = `${progressPercent}%`;
-            
+
             // Обновляем оставшееся время
             const minutes = Math.floor(remaining / 60000);
             const seconds = Math.floor((remaining % 60000) / 1000);
             document.getElementById('timeLeft').textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-            
+
             // Если время истекло, останавливаем обновление
             if (remaining <= 0) {
                 clearInterval(updateProgressTimer);
@@ -591,14 +593,14 @@
         // Функция для обработки сообщений от сервера
         function handleServerMessage(event) {
             eventCounter++;
-            
+
             try {
                 const data = JSON.parse(event.data);
-                
+
                 if (data.type === 'status_update') {
                     const newCount = data.files_sent || 0;
                     document.getElementById('filesCount').textContent = newCount;
-                    
+
                     // Если количество файлов увеличилось, считаем это успешной отправкой
                     if (newCount > statsTotal) {
                         const diff = newCount - statsTotal;
@@ -607,7 +609,7 @@
                         stopSpinner();
                         log(`Файл успешно отправлен`, 'success');
                     }
-                    
+
                     if (data.time_left <= 0 && !isCompleted) {
                         isCompleted = true;
                         stopSpinner();
@@ -621,7 +623,7 @@
                     }
                 } else if (data.type === 'console_output') {
                     // Выводим все сообщения о процессе
-                    if (data.text.includes('Генерация файла') || 
+                    if (data.text.includes('Генерация файла') ||
                         data.text.includes('Отправка файла') ||
                         data.text.includes('Ожидание') ||
                         data.text.includes('Подготовка')) {
@@ -674,32 +676,32 @@
             const interval = parseFloat(document.getElementById('interval').value);
             const duration = parseFloat(document.getElementById('duration').value);
             const url = document.getElementById('url').value;
-            
+
             if (interval <= 0 || duration <= 0) {
                 showStatus('Интервал и продолжительность должны быть больше 0', 'error');
                 return;
             }
-            
+
             // Сбрасываем статистику при старте
             statsTotal = 0;
             statsSuccess = 0;
             statsError = 0;
             isCompleted = false;
             eventCounter = 0;
-            
+
             // Сохраняем параметры
             saveParams();
-            
+
             // Устанавливаем время начала и окончания
             autoGenerationStartTime = Date.now();
             autoGenerationEndTime = autoGenerationStartTime + (duration * 60 * 1000);
-            
+
             // Запускаем обновление прогресс-бара
             updateProgressTimer = setInterval(updateProgress, 1000);
-            
+
             // Создаем новое SSE соединение
             createEventSource();
-            
+
             // Отправляем запрос на сервер
             fetch('/api/auto-generate', {
                 method: 'POST',
@@ -744,14 +746,14 @@
                     clearInterval(updateProgressTimer);
                     document.getElementById('timeLeft').textContent = '00:00';
                     document.getElementById('progressBar').style.width = '0%';
-                    
+
                     // Показываем статистику при остановке
                     if (!isCompleted) {
                         isCompleted = true;
                         log('Автоматическая генерация остановлена');
                         showFinalStats();
                     }
-                    
+
                     // Закрываем соединение с сервером событий
                     if (eventSource) {
                         eventSource.close();
@@ -785,13 +787,13 @@
                 })
                 .then(regions => {
                     const regionSelect = document.getElementById('region');
-                    
+
                     if (!regionSelect) {
                         return;
                     }
-                    
+
                     regionSelect.innerHTML = '<option value="">Выберите регион...</option>';
-                    
+
                     if (regions && regions.length > 0) {
                         regions.forEach(region => {
                             const option = document.createElement('option');

@@ -245,9 +245,11 @@ def index():
     return render_template("index.html")
 
 
-@app.route("/generate")
+@app.route("/generate/<region>")
 @login_required
-def generate():
+def generate(region):
+    # print(111, region, type(region))
+
     def generate_output():
         capture = OutputCapture()
         sys.stdout = capture
@@ -285,6 +287,14 @@ def generate():
                 try:
                     print("[DEBUG] Вызов get_next_constants()")
                     for constants_dict in get_next_constants():
+                        print(
+                            2222,
+                            constants_dict.get("region_name/constant name", "region1"),
+                        )
+                        if region != constants_dict.get(
+                            "region_name/constant name", "region1"
+                        ):
+                            continue
                         print(
                             f"[DEBUG] Обработка констант для региона: {constants_dict.get('region_name/constant name', 'region1')}"
                         )
