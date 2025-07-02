@@ -23,10 +23,7 @@ pipeline {
                 if [ -d "/home/tester/xml_generator/files" ]; then
                   sudo rm -r /home/tester/xml_generator/files
                 fi
-                sudo mkdir /home/tester/xml_generator/files
-                sudo chmod 700 /home/tester/xml_generator/files  # Устанавливает права 700 для папки files (только владелец)
-                sudo chmod 600 /home/tester/xml_generator/.env.example  # Устанавливает права 600 для файла .env.example (только владелец)
-                sudo chmod 755 /home/tester/xml_generator/main.py # Устанавливает права 755 для файла main.py (только владелец, на запуск) 
+                sudo mkdir /home/tester/xml_generator/files 
                 sudo cp -r /home/tester/wsdl_4_3.wsdl /home/tester/xml_generator/
                 sudo chown -R tester:tester /home/tester/xml_generator
                 
