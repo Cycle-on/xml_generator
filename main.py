@@ -48,7 +48,10 @@ def generate_region_files(
     print("fill incident types list")
     # models_create_time = None
     # fill with the Google sheets
-    fill_addresses(region_name)
+    addresses = fill_addresses(region_name)
+    if not addresses:
+        print(f"Не найдены адреса в таблице для региона: {region_name}")
+        return
     # generate dicts with info
     for i in range(ALL_PROJ_CONSTANTS.get("files_count")):
         ukios_list = []
@@ -120,7 +123,8 @@ def generate_region_files(
     # print('start cleaning')
     # time.sleep(10)
     del ukios
-    ALL_PROJ_CONSTANTS = {}
+    if ALL_PROJ_CONSTANTS["TAKE_CONSTANTS_FROM_FILE"]:
+        ALL_PROJ_CONSTANTS = {}
     ARM_WORK.clear()
     OPERATOR_WORK.clear()
     ukios_info.clear()

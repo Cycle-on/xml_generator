@@ -36,6 +36,7 @@ def fill_addresses(region_name: str = ""):
 
         if el_region == param_region and region_name != "" or region_name == "":
             ADDRESSES.append(Address(**el))
+    return ADDRESSES
 
 
 def get_random_address() -> tuple[str, str, str, str, str, str, str]:
