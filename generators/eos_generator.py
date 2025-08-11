@@ -223,7 +223,7 @@ def generate_card_from_eos_model(
                         ALL_PROJ_CONSTANTS["SUSPECT_DESCRIPTION"]
                     ),
                     strArmament=[random.choice(ALL_PROJ_CONSTANTS["ARMAMENTS"])],
-                    strVehicles=[
+                    strVehicle=[
                         random.choice(ALL_PROJ_CONSTANTS["ARMAMENTS"])
                         for _ in range(
                             int(

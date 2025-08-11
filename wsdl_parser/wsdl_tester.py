@@ -83,7 +83,7 @@ def check_fields_by_file_path(file_path: str, wsdl_path: str) -> None:
 
 def main():
     check_fields_by_file_path(
-        "../files/file_2024-10-16_12-54-03/ukios_0.xml", "wsdl_4_3.wsdl"
+        "../files/file_2024-10-16_12-54-03/ukios_0.xml", "wsdl_5.wsdl"
     )
     # s = get_types_from_wsdl(get_capital_fields=True)
     # print(s)

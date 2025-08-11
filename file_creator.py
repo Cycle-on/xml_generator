@@ -31,7 +31,7 @@ def get_wsdl_types():
     global _wsdl_types_cache
     if _wsdl_types_cache is None:
         _wsdl_types_cache = get_types_from_wsdl(
-            "wsdl_4_3.wsdl", get_capital_fields=True
+            "wsdl_5.wsdl", get_capital_fields=True
         )
     return _wsdl_types_cache
 
@@ -84,7 +84,11 @@ def __generate_xml_from_pydantic(root: ET.Element, model: dict, name="Ukio"):
         if feature_name in ("p_min", "p_max", "class"):
             continue
         el = ET.SubElement(sub_root, f"s112:{feature_name}")
-        el.text = str(feature_value)
+        # Обработка enum значений - берем .value вместо str()
+        if hasattr(feature_value, 'value'):  # Это enum
+            el.text = feature_value.value
+        else:
+            el.text = str(feature_value)
         if "dt" in feature_name:
             el.text += "Z"
     return sub_root

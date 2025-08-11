@@ -134,6 +134,6 @@ class CardAT(BaseModelWithId):
     iSuspectPeople: int = None
     strSuspectDescription: str = None
     strArmament: list[str] = None
-    strVehicles: list[str] = None
+    strVehicle: list[str] = None
     strDirection: str = None
     strInjurySuspect: str = None

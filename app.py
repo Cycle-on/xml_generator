@@ -901,6 +901,9 @@ def auto_generation_worker(url=None):
                             print(
                                 f"DEBUG: Ошибка при отправке файла {filename}: {response.status_code}"
                             )
+                            # Добавляем вывод тела ответа для диагностики
+                            if response.status_code == 500:
+                                print(f"DEBUG: Ответ сервера: {response.text[:500]}")  # Первые 500 символов
                             log_message(
                                 {
                                     "type": "error",
