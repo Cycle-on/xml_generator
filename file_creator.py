@@ -136,8 +136,11 @@ def create_file_from_model(
         if not os.path.exists(dir_path):
             os.makedirs(dir_path)
 
+        # Добавляем форматирование XML для читаемости
+        ET.indent(tree, space="  ", level=0)
+        
         with open(file_path, "wb+") as tree_to_write:
-            tree.write(tree_to_write, encoding="utf-8")
+            tree.write(tree_to_write, encoding="utf-8", xml_declaration=True)
 
         return file_path
     except Exception:

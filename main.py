@@ -157,6 +157,18 @@ def main():
 if __name__ == "__main__":
     # print("start")
     # time.sleep(10)
-    main()
+    
+    # Проверяем режим генерации из config
+    from config import GENERATION_MODE
+    
+    # Выбираем режим генерации
+    if GENERATION_MODE == 'cpg':
+        # Режим ЦПГ - используем параллельную реализацию
+        from main_cpg import main_cpg
+        main_cpg()
+    else:
+        # Режим ЦССИ - существующая логика
+        main()
+    
     # print("stop generating")
     # time.sleep(10)
