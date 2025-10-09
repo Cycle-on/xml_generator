@@ -1,0 +1,89 @@
+{
+  "timestamp": "2025-09-12T11:18:49.923329",
+  "tests": {
+    "ЦССИ": {
+      "error": "[Errno 2] No such file or directory: 'generators/random_generators/random_names/female.txt'"
+    },
+    "ЦПГ": {
+      "error": "[Errno 2] No such file or directory: 'generators/random_generators/random_names/female.txt'"
+    },
+    "mapping": {
+      "test": "field_mapping",
+      "mappings": {
+        "globalId → Id112": {
+          "ЦССИ": "TEST_MAPPING_001",
+          "ЦПГ": "TEST_MAPPING_001",
+          "Статус": "✅"
+        },
+        "strIncidentType → CommonData.TypeStr": {
+          "ЦССИ": "Пожар",
+          "ЦПГ": "Пожар",
+          "Статус": "✅"
+        },
+        "nCasualties → CommonData.InjuredNumber": {
+          "ЦССИ": 5,
+          "ЦПГ": 5,
+          "Статус": "✅"
+        },
+        "bHumanThreat → CommonData.IsDanger": {
+          "ЦССИ": true,
+          "ЦПГ": true,
+          "Статус": "✅"
+        },
+        "bChs → CommonData.Level": {
+          "ЦССИ": 1,
+          "ЦПГ": 1,
+          "Статус": "✅"
+        }
+      },
+      "new_fields": {
+        "ExtId (новое)": "EXT_8DA21EFD",
+        "HrId (новое)": "INC-58067",
+        "RegionStr (новое)": "Московская область",
+        "LostNumber (новое)": 0,
+        "IsBlocking (новое)": false,
+        "IerType (новое)": 1
+      }
+    },
+    "structure": {
+      "test": "structure_comparison",
+      "differences": [
+        {
+          "Аспект": "Namespace",
+          "ЦССИ": "s112",
+          "ЦПГ": "http://tspg.service/"
+        },
+        {
+          "Аспект": "Корневой элемент",
+          "ЦССИ": "Ukios (коллекция Ukio)",
+          "ЦПГ": "UpdateCardRequest"
+        },
+        {
+          "Аспект": "Структура данных",
+          "ЦССИ": "Монолитный объект Ukio",
+          "ЦПГ": "Разделение на Card + Ier"
+        },
+        {
+          "Аспект": "EOS карточки",
+          "ЦССИ": "Card01-04, CardAT, CardCommServ",
+          "ЦПГ": "DdsData01 (упрощенная)"
+        },
+        {
+          "Аспект": "Операторы",
+          "ЦССИ": "Внутри PhoneCall",
+          "ЦПГ": "CreateOperator, LastChangeOperator в Card"
+        },
+        {
+          "Аспект": "Адрес",
+          "ЦССИ": "Address как отдельный объект",
+          "ЦПГ": "Location (Address + Coords)"
+        },
+        {
+          "Аспект": "Идентификаторы",
+          "ЦССИ": "globalId",
+          "ЦПГ": "Id112 + ExtId + HrId"
+        }
+      ]
+    }
+  }
+}

@@ -28,10 +28,21 @@ def parse_args():
         default=datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S-%f"),
         help="Дата в формате: YYYY-MM-DD_HH-MM-SS",
     )
+    # Добавляем поддержку режима ЦПГ
+    parser.add_argument("--mode", choices=["cssi", "cpg"], default="cssi",
+                        help="Generation mode: cssi (ЦССИ) or cpg (ЦПГ)")
+    parser.add_argument("--files-count", type=int, help="Number of files to generate")
+    parser.add_argument("--xmls", type=int, help="Number of XML per file")
 
     # Парсим аргументы
     args = parser.parse_args()
 
+    # Применяем параметры если заданы
+    if args.files_count:
+        ALL_PROJ_CONSTANTS["files_count"] = args.files_count
+    if args.xmls:
+        ALL_PROJ_CONSTANTS["xml_count_per_file"] = args.xmls
+    
     # ALL_PROJ_CONSTANTS["files_count"] = args.files_count
     # ALL_PROJ_CONSTANTS['xml_count_per_file'] = args.xmls
     # if args.send:
@@ -43,13 +54,17 @@ def parse_args():
         config_data.DATE_ZERO = datetime.datetime.strptime(
             args.date, "%Y-%m-%d_%H-%M-%S-%f"
         ) - td(hours=3)
-        return args.send, config_data.DATE_ZERO
+        # Возвращаем все аргументы для использования в main.py
+        return args
     except ValueError:
         print("Дата не соответствует формату YYYY-MM-DD_HH-MM-SS\nРабота прервана")
         quit()
 
 
-__send_files, GLOBAL_DATE = parse_args()
+__args = parse_args()
+__send_files = __args.send
+GLOBAL_DATE = config_data.DATE_ZERO
+GENERATION_MODE = __args.mode
 
 
 def check_percent_number(number: int) -> bool:

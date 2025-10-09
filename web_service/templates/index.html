@@ -1,14 +1,52 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>XML Generator</title>
+    <title>XML Generator - ЦССИ и ЦПГ</title>
     <style>
         body {
             font-family: Arial, sans-serif;
-            max-width: 800px;
+            max-width: 1200px;
             margin: 0 auto;
             padding: 20px;
         }
+        
+        /* Табовая структура */
+        .tabs {
+            display: flex;
+            border-bottom: 2px solid #007bff;
+            margin-bottom: 20px;
+        }
+        
+        .tab {
+            background: #f8f9fa;
+            border: 1px solid #ddd;
+            border-bottom: none;
+            padding: 15px 30px;
+            cursor: pointer;
+            border-radius: 5px 5px 0 0;
+            margin-right: 5px;
+            font-weight: bold;
+            transition: background 0.2s;
+        }
+        
+        .tab:hover {
+            background: #e9ecef;
+        }
+        
+        .tab.active {
+            background: #007bff;
+            color: white;
+            border-color: #007bff;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
         .console {
             background: #1e1e1e;
             color: #fff;
@@ -106,10 +144,6 @@
             margin-left: 10px;
             vertical-align: middle;
         }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
         .status {
             margin-top: 10px;
             padding: 10px;
@@ -169,62 +203,148 @@
             width: 0%;
             transition: width 0.3s ease;
         }
+        
+        /* Разные цвета для ЦПГ */
+        .cpg-tab.active {
+            background: #28a745;
+            border-color: #28a745;
+        }
+        
+        .cpg button {
+            background: #28a745;
+        }
+        
+        .cpg button:hover {
+            background: #218838;
+        }
+        
+        .cpg .progress-bar-fill {
+            background: #28a745;
+        }
     </style>
 </head>
 <body>
-    <div class="params-block">
-        <h1>Параметры запроса</h1>
-        <div class="form-group">
-            <label for="url">URL:</label>
-            <input type="text" id="url" value="htps://rsc-testing.k8s.s112.fastec.lan/soap_4_3?">
-        </div>
+    <!-- Табовая навигация -->
+    <div class="tabs">
+        <div class="tab active" onclick="switchTab('cssi')">ЦССИ (WSDL 5)</div>
+        <div class="tab cpg-tab" onclick="switchTab('cpg')">ЦПГ</div>
     </div>
 
-    <div class="test-block">
-        <h1>Тестовая генерация</h1>
-
-        <div class="form-group">
-            <label for="region">Регион:</label>
-            <select id="region" onchange="updateFileList()">
-                <option value="">Выберите регион...</option>
-            </select>
-        </div>
-
-        <div class="button-group">
-            <button id="generateButton" onclick="generate()">Сгенерировать</button>
-            <button id="sendButton" onclick="sendFiles()">Отправить</button>
-        </div>
-    </div>
-
-    <div class="auto-block">
-        <h1>Автоматическая генерация</h1>
-        <div class="form-group">
-            <label for="interval">Интервал отправки (минут):</label>
-            <input type="number" id="interval" step="0.5" min="0.5" value="0.5">
-        </div>
-        <div class="form-group">
-            <label for="duration">Продолжительность (минут):</label>
-            <input type="number" id="duration" min="1" value="2">
-        </div>
-        <div class="button-group">
-            <button id="startAutoButton" onclick="startAutoGeneration()">Начать</button>
-            <button id="stopAutoButton" onclick="stopAutoGeneration()" disabled>Остановить</button>
-        </div>
-        <div class="progress-container">
-            <div class="progress-info">
-                <span>Осталось: <span id="timeLeft">00:00</span></span>
-                <span>Файлов: <span id="filesCount">0</span></span>
-            </div>
-            <div class="progress-bar">
-                <div id="progressBar" class="progress-bar-fill"></div>
+    <!-- Контент ЦССИ -->
+    <div id="cssi-content" class="tab-content active">
+        <div class="params-block">
+            <h1>Параметры запроса ЦССИ</h1>
+            <div class="form-group">
+                <label for="url">URL:</label>
+                <input type="text" id="url" value="htps://rsc-testing.k8s.s112.fastec.lan/soap_4_3?">
             </div>
         </div>
+
+        <div class="test-block">
+            <h1>Тестовая генерация ЦССИ</h1>
+
+            <div class="form-group">
+                <label for="region">Регион:</label>
+                <select id="region" onchange="updateFileList()">
+                    <option value="">Выберите регион...</option>
+                </select>
+            </div>
+
+            <div class="button-group">
+                <button id="generateButton" onclick="generate()">Сгенерировать</button>
+                <button id="sendButton" onclick="sendFiles()">Отправить</button>
+            </div>
+        </div>
+
+        <div class="auto-block">
+            <h1>Автоматическая генерация ЦССИ</h1>
+            <div class="form-group">
+                <label for="interval">Интервал отправки (минут):</label>
+                <input type="number" id="interval" step="0.5" min="0.5" value="0.5">
+            </div>
+            <div class="form-group">
+                <label for="duration">Продолжительность (минут):</label>
+                <input type="number" id="duration" min="1" value="2">
+            </div>
+            <div class="button-group">
+                <button id="startAutoButton" onclick="startAutoGeneration()">Начать</button>
+                <button id="stopAutoButton" onclick="stopAutoGeneration()" disabled>Остановить</button>
+            </div>
+            <div class="progress-container">
+                <div class="progress-info">
+                    <span>Осталось: <span id="timeLeft">00:00</span></span>
+                    <span>Файлов: <span id="filesCount">0</span></span>
+                </div>
+                <div class="progress-bar">
+                    <div id="progressBar" class="progress-bar-fill"></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="status" class="status"></div>
+        <div id="console" class="console"></div>
     </div>
 
-    <div id="status" class="status"></div>
-    <div id="console" class="console"></div>
+    <!-- Контент ЦПГ -->
+    <div id="cpg-content" class="tab-content cpg">
+        <div class="params-block">
+            <h1>Параметры запроса</h1>
+            <div class="form-group">
+                <label for="cpg_url">URL:</label>
+                <input type="text" id="cpg_url" placeholder="https://tspg-connect-master.connect.lan/soap_1?">
+            </div>
+        </div>
+
+        <div class="test-block">
+            <h1>Тестовая генерация</h1>
+
+            <div class="form-group">
+                <label for="cpg_region">Регион:</label>
+                <select id="cpg_region" onchange="updateCpgFileList()">
+                    <option value="">Выберите регион...</option>
+                </select>
+            </div>
+
+            <div class="button-group">
+                <button id="cpgGenerateButton" onclick="generateCpg()">Сгенерировать</button>
+                <button id="cpgSendButton" onclick="sendCpgFiles()">Отправить</button>
+            </div>
+        </div>
+
+        <div class="auto-block">
+            <h1>Автоматическая генерация</h1>
+            <div class="form-group">
+                <label for="cpg_interval">Интервал отправки (минут):</label>
+                <input type="number" id="cpg_interval" step="0.5" min="0.5" value="0.5">
+            </div>
+            <div class="form-group">
+                <label for="cpg_duration">Продолжительность (минут):</label>
+                <input type="number" id="cpg_duration" min="1" value="2">
+            </div>
+            <div class="button-group">
+                <button id="cpgStartAutoButton" onclick="startCpgAutoGeneration()">Начать</button>
+                <button id="cpgStopAutoButton" onclick="stopCpgAutoGeneration()" disabled>Остановить</button>
+            </div>
+            <div class="progress-container">
+                <div class="progress-info">
+                    <span>Осталось: <span id="cpgTimeLeft">00:00</span></span>
+                    <span>Файлов: <span id="cpgFilesCount">0</span></span>
+                </div>
+                <div class="progress-bar">
+                    <div id="cpgProgressBar" class="progress-bar-fill"></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="cpg_status" class="status"></div>
+        <div id="cpg_console" class="console"></div>
+    </div>
 
     <script>
+        // ========== ОБЩИЕ ПЕРЕМЕННЫЕ ==========
+        let currentTab = 'cssi';
+        
+        // ========== ЦССИ ПЕРЕМЕННЫЕ ==========
         let isGenerating = false;
         let isSending = false;
         let spinnerInterval;
@@ -237,15 +357,91 @@
         let lastStatusUpdate = 0;
         let eventSource = null;
         let currentSpinnerLine = null;
-
-        // Глобальные переменные для статистики
         let statsTotal = 0;
         let statsSuccess = 0;
         let statsError = 0;
         let isCompleted = false;
         let eventCounter = 0;
 
-        // Функция для анимации спиннера
+        // ========== ЦПГ ПЕРЕМЕННЫЕ ==========
+        let cpgIsGenerating = false;
+        let cpgIsSending = false;
+        let cpgSpinnerInterval;
+        let cpgAutoGenerationInterval;
+        let cpgAutoGenerationStartTime;
+        let cpgAutoGenerationEndTime;
+        let cpgIsAutoGenerating = false;
+        let cpgTotalFilesGenerated = 0;
+        let cpgUpdateProgressTimer;
+        let cpgLastStatusUpdate = 0;
+        let cpgEventSource = null;
+        let cpgAutoEventSource = null;
+        let cpgCurrentSpinnerLine = null;
+        let cpgStatsTotal = 0;
+        let cpgStatsSuccess = 0;
+        let cpgStatsError = 0;
+        let cpgIsCompleted = false;
+        let cpgEventCounter = 0;
+
+        // ========== ПЕРЕКЛЮЧЕНИЕ ТАБОВ ==========
+        function switchTab(tab) {
+            currentTab = tab;
+            
+            // Скрываем все контенты
+            document.getElementById('cssi-content').classList.remove('active');
+            document.getElementById('cpg-content').classList.remove('active');
+            
+            // Убираем active класс у всех табов
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            
+            // Показываем нужный контент и активируем таб
+            if (tab === 'cssi') {
+                document.getElementById('cssi-content').classList.add('active');
+                document.querySelector('.tab:not(.cpg-tab)').classList.add('active');
+                loadRegions();
+            } else {
+                document.getElementById('cpg-content').classList.add('active');
+                document.querySelector('.cpg-tab').classList.add('active');
+                loadCpgRegions();
+            }
+        }
+
+        // ========== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ==========
+        function getTime() {
+            return new Date().toLocaleTimeString();
+        }
+
+        function log(message, isError = false) {
+            const console = currentTab === 'cssi' ? 
+                document.getElementById('console') : 
+                document.getElementById('cpg_console');
+            const time = getTime();
+            const line = document.createElement('div');
+            line.className = 'console-line' + (isError ? ' error' : '');
+            line.innerHTML = `<span class="console-time">[${time}]</span> ${message}`;
+            console.appendChild(line);
+            console.scrollTop = console.scrollHeight;
+        }
+
+        function logWithSpinner(message) {
+            const console = currentTab === 'cssi' ? 
+                document.getElementById('console') : 
+                document.getElementById('cpg_console');
+            const time = getTime();
+            const line = document.createElement('div');
+            line.className = 'console-line';
+            line.innerHTML = `<span class="console-time">[${time}]</span> ${message} `;
+            console.appendChild(line);
+            console.scrollTop = console.scrollHeight;
+            
+            if (currentTab === 'cssi') {
+                startSpinner(line);
+            } else {
+                startCpgSpinner(line);
+            }
+            return line;
+        }
+
         function startSpinner(line) {
             if (spinnerInterval) {
                 clearInterval(spinnerInterval);
@@ -263,7 +459,6 @@
             }, 100);
         }
 
-        // Функция для остановки спиннера
         function stopSpinner() {
             if (spinnerInterval) {
                 clearInterval(spinnerInterval);
@@ -276,537 +471,529 @@
             }
         }
 
-        // Функция для логирования с поддержкой спиннера
-        function logWithSpinner(message) {
-            const console = document.getElementById('console');
-            const time = getTime();
-            const line = document.createElement('div');
-            line.className = 'console-line';
-            line.innerHTML = `<span class="console-time">[${time}]</span> ${message} `;
-            console.appendChild(line);
-            console.scrollTop = console.scrollHeight;
-            startSpinner(line);
-            return line;
+        function startCpgSpinner(line) {
+            if (cpgSpinnerInterval) {
+                clearInterval(cpgSpinnerInterval);
+            }
+            cpgCurrentSpinnerLine = line;
+            let spinnerChars = ['|', '/', '-', '\\'];
+            let spinnerIndex = 0;
+
+            cpgSpinnerInterval = setInterval(() => {
+                if (cpgCurrentSpinnerLine) {
+                    const text = cpgCurrentSpinnerLine.textContent.replace(/[|/\\-]$/, '');
+                    cpgCurrentSpinnerLine.textContent = text + spinnerChars[spinnerIndex];
+                    spinnerIndex = (spinnerIndex + 1) % spinnerChars.length;
+                }
+            }, 100);
         }
 
-        // Функция для логирования отладочной информации
-        function debugLog(message, data = null) {
-            const debugMessage = data ? `${message}: ${JSON.stringify(data)}` : message;
-            log(`[DEBUG] ${debugMessage}`);
+        function stopCpgSpinner() {
+            if (cpgSpinnerInterval) {
+                clearInterval(cpgSpinnerInterval);
+                cpgSpinnerInterval = null;
+            }
+            if (cpgCurrentSpinnerLine) {
+                const text = cpgCurrentSpinnerLine.textContent.replace(/[|/\\-]$/, '');
+                cpgCurrentSpinnerLine.textContent = text;
+                cpgCurrentSpinnerLine = null;
+            }
+        }
+        function handleCpgAutoGenerationLog(data) {
+            // Обработка логов автогенерации CPG
+            switch(data.type) {
+                case 'console_output':
+                    log(data.text);
+                    break;
+                case 'time_left':
+                    // Время уже отображается в статусе, не дублируем в логах
+                    break;
+                case 'files_found':
+                    log(`Найдено файлов: ${data.count}`);
+                    break;
+                case 'sending_file':
+                    log(`Отправка файла ${data.current}/${data.total}`);
+                    break;
+                case 'file_sent_success':
+                    log(`✓ Файл ${data.filename} успешно отправлен (всего: ${data.total_sent})`);
+                    break;
+                case 'file_sent_error':
+                    log(`✗ Ошибка при отправке файла ${data.filename}: ${data.status_code}`, true);
+                    break;
+                case 'error':
+                    log(`Ошибка: ${data.message}`, true);
+                    break;
+                default:
+                    console.log('Неизвестный тип лога:', data);
+            }
         }
 
-        // Функция для создания нового EventSource
-        function createEventSource() {
-            // Закрываем предыдущее соединение, если оно существует
+        // ========== ЦССИ ФУНКЦИИ ==========
+        function loadRegions() {
+            fetch('/api/regions')
+                .then(response => response.json())
+                .then(regions => {
+                    const select = document.getElementById('region');
+                    select.innerHTML = '<option value="">Выберите регион...</option>';
+                    regions.forEach(region => {
+                        const option = document.createElement('option');
+                        option.value = region;
+                        option.textContent = region;
+                        select.appendChild(option);
+                    });
+                })
+                .catch(error => {
+                    console.error('Ошибка загрузки регионов:', error);
+                    log('Ошибка загрузки регионов: ' + error.message, true);
+                });
+        }
+
+        function generate() {
+            const region = document.getElementById('region').value;
+            if (!region) {
+                log('Выберите регион для генерации', true);
+                return;
+            }
+
+            if (isGenerating) {
+                log('Генерация уже в процессе', true);
+                return;
+            }
+
+            isGenerating = true;
+            document.getElementById('generateButton').disabled = true;
+            document.getElementById('console').innerHTML = '';
+
+            const line = logWithSpinner('Генерация файлов...');
+
             if (eventSource) {
                 eventSource.close();
             }
 
-            // Создаем новое соединение
-            eventSource = new EventSource('/api/auto-generate/logs');
+            eventSource = new EventSource(`/generate/${region}`);
 
-            eventSource.onopen = function() {
-                // Убираем сообщение о соединении
-            };
-
-            eventSource.onerror = function(error) {
-                log('Ошибка соединения с сервером событий', 'error');
-            };
-
-            eventSource.onmessage = handleServerMessage;
-        }
-
-        // Функция для сохранения параметров
-        function saveParams() {
-            const url = document.getElementById('url').value;
-            const region = document.getElementById('region').value;
-            const interval = document.getElementById('interval').value;
-            const duration = document.getElementById('duration').value;
-
-            localStorage.setItem('xmlGenerator_url', url);
-            localStorage.setItem('xmlGenerator_region', region);
-            localStorage.setItem('xmlGenerator_interval', interval);
-            localStorage.setItem('xmlGenerator_duration', duration);
-        }
-
-        // Функция для загрузки параметров
-        function loadParams() {
-            const url = localStorage.getItem('xmlGenerator_url') || '';
-            const region = localStorage.getItem('xmlGenerator_region') || '';
-            const interval = localStorage.getItem('xmlGenerator_interval') || '0.5';
-            const duration = localStorage.getItem('xmlGenerator_duration') || '2';
-
-            document.getElementById('url').value = url;
-            document.getElementById('region').value = region;
-            document.getElementById('interval').value = interval;
-            document.getElementById('duration').value = duration;
-        }
-
-        // Загружаем параметры при загрузке страницы
-        document.addEventListener('DOMContentLoaded', function() {
-            loadParams();
-            loadRegions();
-        });
-
-        // Сохраняем параметры при изменении
-        document.getElementById('url').addEventListener('change', saveParams);
-        document.getElementById('region').addEventListener('change', saveParams);
-        document.getElementById('interval').addEventListener('change', saveParams);
-        document.getElementById('duration').addEventListener('change', saveParams);
-
-        function getTime() {
-            const now = new Date();
-            return now.toLocaleTimeString('ru-RU', { hour12: false });
-        }
-
-        function log(message, type = 'normal') {
-            const console = document.getElementById('console');
-            const time = getTime();
-            const line = document.createElement('div');
-            line.className = `console-line ${type}`;
-            line.innerHTML = `<span class="console-time">[${time}]</span> ${message}`;
-            console.appendChild(line);
-            console.scrollTop = console.scrollHeight;
-            return line;
-        }
-
-        function addToConsole(text) {
-            const console = document.getElementById('console');
-            const time = getTime();
-            const line = document.createElement('div');
-            line.className = 'console-line';
-            line.innerHTML = `<span class="console-time">[${time}]</span> ${text}`;
-            console.appendChild(line);
-            console.scrollTop = console.scrollHeight;
-        }
-
-        function showStatus(message, type) {
-            const status = document.getElementById('status');
-            status.textContent = message;
-            status.className = `status ${type}`;
-        }
-
-        function generate() {
-            const button = document.getElementById('generateButton');
-            const innerConsole = document.getElementById('console');
-
-            // Очищаем консоль перед новой генерацией
-            innerConsole.innerHTML = '';
-
-            // Блокируем кнопку и показываем спиннер
-            button.disabled = true;
-            button.innerHTML = 'Генерация... <span class="spinner"></span>';
-            const region = document.getElementById('region').value
-            console.log(region)
-            const eventSource = new EventSource(`/generate/${region}`);
-
-            eventSource.onmessage = function(e) {
-                if (e.data.trim() === '') {
-                    // Завершение генерации
-                    eventSource.close();
-                    button.disabled = false;
-                    button.textContent = 'Сгенерировать';
-
-                    // Удаляем все спиннеры из консоли
-                    const spinners = innerConsole.querySelectorAll('.console-spinner');
-                    spinners.forEach(spinner => spinner.remove());
-
-                    updateFileList();
-                    return;
+            eventSource.onmessage = function(event) {
+                if (event.data.trim()) {
+                    stopSpinner();
+                    log(event.data);
                 }
-
-                // Добавляем новую строку в консоль
-                const time = getTime();
-                const line = document.createElement('div');
-                line.className = 'console-line';
-
-                // Если это первое сообщение, добавляем спиннер
-                if (innerConsole.children.length === 0) {
-                    line.innerHTML = `<span class="console-time">[${time}]</span> ${e.data} <span class="console-spinner"></span>`;
-                } else {
-                    line.innerHTML = `<span class="console-time">[${time}]</span> ${e.data}`;
-                }
-
-                innerConsole.appendChild(line);
-                innerConsole.scrollTop = console.scrollHeight;
             };
 
-            eventSource.onerror = function() {
-                // При любой ошибке просто закрываем соединение и разблокируем кнопку
+            eventSource.addEventListener('done', function(event) {
+                stopSpinner();
+                isGenerating = false;
+                document.getElementById('generateButton').disabled = false;
                 eventSource.close();
-                button.disabled = false;
-                button.textContent = 'Сгенерировать';
+                updateFileList();
+                log('Генерация завершена');
+            });
 
-                // Удаляем все спиннеры из консоли
-                const spinners = innerConsole.querySelectorAll('.console-spinner');
-                spinners.forEach(spinner => spinner.remove());
+            eventSource.onerror = function(event) {
+                stopSpinner();
+                isGenerating = false;
+                document.getElementById('generateButton').disabled = false;
+                log('Ошибка при генерации', true);
+                eventSource.close();
             };
         }
 
-        function updateSendButton() {
-            const sendButton = document.getElementById('sendButton');
-            if (isSending) {
-                sendButton.disabled = true;
-                sendButton.textContent = 'Отправка...';
-            } else {
-                sendButton.disabled = false;
-                sendButton.textContent = 'Отправить';
-            }
+        function updateFileList() {
+            // Обновление списка файлов ЦССИ (если нужно)
         }
 
         function sendFiles() {
-            if (isSending) {
+            const region = document.getElementById('region').value;
+            const url = document.getElementById('url').value;
+
+            if (!region || !url) {
+                log('Заполните все поля', true);
                 return;
             }
 
-            const url = document.getElementById('url').value;
-            const region = document.getElementById('region').value;
-
-            if (!url || !region) {
-                showStatus('Пожалуйста, заполните все поля', false);
+            if (isSending) {
+                log('Отправка уже в процессе', true);
                 return;
             }
 
             isSending = true;
-            updateSendButton();
+            document.getElementById('sendButton').disabled = true;
 
-            // Получаем список файлов для выбранного региона
+            // Получаем список файлов и отправляем их
             fetch('/files')
                 .then(response => response.json())
                 .then(files => {
-                    // Фильтруем файлы только для выбранного региона
-                    const regionFiles = files.filter(file => file.startsWith(region + '/Ukios/'));
-
+                    const regionFiles = files.filter(f => f.startsWith(region + '/'));
                     if (regionFiles.length === 0) {
-                        showStatus('Нет файлов для отправки', false);
+                        log('Нет файлов для отправки в выбранном регионе', true);
                         isSending = false;
-                        updateSendButton();
+                        document.getElementById('sendButton').disabled = false;
                         return;
                     }
 
-                    // Отправляем каждый файл
-                    let successCount = 0;
-                    let errorCount = 0;
-
-                    const sendNextFile = (index) => {
-                        if (index >= regionFiles.length) {
-                            // Все файлы отправлены
-                            isSending = false;
-                            updateSendButton();
-                            showStatus(`Отправка завершена. Успешно: ${successCount}, Ошибок: ${errorCount}`, successCount > 0);
-                            return;
-                        }
-
-                        const file = regionFiles[index];
-                        log(`Отправка файла: ${file}`);
-
-                        fetch('/api/send', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json'
-                            },
-                            body: JSON.stringify({
-                                url: url,
-                                region: region,
-                                file: file
-                            })
-                        })
-                        .then(response => response.json())
-                        .then(data => {
-                            if (data.success) {
-                                successCount++;
-                                log(`Файл ${file} успешно отправлен`, 'success');
-                            } else {
-                                errorCount++;
-                                log(`Ошибка при отправке файла ${file}: ${data.message}`, 'error');
-                            }
-                            // Отправляем следующий файл
-                            sendNextFile(index + 1);
-                        })
-                        .catch(error => {
-                            errorCount++;
-                            log(`Ошибка при отправке файла ${file}: ${error.message}`, 'error');
-                            // Отправляем следующий файл
-                            sendNextFile(index + 1);
-                        });
-                    };
-
-                    // Начинаем отправку первого файла
-                    sendNextFile(0);
+                    sendFilesBatch(regionFiles, url, region);
                 })
                 .catch(error => {
-                    console.error('Ошибка при получении списка файлов:', error);
-                    showStatus('Ошибка при получении списка файлов', false);
+                    log('Ошибка получения списка файлов: ' + error.message, true);
                     isSending = false;
-                    updateSendButton();
+                    document.getElementById('sendButton').disabled = false;
                 });
         }
 
-        function updateFileList() {
-            const region = document.getElementById('region').value;
-            // console.log(region);
-            if (!region) {
-                return;
-            }
-        }
+        function sendFilesBatch(files, url, region) {
+            let sent = 0;
+            const total = files.length;
 
-        function loadFile() {
-            const fileSelect = document.getElementById('fileSelect');
-            if (fileSelect.value) {
-                fetch(`/file/${fileSelect.value}`)
-                    .then(response => response.text())
-                    .then(content => {
-                        log(`Загружен файл: ${fileSelect.value}`);
-                    });
-            }
-        }
-
-        // Загружаем список файлов при загрузке страницы
-        updateFileList();
-
-        // Функция для обновления прогресс-бара
-        function updateProgress() {
-            if (!isAutoGenerating) return;
-
-            const now = Date.now();
-            const totalDuration = autoGenerationEndTime - autoGenerationStartTime;
-            const elapsed = now - autoGenerationStartTime;
-            const remaining = Math.max(0, autoGenerationEndTime - now);
-
-            // Обновляем прогресс-бар
-            const progressPercent = Math.min(100, (elapsed / totalDuration) * 100);
-            document.getElementById('progressBar').style.width = `${progressPercent}%`;
-
-            // Обновляем оставшееся время
-            const minutes = Math.floor(remaining / 60000);
-            const seconds = Math.floor((remaining % 60000) / 1000);
-            document.getElementById('timeLeft').textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-
-            // Если время истекло, останавливаем обновление
-            if (remaining <= 0) {
-                clearInterval(updateProgressTimer);
-                document.getElementById('timeLeft').textContent = '00:00';
-                document.getElementById('progressBar').style.width = '100%';
-            }
-        }
-
-        // Функция для обработки сообщений от сервера
-        function handleServerMessage(event) {
-            eventCounter++;
-
-            try {
-                const data = JSON.parse(event.data);
-
-                if (data.type === 'status_update') {
-                    const newCount = data.files_sent || 0;
-                    document.getElementById('filesCount').textContent = newCount;
-
-                    // Если количество файлов увеличилось, считаем это успешной отправкой
-                    if (newCount > statsTotal) {
-                        const diff = newCount - statsTotal;
-                        statsSuccess += diff;
-                        statsTotal = newCount;
-                        stopSpinner();
-                        log(`Файл успешно отправлен`, 'success');
-                    }
-
-                    if (data.time_left <= 0 && !isCompleted) {
-                        isCompleted = true;
-                        stopSpinner();
-                        log('Автоматическая генерация завершена');
-                        showFinalStats();
-                        eventSource.close();
-                        // Возвращаем кнопки в исходное состояние
-                        document.getElementById('startAutoButton').disabled = false;
-                        document.getElementById('stopAutoButton').disabled = true;
-                        isAutoGenerating = false;
-                    }
-                } else if (data.type === 'console_output') {
-                    // Выводим все сообщения о процессе
-                    if (data.text.includes('Генерация файла') ||
-                        data.text.includes('Отправка файла') ||
-                        data.text.includes('Ожидание') ||
-                        data.text.includes('Подготовка')) {
-                        stopSpinner();
-                        log(data.text);
-                    }
-                } else if (data.type === 'generation_start') {
-                    logWithSpinner('Начало цикла генерации');
-                } else if (data.type === 'generation_complete') {
-                    stopSpinner();
-                    log('Генерация файла завершена');
-                    logWithSpinner('Отправляю файл');
-                } else if (data.type === 'files_found') {
-                    stopSpinner();
-                    log(`Сгенерировано файлов: ${data.count}`);
-                    logWithSpinner('Отправляю файл');
-                } else if (data.type === 'sending_file') {
-                    logWithSpinner(`Отправляю файл ${data.current} / ${data.total}`);
-                } else if (data.type === 'file_sent') {
-                    statsSuccess++;
-                    statsTotal++;
-                    stopSpinner();
-                    console.log('DEBUG: Получены данные о файле:', data);  // Отладочный вывод
-                    log(`Файл ${data.filename} успешно отправлен [${data.status}]`, 'success');
-                } else if (data.type === 'error') {
-                    statsError++;
-                    statsTotal++;
-                    stopSpinner();
-                    log(data.message, 'error');
+            function sendNext() {
+                if (sent >= total) {
+                    log(`Отправка завершена: ${sent}/${total} файлов`);
+                    isSending = false;
+                    document.getElementById('sendButton').disabled = false;
+                    return;
                 }
-            } catch (error) {
-                stopSpinner();
-                log(`Ошибка при обработке сообщения: ${error.message}`, 'error');
+
+                const file = files[sent];
+                log(`Отправка файла ${sent + 1}/${total}: ${file}`);
+
+                fetch('/api/send', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ url, region, file })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        log(`✓ ${file}: ${data.message}`);
+                    } else {
+                        log(`✗ ${file}: ${data.message}`, true);
+                    }
+                    sent++;
+                    setTimeout(sendNext, 100);
+                })
+                .catch(error => {
+                    log(`✗ ${file}: ${error.message}`, true);
+                    sent++;
+                    setTimeout(sendNext, 100);
+                });
             }
+
+            sendNext();
         }
 
-        // Функция для отображения итоговой статистики
-        function showFinalStats() {
-            const stats = `=== Итоговая статистика ===\n` +
-                         `Всего файлов отправлено: ${statsTotal}\n` +
-                         `Успешно отправлено: ${statsSuccess}\n` +
-                         `Ошибок при отправке: ${statsError}\n` +
-                         `Процент успешных отправок: ${statsTotal > 0 ? ((statsSuccess / statsTotal) * 100).toFixed(2) : 0}%\n` +
-                         `========================`;
-            log(stats);
-        }
-
-        // Функция для запуска автоматической генерации
         function startAutoGeneration() {
-            const interval = parseFloat(document.getElementById('interval').value);
-            const duration = parseFloat(document.getElementById('duration').value);
-            const url = document.getElementById('url').value;
+            // Реализация автогенерации ЦССИ (упрощенная версия)
+            log('Автогенерация ЦССИ пока не реализована');
+        }
 
-            if (interval <= 0 || duration <= 0) {
-                showStatus('Интервал и продолжительность должны быть больше 0', 'error');
+        function stopAutoGeneration() {
+            // Остановка автогенерации ЦССИ
+            log('Остановка автогенерации ЦССИ');
+        }
+
+        // ========== ЦПГ ФУНКЦИИ ==========
+        function loadCpgRegions() {
+            fetch('/api/cpg/regions')
+                .then(response => response.json())
+                .then(regions => {
+                    const select = document.getElementById('cpg_region');
+                    select.innerHTML = '<option value="">Выберите регион...</option>';
+                    regions.forEach(region => {
+                        const option = document.createElement('option');
+                        option.value = region;
+                        option.textContent = region;
+                        select.appendChild(option);
+                    });
+                })
+                .catch(error => {
+                    console.error('Ошибка загрузки регионов:', error);
+                    log('Ошибка загрузки регионов: ' + error.message, true);
+                });
+        }
+
+        function generateCpg() {
+            const region = document.getElementById('cpg_region').value;
+            if (!region) {
+                log('Выберите регион для генерации', true);
                 return;
             }
 
-            // Сбрасываем статистику при старте
-            statsTotal = 0;
-            statsSuccess = 0;
-            statsError = 0;
-            isCompleted = false;
-            eventCounter = 0;
+            if (cpgIsGenerating) {
+                log('Генерация уже в процессе', true);
+                return;
+            }
 
-            // Сохраняем параметры
-            saveParams();
+            cpgIsGenerating = true;
+            document.getElementById('cpgGenerateButton').disabled = true;
+            document.getElementById('cpg_console').innerHTML = '';
 
-            // Устанавливаем время начала и окончания
-            autoGenerationStartTime = Date.now();
-            autoGenerationEndTime = autoGenerationStartTime + (duration * 60 * 1000);
+            const line = logWithSpinner('Генерация файлов...');
 
-            // Запускаем обновление прогресс-бара
-            updateProgressTimer = setInterval(updateProgress, 1000);
+            if (cpgEventSource) {
+                cpgEventSource.close();
+            }
 
-            // Создаем новое SSE соединение
-            createEventSource();
+            cpgEventSource = new EventSource(`/cpg/generate/${region}`);
 
-            // Отправляем запрос на сервер
-            fetch('/api/auto-generate', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    interval: interval,
-                    duration: duration,
-                    url: url || null
-                })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    isAutoGenerating = true;
-                    document.getElementById('startAutoButton').disabled = true;
-                    document.getElementById('stopAutoButton').disabled = false;
-                    log(`Запущена автоматическая генерация на ${duration} минут`);
-                    logWithSpinner('Начало цикла генерации');
-                } else {
-                    showStatus(data.message, 'error');
+            cpgEventSource.onmessage = function(event) {
+                if (event.data.trim()) {
+                    stopCpgSpinner();
+                    log(event.data);
                 }
-            })
-            .catch(error => {
-                showStatus('Ошибка подключения к серверу', 'error');
-                console.error('Error:', error);
+            };
+
+            cpgEventSource.addEventListener('done', function(event) {
+                stopCpgSpinner();
+                cpgIsGenerating = false;
+                document.getElementById('cpgGenerateButton').disabled = false;
+                cpgEventSource.close();
+                updateCpgFileList();
+                log('Генерация завершена');
             });
+
+            cpgEventSource.onerror = function(event) {
+                stopCpgSpinner();
+                cpgIsGenerating = false;
+                document.getElementById('cpgGenerateButton').disabled = false;
+                log('Ошибка при генерации', true);
+                cpgEventSource.close();
+            };
         }
 
-        // Функция для остановки автоматической генерации
-        function stopAutoGeneration() {
-            fetch('/api/auto-generate/stop', {
-                method: 'POST'
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    isAutoGenerating = false;
-                    document.getElementById('startAutoButton').disabled = false;
-                    document.getElementById('stopAutoButton').disabled = true;
-                    clearInterval(updateProgressTimer);
-                    document.getElementById('timeLeft').textContent = '00:00';
-                    document.getElementById('progressBar').style.width = '0%';
-
-                    // Показываем статистику при остановке
-                    if (!isCompleted) {
-                        isCompleted = true;
-                        log('Автоматическая генерация остановлена');
-                        showFinalStats();
-                    }
-
-                    // Закрываем соединение с сервером событий
-                    if (eventSource) {
-                        eventSource.close();
-                        eventSource = null;
-                    }
-                } else {
-                    showStatus(data.message, 'error');
-                    log(`Ошибка при остановке генерации: ${data.message}`, 'error');
-                }
-            })
-            .catch(error => {
-                showStatus('Ошибка подключения к серверу', 'error');
-                log(`Ошибка при остановке генерации: ${error.message}`, 'error');
-            });
+        function updateCpgFileList() {
+            // Обновление списка ЦПГ файлов (если нужно)
         }
 
-        // Загрузка списка регионов при загрузке страницы
-        window.onload = function() {
-            console.log('Страница загружена, загружаю регионы...');
-            loadRegions();
-        };
+        function sendCpgFiles() {
+            const region = document.getElementById('cpg_region').value;
+            const url = document.getElementById('cpg_url').value;
 
-        // Загрузка списка регионов
-        function loadRegions() {
-            fetch('/api/regions')
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! status: ${response.status}`);
-                    }
-                    return response.json();
-                })
-                .then(regions => {
-                    const regionSelect = document.getElementById('region');
+            if (!region || !url) {
+                log('Заполните все поля', true);
+                return;
+            }
 
-                    if (!regionSelect) {
+            if (cpgIsSending) {
+                log('Отправка уже в процессе', true);
+                return;
+            }
+
+            cpgIsSending = true;
+            document.getElementById('cpgSendButton').disabled = true;
+
+            // Получаем список файлов и отправляем их
+            fetch('/cpg/files')
+                .then(response => response.json())
+                .then(files => {
+                    const regionFiles = files.filter(f => f.startsWith(region + '/'));
+                    if (regionFiles.length === 0) {
+                        log('Нет файлов для отправки в выбранном регионе', true);
+                        cpgIsSending = false;
+                        document.getElementById('cpgSendButton').disabled = false;
                         return;
                     }
 
-                    regionSelect.innerHTML = '<option value="">Выберите регион...</option>';
-
-                    if (regions && regions.length > 0) {
-                        regions.forEach(region => {
-                            const option = document.createElement('option');
-                            option.value = region;
-                            option.textContent = region;
-                            regionSelect.appendChild(option);
-                        });
-                    }
+                    sendCpgFilesBatch(regionFiles, url, region);
                 })
                 .catch(error => {
-                    console.error('Ошибка при загрузке регионов:', error);
+                    log('Ошибка получения списка файлов: ' + error.message, true);
+                    cpgIsSending = false;
+                    document.getElementById('cpgSendButton').disabled = false;
                 });
         }
+
+        function sendCpgFilesBatch(files, url, region) {
+            let sent = 0;
+            const total = files.length;
+
+            function sendNext() {
+                if (sent >= total) {
+                    log(`Отправка завершена: ${sent}/${total} файлов`);
+                    cpgIsSending = false;
+                    document.getElementById('cpgSendButton').disabled = false;
+                    return;
+                }
+
+                const file = files[sent];
+                log(`Отправка файла ${sent + 1}/${total}: ${file}`);
+
+                fetch('/api/cpg/send', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ url, region, file })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        log(`✓ ${file}: ${data.message}`);
+                    } else {
+                        log(`✗ ${file}: ${data.message}`, true);
+                    }
+                    sent++;
+                    setTimeout(sendNext, 100);
+                })
+                .catch(error => {
+                    log(`✗ ${file}: ${error.message}`, true);
+                    sent++;
+                    setTimeout(sendNext, 100);
+                });
+            }
+
+            sendNext();
+        }
+
+        function startCpgAutoGeneration() {
+            if (cpgIsAutoGenerating) {
+                log('Автогенерация уже запущена', true);
+                return;
+            }
+
+            const interval = document.getElementById('cpg_interval').value;
+            const duration = document.getElementById('cpg_duration').value;
+            const url = document.getElementById('cpg_url').value;
+
+            if (!url) {
+                log('Введите URL для отправки', true);
+                return;
+            }
+
+            cpgIsAutoGenerating = true;
+            document.getElementById('cpgStartAutoButton').disabled = true;
+            document.getElementById('cpgStopAutoButton').disabled = false;
+
+            log(`Запуск автогенерации на ${duration} мин с интервалом ${interval} мин`);
+
+            fetch('/api/cpg/auto-generate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ interval, duration, url })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    log('Автогенерация запущена успешно');
+                    startCpgProgressMonitoring();
+                    // Подключаемся к потоку логов автогенерации
+                    if (cpgAutoEventSource) {
+                        cpgAutoEventSource.close();
+                    }
+                    cpgAutoEventSource = new EventSource('/api/cpg/auto-generate/logs');
+                    cpgAutoEventSource.onmessage = function(event) {
+                        const data = JSON.parse(event.data);
+                        handleCpgAutoGenerationLog(data);
+                    };
+                    cpgAutoEventSource.onerror = function(event) {
+                        console.error('Ошибка подключения к логам автогенерации');
+                    };
+                } else {
+                    log('Ошибка запуска автогенерации: ' + data.message, true);
+                    cpgIsAutoGenerating = false;
+                    document.getElementById('cpgStartAutoButton').disabled = false;
+                    document.getElementById('cpgStopAutoButton').disabled = true;
+                }
+            })
+            .catch(error => {
+                log('Ошибка запуска автогенерации: ' + error.message, true);
+                cpgIsAutoGenerating = false;
+                document.getElementById('cpgStartAutoButton').disabled = false;
+                document.getElementById('cpgStopAutoButton').disabled = true;
+            });
+        }
+
+        function stopCpgAutoGeneration() {
+            if (!cpgIsAutoGenerating) {
+                log('Автогенерация не запущена', true);
+                return;
+            }
+
+            fetch('/api/cpg/auto-generate/stop', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    log('Автогенерация остановлена');
+                    stopCpgProgressMonitoring();
+                    // Закрываем соединение с логами
+                    if (cpgAutoEventSource) {
+                        cpgAutoEventSource.close();
+                        cpgAutoEventSource = null;
+                    }
+                } else {
+                    log('Ошибка остановки автогенерации: ' + data.message, true);
+                }
+            })
+            .catch(error => {
+                log('Ошибка остановки автогенерации: ' + error.message, true);
+            });
+        }
+
+        function startCpgProgressMonitoring() {
+            cpgUpdateProgressTimer = setInterval(() => {
+                fetch('/api/cpg/auto-generate/status')
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.running) {
+                            document.getElementById('cpgTimeLeft').textContent = data.timeLeft;
+                            document.getElementById('cpgFilesCount').textContent = data.filesSent;
+                        } else {
+                            stopCpgProgressMonitoring();
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Ошибка получения статуса:', error);
+                    });
+            }, 1000);
+        }
+
+        function stopCpgProgressMonitoring() {
+            if (cpgUpdateProgressTimer) {
+                clearInterval(cpgUpdateProgressTimer);
+                cpgUpdateProgressTimer = null;
+            }
+            
+            // Закрываем соединение с логами
+            if (cpgAutoEventSource) {
+                cpgAutoEventSource.close();
+                cpgAutoEventSource = null;
+            }
+            
+            cpgIsAutoGenerating = false;
+            document.getElementById('cpgStartAutoButton').disabled = false;
+            document.getElementById('cpgStopAutoButton').disabled = true;
+            document.getElementById('cpgTimeLeft').textContent = '00:00';
+        }
+
+        // ========== СОХРАНЕНИЕ URL В LOCALSTORAGE ==========
+        function saveUrls() {
+            localStorage.setItem('cssi_url', document.getElementById('url').value);
+            localStorage.setItem('cpg_url', document.getElementById('cpg_url').value);
+        }
+
+        function loadUrls() {
+            // Загружаем сохраненные URL
+            const cssiUrl = localStorage.getItem('cssi_url');
+            const cpgUrl = localStorage.getItem('cpg_url');
+            
+            if (cssiUrl) {
+                document.getElementById('url').value = cssiUrl;
+            }
+            if (cpgUrl) {
+                document.getElementById('cpg_url').value = cpgUrl;
+            }
+        }
+
+        // Автосохранение при изменении URL
+        function setupAutoSave() {
+            document.getElementById('url').addEventListener('input', saveUrls);
+            document.getElementById('cpg_url').addEventListener('input', saveUrls);
+        }
+
+        // ========== ИНИЦИАЛИЗАЦИЯ ==========
+        document.addEventListener('DOMContentLoaded', function() {
+            loadUrls();
+            setupAutoSave();
+            loadRegions();
+        });
     </script>
 </body>
-</html> 
+</html>
