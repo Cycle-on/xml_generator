@@ -47,7 +47,7 @@ def generate_cpg_region_files(
     ukios_info.clear()
     
     # Выводим информацию о параметрах генерации
-    print("\n=== Генерация в режиме ЦПГ ===")
+    print("\n=== Генерация ===")
     print(f"Регион: {region_name}")
     print(f"Количество файлов: {ALL_PROJ_CONSTANTS.get('files_count', 1)}")
     print(f"XML на файл: {ALL_PROJ_CONSTANTS.get('xml_count_per_file', 10)}")
@@ -132,7 +132,7 @@ def generate_cpg_region_files(
             file_counter += 1
     
     # Выводим статистику
-    print(f"\n=== Статистика генерации ЦПГ ===")
+    print(f"\n=== Статистика генерации ===")
     print(f"Успешно сгенерировано: {generated_count}")
     print(f"Неудачных попыток: {failed_count}")
     print(f"Время генерации: {datetime.datetime.now() - dt_start}")
@@ -148,10 +148,10 @@ def generate_cpg_region_files(
 
 def main_cpg():
     """
-    Главная функция для генерации файлов ЦПГ
+    Главная функция для генерации файлов
     """
     print("\n" + "="*50)
-    print("ЗАПУСК ГЕНЕРАТОРА В РЕЖИМЕ ЦПГ")
+    print("ЗАПУСК ГЕНЕРАТОРА")
     print("="*50 + "\n")
     
     config.date_zero = datetime.datetime.now() - td(hours=3)
@@ -180,7 +180,7 @@ def main_cpg():
             )
     
     print("\n" + "="*50)
-    print("ГЕНЕРАЦИЯ ЦПГ ЗАВЕРШЕНА")
+    print("ГЕНЕРАЦИЯ ЗАВЕРШЕНА")
     print("="*50 + "\n")
 
 

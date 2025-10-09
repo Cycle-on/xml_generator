@@ -29,6 +29,7 @@ from constants import fill_constants
 
 fill_constants()
 import json
+import queue
 import time
 from threading import Thread
 
@@ -68,7 +69,7 @@ def load_user(user_id):
 # Путь к директории с файлами
 FILES_DIR = os.path.join("files", "TEST")
 
-# Глобальные переменные для управления автоматической генерацией
+# Глобальные переменные для управления автоматической генерацией ЦССИ
 auto_generation_thread = None
 auto_generation_running = False
 auto_generation_start_time = None
@@ -77,6 +78,16 @@ auto_generation_interval = None
 total_files_sent = 0
 log_callbacks = []
 is_generating = False
+
+# Глобальные переменные для управления автоматической генерацией второй системы
+cpg_auto_generation_thread = None
+cpg_auto_generation_running = False
+cpg_auto_generation_start_time = None
+cpg_auto_generation_end_time = None
+cpg_auto_generation_interval = None
+cpg_total_files_sent = 0
+cpg_log_callbacks = []
+cpg_is_generating = False
 
 
 # Получаем список логинов и паролей из .env
@@ -213,6 +224,62 @@ def get_ukios_files():
                     files.append(f"{region}/Ukios/{file}")
 
     return sorted(files)
+
+
+def get_cpg_files():
+    """Получает список ЦПГ файлов"""
+    files = []
+    base_path = os.path.join("files", "TEST_cpg")
+
+    # Проверяем существование базовой директории
+    if not os.path.exists(base_path):
+        return files
+
+    # Перебираем все регионы
+    for region in os.listdir(base_path):
+        region_path = os.path.join(base_path, region, "UpdateCard")
+        if os.path.exists(region_path):
+            # Добавляем все XML файлы из директории UpdateCard
+            for file in os.listdir(region_path):
+                if file.endswith(".xml"):
+                    files.append(f"{region}/UpdateCard/{file}")
+
+    return sorted(files)
+
+
+def get_cpg_regions():
+    """Получает список ЦПГ регионов из .env"""
+    credentials = []
+    try:
+        with open(".env", "r", encoding="utf-8") as f:
+            for line in f:
+                line = line.strip()
+                if line.startswith("CPG_LOGIN_PASSWORD="):
+                    login_password = line.split("=", 1)[1].strip()
+                    if ":" in login_password:
+                        login, password = login_password.split(":", 1)
+                        credentials.append({"login": login, "password": password})
+    except Exception as e:
+        print(f"Ошибка при чтении .env файла: {str(e)}")
+
+    return [cred["login"] for cred in credentials]
+
+
+def get_cpg_password_for_login(login):
+    """Получает пароль для ЦПГ логина"""
+    try:
+        with open(".env", "r", encoding="utf-8") as f:
+            for line in f:
+                line = line.strip()
+                if line.startswith("CPG_LOGIN_PASSWORD="):
+                    login_password = line.split("=", 1)[1].strip()
+                    if ":" in login_password:
+                        l, password = login_password.split(":", 1)
+                        if l == login:
+                            return password
+    except Exception as e:
+        print(f"Ошибка при чтении .env файла: {str(e)}")
+    return None
 
 
 @app.route("/login", methods=["GET", "POST"])
@@ -548,6 +615,10 @@ def log_message(message):
     for callback in log_callbacks:
         callback(message)
 
+def cpg_log_message(message):
+    for callback in cpg_log_callbacks:
+        callback(message)
+
 
 @app.route("/api/auto-generate", methods=["POST"])
 @login_required
@@ -713,6 +784,7 @@ def auto_generation_worker(url=None):
             seconds_left = int(time_left % 60)
 
             print(f"DEBUG: Осталось времени: {minutes_left:02d}:{seconds_left:02d}")
+            log_message({"type": "time_left", "minutes": minutes_left, "seconds": seconds_left})
 
             # Проверяем, не истекло ли время
             if current_time >= auto_generation_end_time:
@@ -729,6 +801,7 @@ def auto_generation_worker(url=None):
 
             # Начало генерации
             print("DEBUG: Начало цикла генерации")
+            log_message({"type": "console_output", "text": "Начало цикла генерации"})
             log_message({"type": "generation_start"})
 
             # Генерируем файлы
@@ -803,6 +876,7 @@ def auto_generation_worker(url=None):
             # Получаем список фактически сгенерированных регионов
             generated_regions = get_generated_regions()
             print(f"DEBUG: Сгенерированные регионы: {generated_regions}")
+            log_message({"type": "console_output", "text": f"Сгенерированные регионы: {generated_regions}"})
 
             # Для каждого сгенерированного региона ищем соответствующий логин/пароль и отправляем файлы
             for region in generated_regions:
@@ -810,6 +884,7 @@ def auto_generation_worker(url=None):
                     break
 
                 print(f"DEBUG: Обработка региона: {region}")
+                log_message({"type": "console_output", "text": f"Обработка региона: {region}"})
                 log_message(
                     {"type": "console_output", "text": f"Обработка региона: {region}"}
                 )
@@ -851,6 +926,7 @@ def auto_generation_worker(url=None):
                         break
 
                     print(f"DEBUG: Отправка файла {i}/{len(region_files)}: {filename}")
+                    log_message({"type": "sending_file", "current": i, "total": len(region_files)})
                     log_message(
                         {
                             "type": "sending_file",
@@ -912,7 +988,9 @@ def auto_generation_worker(url=None):
                             )
 
                     except Exception as e:
-                        print(f"DEBUG: Ошибка при обработке файла {filename}: {str(e)}")
+                        error_msg = f"Ошибка при обработке файла {filename}: {str(e)}"
+                        print(f"DEBUG: {error_msg}")
+                        log_message({"type": "error", "message": error_msg})
                         log_message(
                             {
                                 "type": "error",
@@ -922,6 +1000,7 @@ def auto_generation_worker(url=None):
 
             # Генерация завершена
             print("DEBUG: Цикл генерации завершен")
+            log_message({"type": "console_output", "text": "Цикл генерации завершен"})
             log_message({"type": "generation_complete"})
 
             # Проверяем, не истекло ли время после завершения цикла
@@ -936,6 +1015,7 @@ def auto_generation_worker(url=None):
             # Ожидание следующего цикла
             wait_seconds = int(auto_generation_interval * 60)
             print(f"DEBUG: Ожидание {wait_seconds} секунд до следующего цикла")
+            log_message({"type": "console_output", "text": f"Ожидание {wait_seconds} секунд до следующего цикла"})
             log_message({"type": "waiting", "seconds": wait_seconds})
 
             # Проверяем, не истекло ли время во время ожидания
@@ -954,5 +1034,476 @@ def auto_generation_worker(url=None):
             time.sleep(1)
 
 
+# ========== ЦПГ API ЭНДПОИНТЫ ==========
+
+@app.route("/cpg/generate/<region>")
+@login_required
+def cpg_generate(region):
+    def generate_cpg_output():
+        capture = OutputCapture()
+        sys.stdout = capture
+        sys.stderr = capture
+
+        def output_callback(text):
+            yield f"data: {text}\n\n"
+
+        capture.add_callback(output_callback)
+
+        try:
+            print("[DEBUG] Начало генерации")
+            
+            # Импортируем функции
+            from main_cpg import generate_cpg_region_files
+            from config.dirs import clear_dir
+            
+            # НЕ очищаем директории ЦССИ, создаем только новые
+            yield "data: Начинаю генерацию...\n\n"
+            
+            print(f"[DEBUG] Генерация для региона: {region}")
+            generate_cpg_region_files(region_name=region)
+            print("[DEBUG] Генерация завершена")
+            
+            # Подсчитываем количество сгенерированных файлов
+            cpg_files = get_cpg_files()
+            # Фильтрация файлов по региону
+            file_count = len([f for f in cpg_files if region in f])
+            
+            yield f"data: Генерация завершена успешно, сгенерировано файлов: {file_count}\n\n"
+
+        except Exception as e:
+            print(f"[ERROR] Ошибка в генерации: {str(e)}")
+            import traceback
+            print(f"[ERROR] Трассировка: {traceback.format_exc()}")
+            yield f"data: Ошибка в генерации: {str(e)}\n\n"
+        finally:
+            sys.stdout = capture.stdout
+            sys.stderr = capture.stderr
+            capture.remove_callback(output_callback)
+            yield "event: done\ndata: \n\n"
+
+    return Response(
+        stream_with_context(generate_cpg_output()),
+        mimetype="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no",
+        },
+    )
+
+
+@app.route("/cpg/files")
+@login_required
+def list_cpg_files():
+    return jsonify(get_cpg_files())
+
+
+@app.route("/cpg/file/<path:filename>")
+@login_required
+def get_cpg_file(filename):
+    try:
+        file_path = os.path.join("files", "TEST_cpg", filename)
+        if os.path.exists(file_path):
+            with open(file_path, "r", encoding="utf-8") as f:
+                content = f.read()
+            return Response(content, mimetype="text/xml")
+        else:
+            return "Файл не найден", 404
+    except Exception as e:
+        return f"Ошибка при чтении файла: {str(e)}", 500
+
+
+@app.route("/api/cpg/regions")
+@login_required
+def get_cpg_regions_api():
+    regions = get_cpg_regions()
+    print(f"API /api/cpg/regions: возвращаю регионы: {regions}")
+    return jsonify(regions)
+
+
+@app.route("/api/cpg/send", methods=["POST"])
+@login_required
+def send_cpg_file():
+    try:
+        data = request.get_json()
+        url = data.get("url")
+        region = data.get("region")
+        filename = data.get("file")
+
+        if not all([url, region, filename]):
+            return jsonify(
+                {"success": False, "message": "Ошибка: не все параметры предоставлены"}
+            ), 400
+
+        # Получаем пароль для выбранного ЦПГ региона
+        password = get_cpg_password_for_login(region)
+        if not password:
+            return jsonify(
+                {
+                    "success": False,
+                    "message": f"Ошибка: не найден пароль для региона {region}",
+                }
+            ), 404
+
+        # Читаем содержимое файла
+        file_path = os.path.join("files", "TEST_cpg", filename)
+        if not os.path.exists(file_path):
+            return jsonify(
+                {"success": False, "message": f"Ошибка: файл {filename} не найден"}
+            ), 404
+
+        with open(file_path, "r", encoding="utf-8") as f:
+            content = f.read()
+
+        # Оборачиваем в SOAP envelope
+        from constants.sender import BASE_SOAP_PREFIX, BASE_SOAP_POSTFIX
+        soap_content = BASE_SOAP_PREFIX + content + BASE_SOAP_POSTFIX
+
+        # Отправляем запрос
+        headers = {
+            "Content-Type": "text/xml;charset=UTF-8",
+            "Authorization": f"Basic {base64.b64encode(f'{region}:{password}'.encode()).decode()}",
+        }
+
+        try:
+            print_colored(f"\n[Отправка файла: {filename}]", Colors.BOLD)
+            
+            # Выводим первые 500 символов SOAP XML для отладки
+            print(f"[DEBUG] SOAP XML содержимое (первые 500 символов):")
+            print(soap_content[:500])
+
+            response = requests.post(
+                url, data=soap_content, headers=headers, timeout=30, verify=False
+            )
+
+            if response.status_code == 200:
+                return jsonify(
+                    {
+                        "success": True,
+                        "message": f"Файл успешно отправлен ({response.status_code})",
+                    }
+                )
+            else:
+                # Выводим ответ сервера для диагностики
+                print(f"[DEBUG] Ошибка {response.status_code}, ответ сервера:")
+                print(response.text[:1000])
+                return jsonify(
+                    {
+                        "success": False,
+                        "message": f"Ошибка при отправке файла: {response.status_code}. Ответ: {response.text[:200]}",
+                    }
+                ), response.status_code
+
+        except requests.exceptions.RequestException as e:
+            return jsonify(
+                {"success": False, "message": f"Ошибка при отправке запроса: {str(e)}"}
+            ), 500
+
+    except Exception as e:
+        return jsonify({"success": False, "message": f"Ошибка: {str(e)}"}), 500
+
+
+# ========== АВТОГЕНЕРАЦИЯ ДЛЯ ВТОРОЙ СИСТЕМЫ ==========
+
+@app.route("/api/cpg/auto-generate", methods=["POST"])
+@login_required
+def start_cpg_auto_generation():
+    global \
+        cpg_auto_generation_thread, \
+        cpg_auto_generation_running, \
+        cpg_auto_generation_start_time, \
+        cpg_auto_generation_end_time, \
+        cpg_auto_generation_interval, \
+        cpg_total_files_sent
+
+    data = request.json
+    interval = float(data.get("interval", 1))
+    duration = float(data.get("duration", 10))
+    url = data.get("url")
+
+    if cpg_auto_generation_running:
+        return jsonify(
+            {"success": False, "message": "Автоматическая генерация уже запущена"}
+        )
+
+    cpg_auto_generation_running = True
+    cpg_auto_generation_start_time = time.time()
+    cpg_auto_generation_end_time = cpg_auto_generation_start_time + (duration * 60)
+    cpg_auto_generation_interval = interval
+    cpg_total_files_sent = 0
+
+    cpg_auto_generation_thread = Thread(target=cpg_auto_generation_worker, args=(url,))
+    cpg_auto_generation_thread.start()
+
+    return jsonify(
+        {
+            "success": True,
+            "message": "Автоматическая генерация запущена",
+            "start_time": cpg_auto_generation_start_time,
+            "end_time": cpg_auto_generation_end_time,
+        }
+    )
+
+
+@app.route("/api/cpg/auto-generate/stop", methods=["POST"])
+@login_required
+def stop_cpg_auto_generation():
+    global cpg_auto_generation_running
+
+    if not cpg_auto_generation_running:
+        return jsonify(
+            {"success": False, "message": "Автоматическая генерация не запущена"}
+        )
+
+    cpg_auto_generation_running = False
+    return jsonify({"success": True, "message": "Автоматическая генерация остановлена"})
+
+
+@app.route("/api/cpg/auto-generate/status", methods=["GET"])
+@login_required
+def get_cpg_auto_generation_status():
+    if not cpg_auto_generation_running:
+        return jsonify(
+            {"running": False, "message": "Автоматическая генерация не запущена"}
+        )
+
+    time_left = max(0, cpg_auto_generation_end_time - time.time())
+    minutes = int(time_left // 60)
+    seconds = int(time_left % 60)
+
+    return jsonify(
+        {
+            "running": True,
+            "timeLeft": f"{minutes:02d}:{seconds:02d}",
+            "filesSent": cpg_total_files_sent,
+        }
+    )
+
+
+@app.route("/api/cpg/auto-generate/logs")
+@login_required
+def cpg_auto_generate_logs():
+    def generate_cpg_logs():
+        message_queue = queue.Queue()
+        
+        def log_callback(message):
+            message_queue.put(message)
+        
+        # Добавляем callback для получения логов
+        cpg_log_callbacks.append(log_callback)
+        
+        try:
+            yield ": keep-alive\n\n"
+            while True:
+                try:
+                    # Проверяем наличие сообщений в очереди (неблокирующе)
+                    try:
+                        message = message_queue.get_nowait()
+                        yield f"data: {json.dumps(message)}\n\n"
+                    except queue.Empty:
+                        pass
+                    
+                    # Если автогенерация не запущена, отправляем статус
+                    if not cpg_auto_generation_running:
+                        time.sleep(1)
+                        continue
+                        
+                    time.sleep(0.1)
+                except GeneratorExit:
+                    break
+                except Exception as e:
+                    print(f"Ошибка в генераторе логов ЦПГ: {str(e)}")
+                    time.sleep(1)
+                    continue
+        except Exception as e:
+            print(f"Критическая ошибка в генераторе логов ЦПГ: {str(e)}")
+        finally:
+            # Удаляем callback при закрытии соединения
+            if log_callback in cpg_log_callbacks:
+                cpg_log_callbacks.remove(log_callback)
+
+    response = Response(
+        stream_with_context(generate_cpg_logs()), mimetype="text/event-stream"
+    )
+    response.headers["Cache-Control"] = "no-cache"
+    response.headers["Connection"] = "keep-alive"
+    response.headers["X-Accel-Buffering"] = "no"
+    response.headers["Access-Control-Allow-Origin"] = "*"
+    return response
+
+
+def get_cpg_generated_regions():
+    """Получает список фактически сгенерированных регионов из директории TEST_cpg"""
+    regions = []
+    base_path = os.path.join("files", "TEST_cpg")
+
+    if not os.path.exists(base_path):
+        return regions
+
+    for region in os.listdir(base_path):
+        region_path = os.path.join(base_path, region, "UpdateCard")
+        if os.path.exists(region_path) and os.listdir(region_path):
+            regions.append(region)
+
+    return sorted(regions)
+
+
+def cpg_auto_generation_worker(url=None):
+    global cpg_auto_generation_running, cpg_total_files_sent
+    cpg_total_files_sent = 0
+
+    print("DEBUG: Запущен worker автогенерации")
+    cpg_log_message({"type": "console_output", "text": "Запущен worker автогенерации"})
+    print(
+        f"DEBUG: Время работы - start: {cpg_auto_generation_start_time}, end: {cpg_auto_generation_end_time}, interval: {cpg_auto_generation_interval}"
+    )
+
+    if not url:
+        url = "https://tspg-connect-master.connect.lan/soap_1?"
+    print(f"DEBUG: Используется URL: {url}")
+    cpg_log_message({"type": "console_output", "text": f"Используется URL: {url}"})
+
+    while cpg_auto_generation_running:
+        try:
+            current_time = time.time()
+            time_left = cpg_auto_generation_end_time - current_time
+            minutes_left = int(time_left // 60)
+            seconds_left = int(time_left % 60)
+
+            print(f"DEBUG: Осталось времени: {minutes_left:02d}:{seconds_left:02d}")
+            cpg_log_message({"type": "time_left", "minutes": minutes_left, "seconds": seconds_left})
+
+            if current_time >= cpg_auto_generation_end_time:
+                print("DEBUG: Время генерации истекло")
+                cpg_log_message({"type": "console_output", "text": "Время генерации истекло"})
+                cpg_auto_generation_running = False
+                print("DEBUG: Автогенерация завершена")
+                cpg_log_message({"type": "console_output", "text": "Автогенерация завершена"})
+                break
+
+            print("DEBUG: Начало цикла генерации")
+            cpg_log_message({"type": "console_output", "text": "Начало цикла генерации"})
+
+            # Генерируем файлы для всех регионов
+            cpg_regions = get_cpg_regions()
+            for region in cpg_regions:
+                if not cpg_auto_generation_running:
+                    break
+                
+                print(f"DEBUG: Генерация для региона {region}")
+                cpg_log_message({"type": "console_output", "text": f"Генерация для региона {region}"})
+                try:
+                    from main_cpg import generate_cpg_region_files
+                    generate_cpg_region_files(region_name=region)
+                except Exception as e:
+                    error_msg = f"Ошибка генерации для {region}: {str(e)}"
+                    print(f"DEBUG: {error_msg}")
+                    cpg_log_message({"type": "error", "message": error_msg})
+                    continue
+
+            # Получаем список сгенерированных регионов
+            generated_regions = get_cpg_generated_regions()
+            print(f"DEBUG: Сгенерированные регионы: {generated_regions}")
+            cpg_log_message({"type": "console_output", "text": f"Сгенерированные регионы: {generated_regions}"})
+
+            # Отправляем файлы для каждого региона
+            for region in generated_regions:
+                if not cpg_auto_generation_running:
+                    break
+
+                print(f"DEBUG: Обработка региона: {region}")
+                cpg_log_message({"type": "console_output", "text": f"Обработка региона: {region}"})
+
+                # Получаем пароль для региона
+                password = get_cpg_password_for_login(region)
+                if not password:
+                    error_msg = f"Не найден пароль для региона {region}"
+                    print(f"DEBUG: {error_msg}")
+                    cpg_log_message({"type": "console_output", "text": error_msg})
+                    continue
+
+                # Получаем список файлов для региона
+                files = get_cpg_files()
+                region_files = [f for f in files if f.startswith(f"{region}/")]
+
+                if not region_files:
+                    msg = f"Нет файлов для региона {region}"
+                    print(f"DEBUG: {msg}")
+                    cpg_log_message({"type": "console_output", "text": msg})
+                    continue
+
+                print(f"DEBUG: Найдено файлов для региона {region}: {len(region_files)}")
+                cpg_log_message({"type": "files_found", "count": len(region_files)})
+
+                # Отправляем каждый файл
+                for i, filename in enumerate(region_files, 1):
+                    if not cpg_auto_generation_running:
+                        break
+
+                    print(f"DEBUG: Отправка файла {i}/{len(region_files)}: {filename}")
+                    cpg_log_message({"type": "sending_file", "current": i, "total": len(region_files)})
+
+                    try:
+                        file_path = os.path.join("files", "TEST_cpg", filename)
+                        if not os.path.exists(file_path):
+                            continue
+
+                        with open(file_path, "r", encoding="utf-8") as f:
+                            content = f.read()
+
+                        # Оборачиваем в SOAP
+                        from constants.sender import BASE_SOAP_PREFIX, BASE_SOAP_POSTFIX
+                        soap_content = BASE_SOAP_PREFIX + content + BASE_SOAP_POSTFIX
+
+                        headers = {
+                            "Content-Type": "text/xml;charset=UTF-8",
+                            "Authorization": f"Basic {base64.b64encode(f'{region}:{password}'.encode()).decode()}",
+                        }
+
+                        response = requests.post(
+                            url, data=soap_content, headers=headers, timeout=30, verify=False
+                        )
+
+                        if response.status_code == 200:
+                            cpg_total_files_sent += 1
+                            success_msg = f"Файл {filename} успешно отправлен"
+                            print(f"DEBUG: {success_msg}")
+                            cpg_log_message({"type": "file_sent_success", "filename": filename, "total_sent": cpg_total_files_sent})
+                        else:
+                            error_msg = f"Ошибка при отправке файла {filename}: {response.status_code}"
+                            print(f"DEBUG: {error_msg}")
+                            cpg_log_message({"type": "file_sent_error", "filename": filename, "status_code": response.status_code})
+
+                    except Exception as e:
+                        error_msg = f"Ошибка при обработке файла {filename}: {str(e)}"
+                        print(f"DEBUG: {error_msg}")
+                        cpg_log_message({"type": "error", "message": error_msg})
+
+            print("DEBUG: Цикл генерации завершен")
+            cpg_log_message({"type": "console_output", "text": "Цикл генерации завершен"})
+
+            if time.time() >= cpg_auto_generation_end_time:
+                cpg_auto_generation_running = False
+                break
+
+            # Ожидание следующего цикла
+            wait_seconds = int(cpg_auto_generation_interval * 60)
+            print(f"DEBUG: Ожидание {wait_seconds} секунд до следующего цикла")
+            cpg_log_message({"type": "console_output", "text": f"Ожидание {wait_seconds} секунд до следующего цикла"})
+
+            end_time = time.time() + wait_seconds
+            while time.time() < end_time and cpg_auto_generation_running:
+                if time.time() >= cpg_auto_generation_end_time:
+                    cpg_auto_generation_running = False
+                    break
+                time.sleep(1)
+
+        except Exception as e:
+            error_msg = f"Ошибка в цикле генерации: {str(e)}"
+            print(f"DEBUG: {error_msg}")
+            cpg_log_message({"type": "error", "message": error_msg})
+            time.sleep(1)
+
+
 if __name__ == "__main__":
-    app.run(host="0.0.0.0")
+    app.run(host="0.0.0.0", port=5001)
