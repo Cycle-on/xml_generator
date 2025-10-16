@@ -114,19 +114,20 @@ def _add_elements_to_xml(parent: ET.Element, data: dict, namespace: str):
                     _add_elements_to_xml(sub_element, item, namespace)
                 else:
                     sub_element = ET.SubElement(parent, element_tag)
-                    sub_element.text = _format_value(item)
+                    sub_element.text = _format_value(item, key)
         else:
             # Простое значение
             element = ET.SubElement(parent, element_tag)
-            element.text = _format_value(value)
+            element.text = _format_value(value, key)
 
 
-def _format_value(value) -> str:
+def _format_value(value, field_name: str = "") -> str:
     """
     Форматирует значение для XML
     
     Args:
         value: Значение для форматирования
+        field_name: Имя поля для определения типа времени
         
     Returns:
         str: Отформатированное значение
@@ -134,7 +135,11 @@ def _format_value(value) -> str:
     if isinstance(value, bool):
         return str(value).lower()
     elif isinstance(value, datetime.datetime):
-        return value.isoformat()
+        formatted_value = value.isoformat()
+        # Добавляем Z для полей времени (аналогично ЦССИ)
+        if "time" in field_name.lower() or "created" in field_name.lower() or "changed" in field_name.lower():
+            formatted_value += "Z"
+        return formatted_value
     elif value is None:
         return ""
     else:

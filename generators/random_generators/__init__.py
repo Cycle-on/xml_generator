@@ -39,7 +39,7 @@ def execute_district(address: str):
     return None, None
 
 
-def get_address_by_code(region_code: str | int = "27") -> tuple[str, str, str]:
+def get_address_by_code(region_code: str | int = "50") -> tuple[str, str, str]:
     with open(
         os.path.join(
             "generators", "random_generators", "addresses", f"{region_code}.txt"
