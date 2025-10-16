@@ -70,8 +70,8 @@ def _create_card_from_ukio(ukio: Ukio) -> CPGCard:
         CreateOperator=_map_operator(first_operator),
         LastChangeOperator=_map_operator(last_operator),
         IncidentState=ukio.strCardState.value if ukio.strCardState else "new",
-        Created=ukio.dtCreate.isoformat() if ukio.dtCreate else datetime.now().isoformat(),
-        Changed=ukio.dtUpdate.isoformat() if ukio.dtUpdate else datetime.now().isoformat()
+        Created=ukio.dtCreate.isoformat() + 'Z' if ukio.dtCreate else datetime.now().isoformat() + 'Z',
+        Changed=ukio.dtUpdate.isoformat() + 'Z' if ukio.dtUpdate else datetime.now().isoformat() + 'Z'
     )
     
     return card
@@ -82,14 +82,14 @@ def _create_ier_from_ukio(ukio: Ukio) -> CPGIer:
     
     # Извлекаем оператора принявшего звонок
     accept_operator = None
-    ier_time = datetime.now().isoformat()
+    ier_time = datetime.now().isoformat() + 'Z'
     
     if ukio.phoneCall and len(ukio.phoneCall) > 0:
         first_call = ukio.phoneCall[0]
         if hasattr(first_call, 'operator'):
             accept_operator = first_call.operator
         if hasattr(first_call, 'dtCall'):
-            ier_time = first_call.dtCall.isoformat()
+            ier_time = first_call.dtCall.isoformat() + 'Z'
     
     if not accept_operator:
         accept_operator = _create_default_operator()
@@ -192,9 +192,9 @@ def _extract_common_data(ukio: Ukio) -> CPGCommonData:
         incident_type = ukio.strIncidentType
     
     # Определяем время происшествия
-    time_iso = datetime.now().isoformat()
+    time_iso = datetime.now().isoformat() + 'Z'
     if ukio.dtCall:
-        time_iso = ukio.dtCall.isoformat()
+        time_iso = ukio.dtCall.isoformat() + 'Z'
     
     # Извлекаем описание
     description = None
