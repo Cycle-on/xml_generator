@@ -203,7 +203,7 @@ def _extract_common_data(ukio: Ukio) -> CPGCommonData:
     
     return CPGCommonData(
         TypeStr=incident_type,
-        RegionStr="",  # Обязательное поле по WSDL! Пустая строка
+        RegionStr="Московская область",  # Обязательное поле по WSDL
         HrId=None,  # Нет соответствия согласно таблице маппинга!
         Description=description,
         LostNumber=None,  # Нет соответствия - должно быть пустым!

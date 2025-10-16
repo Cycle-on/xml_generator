@@ -73,7 +73,7 @@ class CPGLocation(BaseModel):
 class CPGCommonData(BaseModel):
     """Общие данные карточки"""
     TypeStr: str  # Тип происшествия
-    RegionStr: Optional[str] = None  # Нет соответствия - должно быть пустым!
+    RegionStr: str = "Московская область"  # Обязательное поле по WSDL
     HrId: Optional[str] = None  # Нет соответствия - должно быть пустым!
     Description: Optional[str] = None
     LostNumber: Optional[int] = None  # Нет соответствия - должно быть пустым!
