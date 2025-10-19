@@ -1054,10 +1054,12 @@ def cpg_generate(region):
             
             # Импортируем функции
             from main_cpg import generate_cpg_region_files
-            from config.dirs import clear_dir
+            from config.dirs import clear_dir, clear_cpg_dir
             from constants.constants_remaker import get_next_constants
             
-            # НЕ очищаем директории ЦССИ, создаем только новые
+            # Очищаем только ЦПГ директории, не трогаем ЦССИ
+            print("[DEBUG] Очистка ЦПГ директорий перед генерацией")
+            clear_cpg_dir()
             yield "data: Начинаю генерацию...\n\n"
             
             print(f"[DEBUG] Генерация для региона: {region}")
@@ -1387,6 +1389,12 @@ def cpg_auto_generation_worker(url=None):
     print(
         f"DEBUG: Время работы - start: {cpg_auto_generation_start_time}, end: {cpg_auto_generation_end_time}, interval: {cpg_auto_generation_interval}"
     )
+    
+    # Очищаем ЦПГ директории перед началом автогенерации
+    print("DEBUG: Очистка ЦПГ директорий перед автогенерацией")
+    cpg_log_message({"type": "console_output", "text": "Очистка ЦПГ директорий"})
+    from config.dirs import clear_cpg_dir
+    clear_cpg_dir()
 
     if not url:
         url = "https://tspg-connect-master.connect.lan/soap_1?"

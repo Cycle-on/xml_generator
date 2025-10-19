@@ -24,3 +24,18 @@ def clear_dir(dir_path: str = "./files/"):
     if os.path.exists(dir_path):
         shutil.rmtree(dir_path)
         os.makedirs(dir_path)
+
+
+def clear_cpg_dir():
+    """Очищает только ЦПГ директории, не трогая ЦССИ файлы"""
+    cpg_dirs = ["./files/TEST_cpg/", "./files/cpg/"]
+    
+    for dir_path in cpg_dirs:
+        if os.path.exists(dir_path):
+            print(f"[DEBUG] Очищаем ЦПГ директорию: {dir_path}")
+            shutil.rmtree(dir_path)
+            os.makedirs(dir_path)
+        else:
+            print(f"[DEBUG] ЦПГ директория не существует: {dir_path}")
+    
+    print("[DEBUG] Очистка ЦПГ директорий завершена")
