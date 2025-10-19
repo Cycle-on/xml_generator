@@ -1055,12 +1055,42 @@ def cpg_generate(region):
             # Импортируем функции
             from main_cpg import generate_cpg_region_files
             from config.dirs import clear_dir
+            from constants.constants_remaker import get_next_constants
             
             # НЕ очищаем директории ЦССИ, создаем только новые
             yield "data: Начинаю генерацию...\n\n"
             
             print(f"[DEBUG] Генерация для региона: {region}")
-            generate_cpg_region_files(region_name=region)
+            
+            # Запускаем генерацию в зависимости от значения TAKE_CONSTANTS_FROM_FILE
+            if TAKE_CONSTANTS_FROM_FILE:
+                print("[DEBUG] TAKE_CONSTANTS_FROM_FILE = True, вызываем generate_cpg_region_files() с константами из файла")
+                generate_cpg_region_files(region_name=region)
+            else:
+                print("[DEBUG] TAKE_CONSTANTS_FROM_FILE = False, получаем константы из get_next_constants()")
+                try:
+                    print("[DEBUG] Вызов get_next_constants() для ЦПГ")
+                    for constants_dict in get_next_constants():
+                        print(f"[DEBUG] Обрабатываем константы для региона: {constants_dict.get('region_name/constant name', region)}")
+                        
+                        # Обновляем константы как в ЦССИ режиме
+                        ALL_PROJ_CONSTANTS.update(constants_dict)
+                        
+                        # Преобразуем строки в списки если нужно
+                        for k, v in ALL_PROJ_CONSTANTS.items():
+                            if isinstance(v, str) and "[" in v:
+                                ALL_PROJ_CONSTANTS[k] = eval(v)
+                        
+                        generate_cpg_region_files(
+                            region_name=constants_dict.get("region_name/constant name", region)
+                        )
+                        print(f"[DEBUG] Генерация завершена для региона: {constants_dict.get('region_name/constant name', region)}")
+                        
+                except Exception as e:
+                    print(f"[ERROR] Ошибка при загрузке констант из Google Sheets: {e}")
+                    print("[DEBUG] Используем константы из файла как fallback")
+                    generate_cpg_region_files(region_name=region)
+            
             print("[DEBUG] Генерация завершена")
             
             # Подсчитываем количество сгенерированных файлов
@@ -1394,7 +1424,33 @@ def cpg_auto_generation_worker(url=None):
                 cpg_log_message({"type": "console_output", "text": f"Генерация для региона {region}"})
                 try:
                     from main_cpg import generate_cpg_region_files
-                    generate_cpg_region_files(region_name=region)
+                    from constants.constants_remaker import get_next_constants
+                    
+                    # Запускаем генерацию в зависимости от значения TAKE_CONSTANTS_FROM_FILE
+                    if TAKE_CONSTANTS_FROM_FILE:
+                        print(f"[DEBUG] TAKE_CONSTANTS_FROM_FILE = True, генерация {region} с константами из файла")
+                        generate_cpg_region_files(region_name=region)
+                    else:
+                        print(f"[DEBUG] TAKE_CONSTANTS_FROM_FILE = False, загружаем константы из Google Sheets для {region}")
+                        constants_loaded = False
+                        for constants_dict in get_next_constants():
+                            # Обновляем константы
+                            ALL_PROJ_CONSTANTS.update(constants_dict)
+                            
+                            # Преобразуем строки в списки если нужно
+                            for k, v in ALL_PROJ_CONSTANTS.items():
+                                if isinstance(v, str) and "[" in v:
+                                    ALL_PROJ_CONSTANTS[k] = eval(v)
+                            
+                            generate_cpg_region_files(
+                                region_name=constants_dict.get("region_name/constant name", region)
+                            )
+                            constants_loaded = True
+                            
+                        if not constants_loaded:
+                            print(f"[DEBUG] Не удалось загрузить константы из Google Sheets, используем файловые для {region}")
+                            generate_cpg_region_files(region_name=region)
+                            
                 except Exception as e:
                     error_msg = f"Ошибка генерации для {region}: {str(e)}"
                     print(f"DEBUG: {error_msg}")
