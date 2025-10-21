@@ -1153,6 +1153,131 @@ def get_cpg_regions_api():
     return jsonify(regions)
 
 
+@app.route("/api/clear-files", methods=["POST"])
+@login_required
+def clear_all_files():
+    try:
+        import shutil
+        deleted_count = 0
+        deleted_folders = []
+        
+        # Пути к директориям
+        test_dir = os.path.join("files", "TEST")
+        test_cpg_dir = os.path.join("files", "TEST_cpg")
+        
+        # Удаляем содержимое TEST директории
+        if os.path.exists(test_dir):
+            for item in os.listdir(test_dir):
+                item_path = os.path.join(test_dir, item)
+                if os.path.isdir(item_path):
+                    shutil.rmtree(item_path)
+                    deleted_folders.append(f"TEST/{item}")
+                else:
+                    os.remove(item_path)
+                    deleted_count += 1
+                    
+        # Удаляем содержимое TEST_cpg директории  
+        if os.path.exists(test_cpg_dir):
+            for item in os.listdir(test_cpg_dir):
+                item_path = os.path.join(test_cpg_dir, item)
+                if os.path.isdir(item_path):
+                    shutil.rmtree(item_path)
+                    deleted_folders.append(f"TEST_cpg/{item}")
+                else:
+                    os.remove(item_path)
+                    deleted_count += 1
+        
+        message = f"Удалено {len(deleted_folders)} папок и {deleted_count} файлов"
+        if deleted_folders:
+            message += f". Папки: {', '.join(deleted_folders)}"
+            
+        print_colored(f"\n[Очистка файлов: {message}]", Colors.YELLOW)
+        
+        return jsonify({
+            "success": True,
+            "message": message,
+            "deleted_folders": len(deleted_folders),
+            "deleted_files": deleted_count
+        })
+        
+    except Exception as e:
+        error_msg = f"Ошибка при удалении файлов: {str(e)}"
+        print_colored(f"\n[ОШИБКА очистки файлов: {error_msg}]", Colors.RED)
+        return jsonify({
+            "success": False,
+            "message": error_msg
+        }), 500
+
+
+@app.route("/api/get-token", methods=["POST"])
+@login_required  
+def get_auth_token():
+    try:
+        data = request.get_json()
+        url = data.get("url")
+        client_id = data.get("client_id")
+        client_secret = data.get("client_secret")
+
+        if not all([url, client_id, client_secret]):
+            return jsonify(
+                {"success": False, "message": "Ошибка: не все параметры предоставлены"}
+            ), 400
+
+        # Подготавливаем данные для запроса токена
+        token_data = {
+            "grant_type": "client_credentials",
+            "client_id": client_id,
+            "client_secret": client_secret
+        }
+
+        headers = {
+            "Content-Type": "application/x-www-form-urlencoded"
+        }
+
+        try:
+            print_colored(f"\n[Запрос токена для client_id: {client_id}]", Colors.BOLD)
+            print_request_details(url, headers, str(token_data))
+
+            response = requests.post(
+                url, 
+                data=token_data, 
+                headers=headers, 
+                timeout=30, 
+                verify=False
+            )
+
+            print_response_details(response)
+
+            if response.status_code == 200:
+                token_response = response.json()
+                access_token = token_response.get("access_token")
+                
+                if access_token:
+                    return jsonify({
+                        "success": True,
+                        "access_token": access_token,
+                        "message": "Токен успешно получен"
+                    })
+                else:
+                    return jsonify({
+                        "success": False,
+                        "message": "Токен не найден в ответе сервера"
+                    }), 400
+            else:
+                return jsonify({
+                    "success": False,
+                    "message": f"Ошибка получения токена: {response.status_code}. Ответ: {response.text[:200]}"
+                }), response.status_code
+
+        except requests.exceptions.RequestException as e:
+            return jsonify(
+                {"success": False, "message": f"Ошибка при отправке запроса: {str(e)}"}
+            ), 500
+
+    except Exception as e:
+        return jsonify({"success": False, "message": f"Ошибка: {str(e)}"}), 500
+
+
 @app.route("/api/cpg/send", methods=["POST"])
 @login_required
 def send_cpg_file():
@@ -1161,21 +1286,12 @@ def send_cpg_file():
         url = data.get("url")
         region = data.get("region")
         filename = data.get("file")
+        auth_token = data.get("auth_token")  # Опциональный Bearer токен
 
         if not all([url, region, filename]):
             return jsonify(
                 {"success": False, "message": "Ошибка: не все параметры предоставлены"}
             ), 400
-
-        # Получаем пароль для выбранного ЦПГ региона
-        password = get_cpg_password_for_login(region)
-        if not password:
-            return jsonify(
-                {
-                    "success": False,
-                    "message": f"Ошибка: не найден пароль для региона {region}",
-                }
-            ), 404
 
         # Читаем содержимое файла
         file_path = os.path.join("files", "TEST_cpg", filename)
@@ -1191,11 +1307,27 @@ def send_cpg_file():
         from constants.sender import BASE_SOAP_PREFIX, BASE_SOAP_POSTFIX
         soap_content = BASE_SOAP_PREFIX + content + BASE_SOAP_POSTFIX
 
-        # Отправляем запрос
+        # Определяем тип авторизации
         headers = {
             "Content-Type": "text/xml;charset=UTF-8",
-            "Authorization": f"Basic {base64.b64encode(f'{region}:{password}'.encode()).decode()}",
         }
+        
+        if auth_token:
+            # Используем Bearer токен
+            headers["Authorization"] = f"Bearer {auth_token}"
+            print_colored(f"\n[Отправка файла с Bearer токеном: {filename}]", Colors.BOLD)
+        else:
+            # Используем Basic авторизацию (старый способ)
+            password = get_cpg_password_for_login(region)
+            if not password:
+                return jsonify(
+                    {
+                        "success": False,
+                        "message": f"Ошибка: не найден пароль для региона {region} и не указан токен",
+                    }
+                ), 404
+            headers["Authorization"] = f"Basic {base64.b64encode(f'{region}:{password}'.encode()).decode()}"
+            print_colored(f"\n[Отправка файла с Basic авторизацией: {filename}]", Colors.BOLD)
 
         try:
             print_colored(f"\n[Отправка файла: {filename}]", Colors.BOLD)
@@ -1252,6 +1384,8 @@ def start_cpg_auto_generation():
     interval = float(data.get("interval", 1))
     duration = float(data.get("duration", 10))
     url = data.get("url")
+    auth_token = data.get("auth_token")  # Опциональный Bearer токен
+    selected_regions = data.get("selected_regions", [])  # Опциональный список регионов
 
     if cpg_auto_generation_running:
         return jsonify(
@@ -1264,7 +1398,7 @@ def start_cpg_auto_generation():
     cpg_auto_generation_interval = interval
     cpg_total_files_sent = 0
 
-    cpg_auto_generation_thread = Thread(target=cpg_auto_generation_worker, args=(url,))
+    cpg_auto_generation_thread = Thread(target=cpg_auto_generation_worker, args=(url, auth_token, selected_regions))
     cpg_auto_generation_thread.start()
 
     return jsonify(
@@ -1380,7 +1514,7 @@ def get_cpg_generated_regions():
     return sorted(regions)
 
 
-def cpg_auto_generation_worker(url=None):
+def cpg_auto_generation_worker(url=None, auth_token=None, selected_regions=None):
     global cpg_auto_generation_running, cpg_total_files_sent
     cpg_total_files_sent = 0
 
@@ -1398,8 +1532,12 @@ def cpg_auto_generation_worker(url=None):
 
     if not url:
         url = "https://tspg-connect-master.connect.lan/soap_1?"
-    print(f"DEBUG: Используется URL: {url}")
-    cpg_log_message({"type": "console_output", "text": f"Используется URL: {url}"})
+    
+    auth_type = "Bearer токеном" if auth_token else "Basic авторизацией"
+    regions_text = f" для регионов: {', '.join(selected_regions)}" if selected_regions else " для всех регионов"
+    print(f"DEBUG: auth_token = '{auth_token}', selected_regions = {selected_regions}")
+    print(f"DEBUG: Используется URL: {url} с {auth_type}{regions_text}")
+    cpg_log_message({"type": "console_output", "text": f"Используется URL: {url} с {auth_type}{regions_text}"})
 
     while cpg_auto_generation_running:
         try:
@@ -1422,8 +1560,14 @@ def cpg_auto_generation_worker(url=None):
             print("DEBUG: Начало цикла генерации")
             cpg_log_message({"type": "console_output", "text": "Начало цикла генерации"})
 
-            # Генерируем файлы для всех регионов
-            cpg_regions = get_cpg_regions()
+            # Генерируем файлы для выбранных регионов или всех
+            if selected_regions:
+                cpg_regions = [region for region in selected_regions if region in get_cpg_regions()]
+                print(f"DEBUG: Используются выбранные регионы: {cpg_regions}")
+            else:
+                cpg_regions = get_cpg_regions()
+                print(f"DEBUG: Используются все регионы: {cpg_regions}")
+            
             for region in cpg_regions:
                 if not cpg_auto_generation_running:
                     break
@@ -1442,6 +1586,13 @@ def cpg_auto_generation_worker(url=None):
                         print(f"[DEBUG] TAKE_CONSTANTS_FROM_FILE = False, загружаем константы из Google Sheets для {region}")
                         constants_loaded = False
                         for constants_dict in get_next_constants():
+                            # Фильтруем по текущему региону - пропускаем если это не тот регион
+                            region_from_constants = constants_dict.get("region_name/constant name", "")
+                            if region_from_constants != region:
+                                print(f"[DEBUG] Пропускаем константы для региона {region_from_constants}, нужен {region}")
+                                continue
+                                
+                            print(f"[DEBUG] Найдены константы для региона {region}")
                             # Обновляем константы
                             ALL_PROJ_CONSTANTS.update(constants_dict)
                             
@@ -1450,13 +1601,12 @@ def cpg_auto_generation_worker(url=None):
                                 if isinstance(v, str) and "[" in v:
                                     ALL_PROJ_CONSTANTS[k] = eval(v)
                             
-                            generate_cpg_region_files(
-                                region_name=constants_dict.get("region_name/constant name", region)
-                            )
+                            generate_cpg_region_files(region_name=region)
                             constants_loaded = True
+                            break  # Генерируем только для текущего региона
                             
                         if not constants_loaded:
-                            print(f"[DEBUG] Не удалось загрузить константы из Google Sheets, используем файловые для {region}")
+                            print(f"[DEBUG] Не удалось загрузить константы из Google Sheets для {region}, используем файловые")
                             generate_cpg_region_files(region_name=region)
                             
                 except Exception as e:
@@ -1478,13 +1628,15 @@ def cpg_auto_generation_worker(url=None):
                 print(f"DEBUG: Обработка региона: {region}")
                 cpg_log_message({"type": "console_output", "text": f"Обработка региона: {region}"})
 
-                # Получаем пароль для региона
-                password = get_cpg_password_for_login(region)
-                if not password:
-                    error_msg = f"Не найден пароль для региона {region}"
-                    print(f"DEBUG: {error_msg}")
-                    cpg_log_message({"type": "console_output", "text": error_msg})
-                    continue
+                # Получаем пароль для региона (только если не используется токен)
+                password = None
+                if not auth_token:
+                    password = get_cpg_password_for_login(region)
+                    if not password:
+                        error_msg = f"Не найден пароль для региона {region}"
+                        print(f"DEBUG: {error_msg}")
+                        cpg_log_message({"type": "console_output", "text": error_msg})
+                        continue
 
                 # Получаем список файлов для региона
                 files = get_cpg_files()
@@ -1519,10 +1671,22 @@ def cpg_auto_generation_worker(url=None):
                         from constants.sender import BASE_SOAP_PREFIX, BASE_SOAP_POSTFIX
                         soap_content = BASE_SOAP_PREFIX + content + BASE_SOAP_POSTFIX
 
+                        # Определяем тип авторизации
                         headers = {
                             "Content-Type": "text/xml;charset=UTF-8",
-                            "Authorization": f"Basic {base64.b64encode(f'{region}:{password}'.encode()).decode()}",
                         }
+                        
+                        if auth_token:
+                            # Используем Bearer токен
+                            headers["Authorization"] = f"Bearer {auth_token}"
+                        else:
+                            # Используем Basic авторизацию (старый способ)
+                            if not password:
+                                error_msg = f"Не найден пароль для региона {region} и не указан токен"
+                                print(f"DEBUG: {error_msg}")
+                                cpg_log_message({"type": "console_output", "text": error_msg})
+                                continue
+                            headers["Authorization"] = f"Basic {base64.b64encode(f'{region}:{password}'.encode()).decode()}"
 
                         response = requests.post(
                             url, data=soap_content, headers=headers, timeout=30, verify=False
