@@ -3,6 +3,11 @@ import io
 import os
 import sys
 import tracemalloc
+import threading
+import time
+import queue
+import json
+import socket
 
 import requests
 from flask import (
@@ -40,6 +45,15 @@ from constants import *
 from constants import ALL_PROJ_CONSTANTS
 from constants.constants_remaker import get_next_constants
 from main import clear_dir, generate_region_files, main
+
+# Импорты для сервера приема сообщений
+try:
+    from message_receiver import start_message_receiver_server, stop_message_receiver_server, is_running as receiver_running
+    from message_logger import message_logger
+    PITV_AVAILABLE = True
+except ImportError as e:
+    print(f"[WARNING] Не удалось загрузить модули ПИТВ: {e}")
+    PITV_AVAILABLE = False
 
 # Загружаем переменные окружения
 load_dotenv()
@@ -88,6 +102,9 @@ cpg_auto_generation_interval = None
 cpg_total_files_sent = 0
 cpg_log_callbacks = []
 cpg_is_generating = False
+
+# Глобальные переменные для ПИТВ
+pitv_message_callbacks = []
 
 
 # Получаем список логинов и паролей из .env
@@ -309,7 +326,17 @@ def logout():
 @app.route("/")
 @login_required
 def index():
-    return render_template("index.html")
+    # Читаем настройки отображения вкладок из .env
+    show_cssi = os.getenv("SHOW_CSSI", "true").lower() == "true"
+    show_cpg = os.getenv("SHOW_CPG", "true").lower() == "true" 
+    show_token = os.getenv("SHOW_TOKEN", "true").lower() == "true"
+    show_messages = os.getenv("SHOW_MESSAGES", "true").lower() == "true"
+    
+    return render_template("index.html", 
+                         show_cssi=show_cssi,
+                         show_cpg=show_cpg, 
+                         show_token=show_token,
+                         show_messages=show_messages)
 
 
 @app.route("/generate/<region>")
@@ -1569,5 +1596,237 @@ def cpg_auto_generation_worker(url=None):
             time.sleep(1)
 
 
+# ========== ПИТВ API ЭНДПОИНТЫ ==========
+
+@app.route("/api/pitv/messages", methods=["GET"])
+@login_required
+def get_pitv_messages():
+    """Получить сообщения ПИТВ из журнала"""
+    if not PITV_AVAILABLE:
+        return jsonify({"success": False, "error": "ПИТВ модули недоступны"}), 503
+    
+    try:
+        limit = int(request.args.get('limit', 100))
+        message_type = request.args.get('type')
+        id_112 = request.args.get('id_112')
+        
+        messages = message_logger.get_messages(
+            limit=limit,
+            message_type=message_type,
+            id_112=id_112
+        )
+        
+        return jsonify({
+            "success": True,
+            "messages": messages,
+            "count": len(messages)
+        })
+        
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@app.route("/api/pitv/messages/clear", methods=["POST"])
+@login_required
+def clear_pitv_messages():
+    """Очистить журнал сообщений ПИТВ"""
+    if not PITV_AVAILABLE:
+        return jsonify({"success": False, "error": "ПИТВ модули недоступны"}), 503
+    
+    try:
+        success = message_logger.clear_messages()
+        return jsonify({
+            "success": success,
+            "message": "Журнал очищен" if success else "Ошибка очистки"
+        })
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@app.route("/api/pitv/statistics", methods=["GET"])
+@login_required
+def get_pitv_statistics():
+    """Получить статистику сообщений ПИТВ"""
+    if not PITV_AVAILABLE:
+        return jsonify({"success": False, "error": "ПИТВ модули недоступны"}), 503
+    
+    try:
+        stats = message_logger.get_statistics()
+        return jsonify({
+            "success": True,
+            "statistics": stats
+        })
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@app.route("/api/pitv/status", methods=["GET"])
+@login_required
+def get_pitv_status():
+    """Получить статус сервера приема ПИТВ"""
+    if not PITV_AVAILABLE:
+        return jsonify({
+            "success": False, 
+            "available": False,
+            "error": "ПИТВ модули недоступны"
+        })
+    
+    try:
+        # Проверяем доступность через HTTP запрос
+        import requests
+        response = requests.get("http://localhost:8081/health", timeout=2)
+        server_status = response.status_code == 200
+        server_data = response.json() if response.status_code == 200 else {}
+    except:
+        server_status = False
+        server_data = {}
+    
+    return jsonify({
+        "success": True,
+        "available": True,
+        "server_running": server_status,
+        "server_data": server_data
+    })
+
+
+@app.route("/api/pitv/messages/stream", methods=["GET"])
+@login_required
+def stream_pitv_messages():
+    """SSE поток для real-time обновлений сообщений ПИТВ"""
+    if not PITV_AVAILABLE:
+        return Response("ПИТВ модули недоступны", status=503)
+    
+    def generate_messages():
+        message_queue = queue.Queue()
+        
+        def message_callback(message_data):
+            message_queue.put(message_data)
+        
+        # Добавляем callback для получения новых сообщений
+        pitv_message_callbacks.append(message_callback)
+        message_logger.add_callback(message_callback)
+        
+        try:
+            yield ": keep-alive\n\n"
+            
+            while True:
+                try:
+                    # Проверяем наличие новых сообщений (неблокирующе)
+                    try:
+                        message = message_queue.get_nowait()
+                        yield f"data: {json.dumps(message)}\n\n"
+                    except queue.Empty:
+                        pass
+                    
+                    time.sleep(0.1)
+                    
+                except GeneratorExit:
+                    break
+                except Exception as e:
+                    print(f"Ошибка в генераторе ПИТВ сообщений: {str(e)}")
+                    time.sleep(1)
+                    continue
+                    
+        except Exception as e:
+            print(f"Критическая ошибка в генераторе ПИТВ сообщений: {str(e)}")
+        finally:
+            # Удаляем callback при закрытии соединения
+            if message_callback in pitv_message_callbacks:
+                pitv_message_callbacks.remove(message_callback)
+            message_logger.remove_callback(message_callback)
+
+    response = Response(
+        stream_with_context(generate_messages()), 
+        mimetype="text/event-stream"
+    )
+    response.headers["Cache-Control"] = "no-cache"
+    response.headers["Connection"] = "keep-alive"
+    response.headers["X-Accel-Buffering"] = "no"
+    response.headers["Access-Control-Allow-Origin"] = "*"
+    return response
+
+
+def check_port_free(port):
+    """Проверить свободен ли порт"""
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        try:
+            s.bind(('localhost', port))
+            return True
+        except OSError:
+            return False
+
+
+def kill_process_on_port(port):
+    """Убить процесс на порту"""
+    try:
+        import subprocess
+        result = subprocess.run(['lsof', '-ti', f':{port}'], capture_output=True, text=True)
+        if result.returncode == 0 and result.stdout.strip():
+            pids = result.stdout.strip().split('\n')
+            for pid in pids:
+                try:
+                    subprocess.run(['kill', pid])
+                    print(f"[Port Killer] Остановлен процесс {pid} на порту {port}")
+                except:
+                    pass
+            time.sleep(1)  # Даем время процессу завершиться
+        return True
+    except:
+        return False
+
+
+def start_pitv_server():
+    """Запустить сервер приема ПИТВ сообщений"""
+    if PITV_AVAILABLE:
+        # Проверяем порт 8081
+        if not check_port_free(8081):
+            print("[Main App] ⚠️  Порт 8081 занят, освобождаем...")
+            kill_process_on_port(8081)
+            
+        print("[Main App] Запуск сервера приема ПИТВ сообщений...")
+        success = start_message_receiver_server()
+        if success:
+            print("[Main App] ✅ Сервер ПИТВ запущен на порту 8081")
+            print("[Main App] 🔥 ПРОСТО ШЛИТЕ XML НА http://localhost:8081/ БЕЗ ЭНДПОИНТОВ!")
+        else:
+            print("[Main App] ❌ Не удалось запустить сервер ПИТВ")
+        return success
+    else:
+        print("[Main App] ⚠️  ПИТВ модули недоступны")
+        return False
+
+
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=8080)
+    print("🚀 === XML GENERATOR WITH PITV MESSAGE RECEIVER ===")
+    print("Запуск системы...")
+    print()
+    
+    # Проверяем порт 8080
+    if not check_port_free(8080):
+        print("[Main App] ⚠️  Порт 8080 занят, освобождаем...")
+        kill_process_on_port(8080)
+    
+    # Запускаем сервер ПИТВ в фоновом режиме
+    pitv_started = start_pitv_server()
+    
+    if pitv_started:
+        print("✅ Сервер приема ПИТВ: http://localhost:8081/")
+        print("✅ Основное приложение: http://localhost:8080")
+        print("✅ Веб-интерфейс: http://localhost:8080 -> вкладка 'Прием сообщений'")
+    else:
+        print("⚠️  Сервер ПИТВ не запущен, но основное приложение работает")
+        print("✅ Основное приложение: http://localhost:8080")
+    
+    print()
+    print("🔥 ГИС ЦПГ должна слать сообщения на: http://ваш-сервер:8081/")
+    print("📝 Нажмите Ctrl+C для остановки")
+    print("=" * 60)
+    
+    try:
+        # Запускаем основное приложение
+        app.run(host="0.0.0.0", port=8080)
+    except KeyboardInterrupt:
+        print("\n🛑 Завершение работы...")
+        if PITV_AVAILABLE:
+            stop_message_receiver_server()
+        print("✅ Серверы остановлены")
