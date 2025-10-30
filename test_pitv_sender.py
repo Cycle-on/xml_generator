@@ -126,6 +126,7 @@ def create_test_message(message_type: str, id_112: str = None) -> str:
                xmlns:tns="http://system112.ru/112/integration">
     <soap:Body>
         <tns:CloseCardResponse>
+            <tns:Id112>{id_112}</tns:Id112>
             <tns:Code>200</tns:Code>
             <tns:CodeDescr>Карточка успешно закрыта</tns:CodeDescr>
         </tns:CloseCardResponse>
