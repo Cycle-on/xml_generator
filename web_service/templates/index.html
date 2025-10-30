@@ -562,9 +562,9 @@
             font-weight: bold;
         }
         
-        .status-badge.received { background: #d1ecf1; color: #0c5460; }
-        .status-badge.processed { background: #d4edda; color: #155724; }
-        .status-badge.error { background: #f8d7da; color: #721c24; }
+        .status-badge.received { background: #e3f2fd; color: #1565c0; }
+        .status-badge.processed { background: #e8f5e8; color: #2e7d32; }
+        .status-badge.error { background: #ffebee; color: #c62828; }
         
         .danger-btn {
             background: #dc3545 !important;
@@ -645,7 +645,7 @@
     <!-- Табовая навигация -->
     <div class="tabs">
         {% if show_cssi %}<div class="tab" onclick="switchTab('cssi')">ЦССИ (WSDL 5)</div>{% endif %}
-        {% if show_cpg %}<div class="tab cpg-tab" onclick="switchTab('cpg')">ЦПГ</div>{% endif %}
+        {% if show_cpg %}<div class="tab cpg-tab" onclick="switchTab('cpg')">ЦПГ (отправка сообщений)</div>{% endif %}
         {% if show_token %}<div class="tab token-tab" onclick="switchTab('token')">Получение токена</div>{% endif %}
         {% if show_messages %}<div class="tab messages-tab" onclick="switchTab('messages')">Прием сообщений</div>{% endif %}
     </div>
@@ -865,13 +865,12 @@
                     <label for="message-type-filter">Фильтр по типу:</label>
                     <select id="message-type-filter" onchange="loadPitvMessages()">
                         <option value="">Все типы</option>
-                        <option value="UpdateCardResponse">UpdateCardResponse</option>
-                        <option value="AddReaction_Notification">AddReaction_Notification</option>
-                        <option value="AddReaction_Departure">AddReaction_Departure</option>
-                        <option value="CancelCard">CancelCard</option>
-                        <option value="UpdateCardRequest">UpdateCardRequest</option>
-                        <option value="FinishReaction">FinishReaction</option>
-                        <option value="CloseCardResponse">CloseCardResponse</option>
+                        <option value="UpdateCardResponse">Создание новой карточки</option>
+                        <option value="AddReaction">Просмотр карточки / Начало реагирования</option>
+                        <option value="CancelCard">Отмена вызова</option>
+                        <option value="UpdateCardRequest">Обновление карточки</option>
+                        <option value="FinishReaction">Завершение реагирования</option>
+                        <option value="CloseCardResponse">Закрытие карточки</option>
                     </select>
                 </div>
                 
@@ -2034,7 +2033,7 @@
                         <td>${date.toLocaleString()}</td>
                         <td>
                             <span class="message-type ${messageTypeClass}">
-                                ${msg.message_type}
+                                ${getHumanReadableMessageType(msg)}
                             </span>
                         </td>
                         <td>${msg.id_112 || '-'}</td>
@@ -2052,6 +2051,42 @@
                     </tr>
                 `;
             }).join('');
+        }
+
+        function getHumanReadableMessageType(msg) {
+            const messageType = msg.message_type;
+            
+            // Для AddReaction смотрим на ActionType
+            if (messageType === 'AddReaction') {
+                const actionType = getActionTypeFromMessage(msg);
+                if (actionType === 'Notification') {
+                    return 'Просмотр карточки';
+                } else if (actionType === 'Departure') {
+                    return 'Начало реагирования';
+                }
+                return 'AddReaction (неизвестный тип)';
+            }
+            
+            // Стандартные типы
+            const typeMap = {
+                'UpdateCardResponse': 'Создание новой карточки',
+                'CancelCard': 'Отмена вызова',
+                'UpdateCardRequest': 'Обновление карточки',
+                'FinishReaction': 'Завершение реагирования',
+                'CloseCardResponse': 'Закрытие карточки',
+                'error': 'Ошибка'
+            };
+            
+            return typeMap[messageType] || messageType;
+        }
+        
+        function getActionTypeFromMessage(msg) {
+            // Ищем ActionType в данных сообщения
+            const data = msg.data;
+            if (data && data.parsed_data) {
+                return data.parsed_data.ActionType || data.parsed_data.actionType;
+            }
+            return null;
         }
 
         function getMessageTypeClass(messageType) {
@@ -2191,7 +2226,7 @@
             content.innerHTML = `
                 <h4>Общая информация</h4>
                 <p><strong>Время:</strong> ${new Date(message.timestamp).toLocaleString()}</p>
-                <p><strong>Тип сообщения:</strong> ${message.message_type}</p>
+                <p><strong>Тип сообщения:</strong> ${getHumanReadableMessageType(message)} (${message.message_type})</p>
                 <p><strong>ID карточки 112:</strong> ${message.id_112 || '-'}</p>
                 <p><strong>Статус:</strong> ${getStatusDisplayName(message.status)}</p>
                 <p><strong>IP отправителя:</strong> ${message.source_ip || '-'}</p>
