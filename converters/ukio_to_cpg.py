@@ -7,6 +7,9 @@ import random
 from typing import Optional, Tuple
 from datetime import datetime
 
+# Флаг для копирования адреса из Card в IER
+USE_CARD_ADDRESS_IN_IER = True
+
 from schemas.ukio_model import Ukio, Address as UkioAddress, Era
 from schemas.string_eos import Operator as UkioOperator
 from schemas.cpg_models import (
@@ -30,8 +33,10 @@ def convert_ukio_to_cpg(ukio: Ukio) -> Tuple[Optional[CPGCard], Optional[CPGIer]
     if not ukio:
         return None, None
     
+    print(f"DEBUG: Флаг USE_CARD_ADDRESS_IN_IER = {USE_CARD_ADDRESS_IN_IER}")
+    
     card = _create_card_from_ukio(ukio)
-    ier = _create_ier_from_ukio(ukio)
+    ier = _create_ier_from_ukio(ukio, card)
     
     return card, ier
 
@@ -77,7 +82,7 @@ def _create_card_from_ukio(ukio: Ukio) -> CPGCard:
     return card
 
 
-def _create_ier_from_ukio(ukio: Ukio) -> CPGIer:
+def _create_ier_from_ukio(ukio: Ukio, card: Optional[CPGCard] = None) -> CPGIer:
     """Создание обращения CPGIer из Ukio"""
     
     # Извлекаем оператора принявшего звонок
@@ -99,10 +104,19 @@ def _create_ier_from_ukio(ukio: Ukio) -> CPGIer:
     if ukio.callContent and hasattr(ukio.callContent, 'strCgPN'):
         cg_pn = ukio.callContent.strCgPN or "112"
     
-    # Извлекаем адрес заявителя
-    applicant_location = None
-    if ukio.callContent and hasattr(ukio.callContent, 'appResAddress'):
-        applicant_location = _map_location_from_string(ukio.callContent.appResAddress)
+    # Определяем адрес для IER
+    ier_location = None
+    if USE_CARD_ADDRESS_IN_IER and card and card.Location:
+        # Используем адрес из Card
+        ier_location = card.Location
+        print(f"DEBUG: IER использует адрес из Card: {card.Location.Address.City if card.Location.Address else 'N/A'}")
+    else:
+        # Используем адрес заявителя (старое поведение)
+        if ukio.callContent and hasattr(ukio.callContent, 'appResAddress'):
+            ier_location = _map_location_from_string(ukio.callContent.appResAddress)
+            print(f"DEBUG: IER использует адрес заявителя: {ukio.callContent.appResAddress}")
+        else:
+            print("DEBUG: IER создается без адреса")
     
     ier = CPGIer(
         Id=f"IER_{uuid.uuid4().hex[:8].upper()}",
@@ -117,7 +131,7 @@ def _create_ier_from_ukio(ukio: Ukio) -> CPGIer:
         IerType=1,  # Обязательное поле по WSDL! Константа = 1
         HrId=None,  # Нет соответствия согласно таблице маппинга!
         Birthdate=None,  # Новое поле - дата рождения заявителя
-        Location=applicant_location
+        Location=ier_location
     )
     
     return ier
