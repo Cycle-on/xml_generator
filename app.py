@@ -8,6 +8,7 @@ import time
 import queue
 import json
 import socket
+from datetime import datetime
 
 import requests
 from flask import (
@@ -68,6 +69,49 @@ app.secret_key = os.getenv("SECRET_KEY", "your-secret-key-here")
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = "login"
+
+
+# Логирование входов в систему
+def log_login_attempt(username, success, ip_address=None):
+    """Логирует попытки входа в JSON файл"""
+    log_entry = {
+        "timestamp": datetime.now().isoformat(),
+        "username": username,
+        "success": success,
+        "ip_address": ip_address or "unknown"
+    }
+    
+    log_file = "login_history.json"
+    
+    try:
+        # Читаем существующие логи
+        if os.path.exists(log_file):
+            with open(log_file, "r", encoding="utf-8") as f:
+                logs = json.load(f)
+        else:
+            logs = []
+        
+        # Добавляем новый лог
+        logs.append(log_entry)
+        
+        # Ограничиваем размер лога (последние 1000 записей)
+        if len(logs) > 1000:
+            logs = logs[-1000:]
+        
+        # Записываем обратно
+        with open(log_file, "w", encoding="utf-8") as f:
+            json.dump(logs, f, ensure_ascii=False, indent=2)
+            
+    except Exception as e:
+        print(f"Ошибка при записи лога входа: {str(e)}")
+
+
+def get_valid_accounts():
+    """Возвращает словарь валидных учетных записей"""
+    return {
+        "xml-sender": os.getenv("ADMIN_PASSWORD", "o7_5nDUJkp"),
+        "GUPO_TEST": os.getenv("GUPO_TEST_PASSWORD", "k9m4x7n2p5")
+    }
 
 
 class User(UserMixin):
@@ -304,14 +348,22 @@ def login():
     if request.method == "POST":
         username = request.form.get("username")
         password = request.form.get("password")
+        client_ip = request.remote_addr
 
-        if username == os.getenv(
-            "ADMIN_USERNAME", "xml-sender"
-        ) and password == os.getenv("ADMIN_PASSWORD", "o7_5nDUJkp"):
+        # Получаем валидные учетные записи
+        valid_accounts = get_valid_accounts()
+        
+        # Проверяем учетные данные
+        if username in valid_accounts and password == valid_accounts[username]:
+            # Логируем успешный вход
+            log_login_attempt(username, True, client_ip)
+            
             user = User(username)
             login_user(user)
             return redirect(url_for("index"))
         else:
+            # Логируем неуспешную попытку входа
+            log_login_attempt(username, False, client_ip)
             flash("Неверное имя пользователя или пароль")
     return render_template("login.html")
 
@@ -321,6 +373,39 @@ def login():
 def logout():
     logout_user()
     return redirect(url_for("login"))
+
+
+@app.route("/api/login-history", methods=["GET"])
+@login_required
+def get_login_history():
+    """API для получения истории входов"""
+    try:
+        log_file = "login_history.json"
+        
+        if not os.path.exists(log_file):
+            return jsonify({"success": True, "history": []})
+        
+        with open(log_file, "r", encoding="utf-8") as f:
+            history = json.load(f)
+        
+        # Ограничиваем количество записей (последние 100)
+        limit = int(request.args.get("limit", 100))
+        history = history[-limit:] if len(history) > limit else history
+        
+        # Сортируем по времени (новые сначала)
+        history.reverse()
+        
+        return jsonify({
+            "success": True,
+            "history": history,
+            "total": len(history)
+        })
+        
+    except Exception as e:
+        return jsonify({
+            "success": False,
+            "error": f"Ошибка при получении истории: {str(e)}"
+        }), 500
 
 
 @app.route("/")
