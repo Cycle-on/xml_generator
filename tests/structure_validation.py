@@ -182,7 +182,7 @@ def check_xml_generation():
             ),
             CreateOperator=CPGOperator(OperatorLogin="test_op"),
             LastChangeOperator=CPGOperator(OperatorLogin="test_op"),
-            IncidentState="new",
+            IncidentState="New",
             Created=datetime.now().isoformat(),
             Changed=datetime.now().isoformat()
         )

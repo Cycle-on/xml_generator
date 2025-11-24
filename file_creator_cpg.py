@@ -14,8 +14,8 @@ from config import load_config
 
 config = load_config()
 
-# Namespace для ЦПГ
-CPG_NAMESPACE = "http://tspg.service/"
+# Namespace для ЦПГ (обновлен под новый WSDL)
+CPG_NAMESPACE = "http://eiim.service112.iskratel.si/"
 NAMESPACES = {
     'tns': CPG_NAMESPACE,
     'xsi': 'http://www.w3.org/2001/XMLSchema-instance'
@@ -80,13 +80,13 @@ def _generate_xml_from_cpg_model(model: BaseModel, operation: str = "UpdateCard"
     # Конвертируем модель в словарь
     model_dict = model.model_dump(exclude_none=True)
     
-    # Рекурсивно добавляем элементы
-    _add_elements_to_xml(root, model_dict, CPG_NAMESPACE)
+    # Рекурсивно добавляем элементы (use_namespace=False для form="unqualified")
+    _add_elements_to_xml(root, model_dict, CPG_NAMESPACE, use_namespace=False)
     
     return root
 
 
-def _add_elements_to_xml(parent: ET.Element, data: dict, namespace: str):
+def _add_elements_to_xml(parent: ET.Element, data: dict, namespace: str, use_namespace: bool = False):
     """
     Рекурсивно добавляет элементы в XML дерево
     
@@ -94,24 +94,28 @@ def _add_elements_to_xml(parent: ET.Element, data: dict, namespace: str):
         parent: Родительский элемент
         data: Данные для добавления
         namespace: Namespace для элементов
+        use_namespace: Использовать namespace для дочерних элементов (False для form="unqualified")
     """
     for key, value in data.items():
         if value is None:
             continue
             
-        # Создаем элемент с namespace
-        element_tag = f"{{{namespace}}}{key}"
+        # Создаем элемент - с namespace только для корневого элемента
+        if use_namespace:
+            element_tag = f"{{{namespace}}}{key}"
+        else:
+            element_tag = key
         
         if isinstance(value, dict):
             # Вложенный объект
             sub_element = ET.SubElement(parent, element_tag)
-            _add_elements_to_xml(sub_element, value, namespace)
+            _add_elements_to_xml(sub_element, value, namespace, use_namespace=False)
         elif isinstance(value, list):
             # Список элементов
             for item in value:
                 if isinstance(item, dict):
                     sub_element = ET.SubElement(parent, element_tag)
-                    _add_elements_to_xml(sub_element, item, namespace)
+                    _add_elements_to_xml(sub_element, item, namespace, use_namespace=False)
                 else:
                     sub_element = ET.SubElement(parent, element_tag)
                     sub_element.text = _format_value(item, key)

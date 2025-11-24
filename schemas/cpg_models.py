@@ -6,7 +6,7 @@ import random
 import uuid
 from datetime import datetime
 from decimal import Decimal
-from typing import Optional, List
+from typing import Optional, List, Literal, Union
 from pydantic import BaseModel, Field
 
 
@@ -26,6 +26,8 @@ class CPGCoords(BaseModel):
     """Координаты"""
     Latitude: Optional[str] = None
     Longitude: Optional[str] = None
+    LapseRadius: Optional[int] = None  # Новое поле
+    ArcData: Optional[str] = None  # Новое поле
 
 
 class CPGAddress(BaseModel):
@@ -46,6 +48,7 @@ class CPGAddress(BaseModel):
     HouseCode: Optional[str] = None
     HouseFiasId: Optional[str] = None
     HouseFraction: Optional[str] = None
+    Housing: Optional[str] = None  # Новое поле
     Building: Optional[str] = None
     BuildingType: Optional[str] = None
     Ownership: Optional[str] = None
@@ -70,6 +73,12 @@ class CPGLocation(BaseModel):
 
 # ============== Структуры карточки ==============
 
+# Enum для уровня инцидента
+IncidentLevel = Literal["SimpleIncident", "LocalEmergency", "GlobalEmergency"]
+
+# Enum для типа обращения
+IerType = Literal["NotSet", "PhoneCall", "Sms", "Fax", "EraGlonass", "Manual"]
+
 class CPGCommonData(BaseModel):
     """Общие данные карточки"""
     TypeStr: str  # Тип происшествия
@@ -80,8 +89,10 @@ class CPGCommonData(BaseModel):
     InjuredNumber: Optional[int] = None  # Число пострадавших
     IsDanger: Optional[bool] = None  # Угроза людям
     IsBlocking: Optional[bool] = None  # Нет соответствия - должно быть пустым!
+    IsChemFlood: Optional[bool] = None  # Новое поле - химическое заражение/наводнение
+    IsMalicius: Optional[bool] = None  # Новое поле - злонамеренное происшествие
     TimeIsoStr: str  # Дата и время происшествия
-    Level: Optional[int] = None  # Признак ЧС
+    Level: Optional[str] = None  # Строка (SimpleIncident, LocalEmergency, GlobalEmergency)
 
 
 class CPGDdsData01(BaseModel):
@@ -90,12 +101,13 @@ class CPGDdsData01(BaseModel):
     HasGas: bool = False  # Объект газифицирован
     NeedRescue: bool = False  # Необходимость спасательных работ
     FloorCount: Optional[int] = None  # Этажность
-    FireTime: Optional[int] = None  # Оценка времени развития пожара
+    FireTime: Optional[str] = None  # Оценка времени развития пожара (изменено на string)
     FireEffects: Optional[str] = None  # Наблюдаемые последствия
     DrivewaysState: Optional[str] = None  # Характеристика подъездных путей
     WorkingConditions: Optional[str] = None  # Условия работы
     EvacuationPossibility: Optional[str] = None  # Оценка возможности эвакуации
     OwnersAndTenantsInfo: Optional[str] = None  # Информация о собственниках
+    BurnObject: Optional[str] = None  # Новое поле - объект горения
     LastChangeOperator01: Optional[CPGOperator] = None
 
 
@@ -159,6 +171,21 @@ class CPGDdsDataCommServ(BaseModel):
     LastChangeOperatorCommServ: Optional[CPGOperator] = None
 
 
+class CPGResourceLink(BaseModel):
+    """Ссылка на ресурс"""
+    Caption: str  # Наименование ресурса
+    ResourceType: str  # Тип ресурса
+    Uri: str  # URI ресурса
+    Size: int  # Размер ресурса
+    AdditionalInfo: Optional[str] = None  # Дополнительная информация
+
+
+class CPGParameter(BaseModel):
+    """Параметр карточки"""
+    Name: str  # Имя параметра
+    Value: str  # Значение параметра
+
+
 class CPGCard(BaseModel):
     """Основная карточка происшествия"""
     Id112: Optional[str] = None  # Идентификатор в системе 112
@@ -172,6 +199,8 @@ class CPGCard(BaseModel):
     DdsDataAT: Optional[CPGDdsDataAT] = None  # Антитеррор
     DdsDataCommServ: Optional[CPGDdsDataCommServ] = None  # Коммунальные службы
     EraGlonassCardId: Optional[str] = None
+    ResourceList: List[CPGResourceLink] = []  # Новое поле - список ресурсов
+    Parameters: List[CPGParameter] = []  # Новое поле - список параметров
     CreateOperator: CPGOperator
     LastChangeOperator: CPGOperator
     IncidentState: str  # Состояние карточки
@@ -247,6 +276,7 @@ class CPGEraCallCard(BaseModel):
 class CPGIer(BaseModel):
     """Информация об обращении"""
     Id: Optional[str] = Field(default_factory=lambda: f"IER_{uuid.uuid4().hex[:8].upper()}")
+    CardId: Optional[str] = None  # Новое поле - ID карточки
     IerIsoTime: str  # Дата и время приема обращения
     CgPn: str  # Номер абонентского устройства
     CdPn: Optional[str] = None  # Номер телефона диспетчера
@@ -255,10 +285,13 @@ class CPGIer(BaseModel):
     Text: Optional[str] = None  # Дополнительная информация
     Era: Optional[CPGEraCallCard] = None
     Sms: Optional[CPGSmsIer] = None
-    IerType: int = 1  # Обязательное поле по WSDL! Константа
+    IerType: str = "PhoneCall"  # Строка (PhoneCall, Sms, EraGlonass, Manual, NotSet, Fax)
     HrId: Optional[str] = None  # Нет соответствия - должно быть пустым!
+    Link: Optional[str] = None  # Новое поле - ссылка
     Birthdate: Optional[str] = None  # Дата рождения заявителя
     Location: Optional[CPGLocation] = None  # Адрес заявителя
+    ExtId: Optional[str] = None  # Новое поле - внешний ID
+    ContactNumber: Optional[str] = None  # Новое поле - контактный номер
 
 
 # ============== Сообщения (операции) ==============
@@ -272,8 +305,10 @@ class UpdateCardRequest(BaseModel):
 
 class UpdateCardResponse(BaseModel):
     """Ответ на запрос создания/обновления карточки"""
-    Id112: str
-    Code: str
+    CardId: Optional[str] = None  # Новая структура - ID карточки
+    IerId: Optional[str] = None  # Новое поле - ID обращения
+    Code: str  # Код результата
+    CodeDescr: Optional[str] = None  # Новое поле - описание кода
 
 
 class CancelCardRequest(BaseModel):
@@ -339,3 +374,6 @@ class CloseCardResponse(BaseModel):
     """Ответ на запрос закрытия карточки"""
     Code: str
     CodeDescr: Optional[str] = None
+
+
+# Модели готовы к использованию

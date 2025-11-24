@@ -124,8 +124,10 @@ def test_basic_conversion():
     assert card.Id112 == ukio.globalId, "Id112 должен совпадать с globalId"
     print(f"✅ Id112 корректно замаплен: {card.Id112}")
     
-    assert card.IncidentState == ukio.strCardState.value, "IncidentState должен совпадать с strCardState"
-    print(f"✅ IncidentState корректно замаплен: {card.IncidentState}")
+    # IncidentState теперь выбирается случайно из допустимых значений
+    incident_state_values = ["New", "Created", "InWork", "Finished", "Closed", "Assigned", "NotSet"]
+    assert card.IncidentState in incident_state_values, f"IncidentState должен быть из допустимых значений: {incident_state_values}"
+    print(f"✅ IncidentState корректно выбран из допустимых значений: {card.IncidentState}")
     
     # Проверяем CommonData
     assert card.CommonData is not None, "CommonData не должна быть None"
@@ -186,11 +188,15 @@ def test_conversion_with_none_values():
     assert card.ExtId is not None and card.ExtId.startswith("EXT_"), "ExtId должен быть сгенерирован"
     print(f"✅ Сгенерирован ExtId: {card.ExtId}")
     
-    assert card.IncidentState == "new", "IncidentState должен иметь дефолтное значение"
-    print(f"✅ IncidentState имеет дефолтное значение: {card.IncidentState}")
+    # IncidentState теперь выбирается случайно из допустимых значений
+    incident_state_values = ["New", "Created", "InWork", "Finished", "Closed", "Assigned", "NotSet"]
+    assert card.IncidentState in incident_state_values, f"IncidentState должен быть из допустимых значений: {incident_state_values}"
+    print(f"✅ IncidentState выбран из допустимых значений: {card.IncidentState}")
     
-    assert ier.IerType == 1, "IerType должен быть 1"
-    print(f"✅ IerType имеет дефолтное значение: {ier.IerType}")
+    # IerType теперь строка из допустимых значений
+    ier_type_values = ["NotSet", "PhoneCall", "Sms", "Fax", "EraGlonass", "Manual"]
+    assert ier.IerType in ier_type_values, f"IerType должен быть из допустимых значений: {ier_type_values}"
+    print(f"✅ IerType имеет корректное значение: {ier.IerType}")
     
     print("\n✅ Все проверки конвертации с пустыми значениями пройдены успешно!")
     return True

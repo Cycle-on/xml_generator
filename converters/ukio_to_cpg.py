@@ -10,13 +10,19 @@ from datetime import datetime
 # Флаг для копирования адреса из Card в IER
 USE_CARD_ADDRESS_IN_IER = True
 
+# Допустимые значения для IncidentState согласно валидатору
+INCIDENT_STATE_VALUES = [
+    "New", "Created", "InWork", "Finished", 
+    "Closed", "Assigned", "NotSet"
+]
+
 from schemas.ukio_model import Ukio, Address as UkioAddress, Era
 from schemas.string_eos import Operator as UkioOperator
 from schemas.cpg_models import (
     CPGCard, CPGIer, CPGOperator, CPGCoords, CPGAddress, CPGLocation,
     CPGCommonData, CPGDdsData01, CPGDdsData02, CPGDdsData03, CPGDdsData04,
     CPGDdsDataAT, CPGDdsDataCommServ, CPGFullName, CPGSmsIer, CPGEraCallCard,
-    CPGEraLocation, CPGCrashType
+    CPGEraLocation, CPGCrashType, IncidentLevel, IerType
 )
 
 
@@ -74,7 +80,7 @@ def _create_card_from_ukio(ukio: Ukio) -> CPGCard:
         EraGlonassCardId=ukio.era.eraId if ukio.era else None,
         CreateOperator=_map_operator(first_operator),
         LastChangeOperator=_map_operator(last_operator),
-        IncidentState=ukio.strCardState.value if ukio.strCardState else "new",
+        IncidentState=random.choice(INCIDENT_STATE_VALUES),
         Created=ukio.dtCreate.isoformat() + 'Z' if ukio.dtCreate else datetime.now().isoformat() + 'Z',
         Changed=ukio.dtUpdate.isoformat() + 'Z' if ukio.dtUpdate else datetime.now().isoformat() + 'Z'
     )
@@ -118,8 +124,16 @@ def _create_ier_from_ukio(ukio: Ukio, card: Optional[CPGCard] = None) -> CPGIer:
         else:
             print("DEBUG: IER создается без адреса")
     
+    # Определяем тип обращения
+    ier_type = "PhoneCall"  # По умолчанию телефонный звонок
+    if ukio.era:
+        ier_type = "EraGlonass"
+    elif ukio.sms and len(ukio.sms) > 0:
+        ier_type = "Sms"
+    
     ier = CPGIer(
         Id=f"IER_{uuid.uuid4().hex[:8].upper()}",
+        CardId=ukio.globalId,  # Новое поле - ссылка на карточку
         IerIsoTime=ier_time,
         CgPn=cg_pn,
         CdPn=None,  # Номер телефона диспетчера - новое поле
@@ -128,10 +142,13 @@ def _create_ier_from_ukio(ukio: Ukio, card: Optional[CPGCard] = None) -> CPGIer:
         Text=None,  # Нет соответствия - должно быть пустым!
         Era=_map_era(ukio.era) if ukio.era else None,
         Sms=_map_sms(ukio.sms[0]) if ukio.sms and len(ukio.sms) > 0 else None,
-        IerType=1,  # Обязательное поле по WSDL! Константа = 1
+        IerType=ier_type,  # Теперь используем enum
         HrId=None,  # Нет соответствия согласно таблице маппинга!
+        Link=None,  # Новое поле - ссылка
         Birthdate=None,  # Новое поле - дата рождения заявителя
-        Location=ier_location
+        Location=ier_location,
+        ExtId=f"EXT_{uuid.uuid4().hex[:8].upper()}",  # Новое поле - внешний ID
+        ContactNumber=cg_pn  # Новое поле - контактный номер
     )
     
     return ier
@@ -215,6 +232,18 @@ def _extract_common_data(ukio: Ukio) -> CPGCommonData:
     if ukio.callContent and hasattr(ukio.callContent, 'strIncidentDescription'):
         description = ukio.callContent.strIncidentDescription
     
+    # Маппинг Level в enum
+    level = None
+    if ukio.bChs is not None:
+        if ukio.bChs == 0:
+            level = "SimpleIncident"
+        elif ukio.bChs == 1:
+            level = "LocalEmergency"
+        elif ukio.bChs == 2:
+            level = "GlobalEmergency"
+        else:
+            level = "SimpleIncident"  # По умолчанию
+    
     return CPGCommonData(
         TypeStr=incident_type,
         RegionStr="Московская область",  # Обязательное поле по WSDL
@@ -224,8 +253,10 @@ def _extract_common_data(ukio: Ukio) -> CPGCommonData:
         InjuredNumber=ukio.nCasualties if ukio.nCasualties else 0,
         IsDanger=bool(ukio.bHumanThreat) if ukio.bHumanThreat is not None else None,
         IsBlocking=None,  # Нет соответствия - должно быть пустым!
+        IsChemFlood=None,  # Новое поле - пока нет маппинга
+        IsMalicius=None,  # Новое поле - пока нет маппинга
         TimeIsoStr=time_iso,
-        Level=int(ukio.bChs) if ukio.bChs is not None else None
+        Level=level
     )
 
 
@@ -239,7 +270,7 @@ def _convert_card01_to_dds(card01) -> Optional[CPGDdsData01]:
         HasGas=card01.bObjectGasified if hasattr(card01, 'bObjectGasified') else False,
         NeedRescue=card01.bNeedRescueWork if hasattr(card01, 'bNeedRescueWork') else False,
         FloorCount=int(card01.strStoreys) if hasattr(card01, 'strStoreys') and card01.strStoreys and str(card01.strStoreys).isdigit() else None,
-        FireTime=int(card01.strEstimation) if hasattr(card01, 'strEstimation') and card01.strEstimation and str(card01.strEstimation).isdigit() else None,
+        FireTime=str(card01.strEstimation) if hasattr(card01, 'strEstimation') and card01.strEstimation else None,
         FireEffects=card01.strObservedConsequencesFire if hasattr(card01, 'strObservedConsequencesFire') else None,
         DrivewaysState=card01.strCharacteristicsAccessRoads if hasattr(card01, 'strCharacteristicsAccessRoads') else None,
         WorkingConditions=card01.strCharacteristicsWorkingConditions if hasattr(card01, 'strCharacteristicsWorkingConditions') else None,

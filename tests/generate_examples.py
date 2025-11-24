@@ -210,7 +210,7 @@ def generate_cpg_example():
         DdsData01=dds_data,
         CreateOperator=operator,
         LastChangeOperator=operator,
-        IncidentState="new",
+        IncidentState="New",
         Created=datetime.now().isoformat(),
         Changed=datetime.now().isoformat()
     )
