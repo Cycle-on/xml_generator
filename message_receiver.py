@@ -28,6 +28,7 @@ app = Flask(__name__)
 server_instance = None
 server_thread = None
 is_running = False
+error_mode_enabled = False  # Режим эмуляции ошибок
 
 
 def parse_soap_xml(xml_content: str) -> dict:
@@ -165,7 +166,27 @@ def health_check():
 @app.route('/', methods=['POST'])
 def receive_pitv_message():
     """Основной эндпоинт для приема всех ПИТВ сообщений на корневой путь"""
+    global error_mode_enabled
+    
     try:
+        # Проверяем режим ошибок
+        if error_mode_enabled:
+            print("[PITV Receiver] РЕЖИМ ОШИБКИ ВКЛЮЧЕН - возвращаем 500")
+            error_response = """<?xml version="1.0" encoding="utf-8"?>
+<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+    <soap:Body>
+        <soap:Fault>
+            <faultcode>Server</faultcode>
+            <faultstring>Эмуляция ошибки сервера</faultstring>
+            <detail>
+                <ErrorCode>500</ErrorCode>
+                <ErrorDescription>Сервер временно недоступен (режим эмуляции ошибок)</ErrorDescription>
+            </detail>
+        </soap:Fault>
+    </soap:Body>
+</soap:Envelope>"""
+            return Response(error_response, mimetype="text/xml", status=500)
+        
         # Получаем данные
         content_type = request.content_type or "text/xml"
         xml_content = request.get_data(as_text=True)
@@ -284,6 +305,37 @@ def get_statistics():
         return jsonify({
             "success": True,
             "statistics": stats
+        })
+    except Exception as e:
+        return jsonify({
+            "success": False,
+            "error": str(e)
+        }), 500
+
+
+@app.route('/api/error-mode', methods=['GET'])
+def get_error_mode():
+    """Получить текущий режим ошибок"""
+    global error_mode_enabled
+    return jsonify({
+        "success": True,
+        "error_mode_enabled": error_mode_enabled
+    })
+
+
+@app.route('/api/error-mode', methods=['POST'])
+def set_error_mode():
+    """Установить режим ошибок"""
+    global error_mode_enabled
+    try:
+        data = request.get_json()
+        error_mode_enabled = data.get('enabled', False)
+        
+        print(f"[PITV Receiver] Режим ошибок: {'ВКЛЮЧЕН' if error_mode_enabled else 'ВЫКЛЮЧЕН'}")
+        
+        return jsonify({
+            "success": True,
+            "error_mode_enabled": error_mode_enabled
         })
     except Exception as e:
         return jsonify({

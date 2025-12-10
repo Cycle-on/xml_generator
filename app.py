@@ -1937,6 +1937,35 @@ def get_pitv_status():
         "server_data": server_data
     })
 
+@app.route("/api/pitv/receiver/error-mode", methods=["GET"])
+@login_required
+def get_pitv_error_mode():
+    """Получить текущий режим ошибок ПИТВ"""
+    if not PITV_AVAILABLE:
+        return jsonify({"success": False, "error": "ПИТВ модули недоступны"}), 503
+    
+    try:
+        import requests
+        response = requests.get('http://localhost:8081/api/error-mode', timeout=2)
+        return response.json()
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+@app.route("/api/pitv/receiver/error-mode", methods=["POST"])
+@login_required
+def set_pitv_error_mode():
+    """Установить режим ошибок ПИТВ"""
+    if not PITV_AVAILABLE:
+        return jsonify({"success": False, "error": "ПИТВ модули недоступны"}), 503
+    
+    try:
+        import requests
+        data = request.get_json()
+        response = requests.post('http://localhost:8081/api/error-mode', json=data, timeout=2)
+        return response.json()
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
 
 @app.route("/api/pitv/messages/stream", methods=["GET"])
 @login_required

@@ -456,6 +456,23 @@
             border: 1px solid #ddd;
         }
         
+        /* Стили для чекбокса режима ошибок */
+        .status-block input[type="checkbox"] {
+            width: auto !important;
+            margin-right: 8px !important;
+            vertical-align: middle !important;
+            position: relative !important;
+            top: -1px !important;
+        }
+        
+        .status-block label {
+            display: flex !important;
+            align-items: center !important;
+            margin: 0 !important;
+            cursor: pointer;
+            user-select: none;
+        }
+        
         .status-indicator {
             padding: 5px 10px;
             border-radius: 3px;
@@ -854,8 +871,14 @@
             
             <!-- Статус сервера -->
             <div class="status-block">
-                <div class="form-group">
-                    <label>Статус сервера приема (порт 8081): <span id="pitv-server-status" class="status-indicator">Проверяем...</span></label>
+                <div class="form-group" style="margin-bottom: 10px;">
+                    <label style="margin: 0;">Статус сервера приема (порт 8081): <span id="pitv-server-status" class="status-indicator">Проверяем...</span></label>
+                </div>
+                <div class="form-group" style="margin: 0;">
+                    <label style="display: flex; align-items: center;">
+                        <input type="checkbox" id="error-mode-toggle" onchange="toggleErrorMode()" style="margin: 0 8px 0 0;">
+                        <span>Режим эмуляции ошибок (возврат 500)</span>
+                    </label>
                 </div>
             </div>
             
@@ -1983,6 +2006,18 @@
                         statusElement.textContent = 'Остановлен';
                         statusElement.className = 'status-indicator offline';
                     }
+                    
+                    // Загружаем текущее состояние режима ошибок
+                    fetch('/api/pitv/receiver/error-mode')
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                document.getElementById('error-mode-toggle').checked = data.error_mode_enabled;
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Ошибка получения режима ошибок:', error);
+                        });
                 })
                 .catch(error => {
                     const statusElement = document.getElementById('pitv-server-status');
@@ -1990,6 +2025,33 @@
                     statusElement.className = 'status-indicator offline';
                     console.error('Ошибка проверки статуса ПИТВ:', error);
                 });
+        }
+        
+        function toggleErrorMode() {
+            const enabled = document.getElementById('error-mode-toggle').checked;
+            
+            fetch('/api/pitv/receiver/error-mode', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ enabled: enabled })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    console.log(`Режим ошибок ${enabled ? 'включен' : 'выключен'}`);
+                } else {
+                    console.error('Ошибка установки режима ошибок');
+                    // Откатываем переключатель
+                    document.getElementById('error-mode-toggle').checked = !enabled;
+                }
+            })
+            .catch(error => {
+                console.error('Ошибка запроса:', error);
+                // Откатываем переключатель
+                document.getElementById('error-mode-toggle').checked = !enabled;
+            });
         }
 
 
